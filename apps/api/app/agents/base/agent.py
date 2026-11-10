@@ -135,7 +135,7 @@ class Agent(ABC, Generic[InT, OutT]):
                 ),
             )
             return AgentResult.fail(
-                f"Unexpected error in {self.name}: {exc}",
+                f'Непредвиденная ошибка в {self.name}: {exc}',
                 escalate=True,
                 escalation_reason=str(exc),
             )

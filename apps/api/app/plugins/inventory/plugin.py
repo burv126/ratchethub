@@ -43,16 +43,14 @@ class InventoryPlugin:
         return "inventory"
 
     def plugin_name(self) -> str:
-        return "Parts & Inventory Intelligence"
+        return 'Аналитика запчастей и склада'
 
     def plugin_version(self) -> str:
         return "1.0.0"
 
     def plugin_description(self) -> str:
         return (
-            "Connects repair recommendations with real parts availability: "
-            "search, stock, suppliers, readiness, and purchase recommendations. "
-            "AI returns Decision Objects only — Workflow executes reservations/orders."
+            'Связывает рекомендации ремонта с наличием запчастей: поиск, склад, поставщики, готовность и закупки. ИИ возвращает решения; резервирование и заказы выполняет процесс.'
         )
 
     def supported_capabilities(self) -> list[str]:
@@ -131,7 +129,7 @@ class InventoryPlugin:
     ) -> Any:
         shop_id = kwargs.get("shop_id") or (context.shop_id if context else None)
         if shop_id is None:
-            raise ValueError("shop_id required for Inventory Intelligence")
+            raise ValueError('Для аналитики склада требуется shop_id')
         if isinstance(shop_id, str):
             shop_id = UUID(shop_id)
 
@@ -246,4 +244,4 @@ class InventoryPlugin:
             plan = self.analyze(ctx)
             return self._plan_payload(plan)
 
-        raise LookupError(f"Unsupported inventory capability: {cap}")
+        raise LookupError(f'Неподдерживаемая возможность склада: {cap}')

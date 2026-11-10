@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
@@ -23,8 +27,8 @@ function OnlineDot({ online }: { online: boolean }) {
       className={`inline-flex h-2.5 w-2.5 shrink-0 rounded-full ${
         online ? "bg-emerald-500" : "bg-red-500"
       }`}
-      title={online ? "Online" : "Offline"}
-      aria-label={online ? "Online" : "Offline"}
+      title={online ? "В сети" : "Не в сети"}
+      aria-label={online ? "В сети" : "Не в сети"}
     />
   );
 }
@@ -90,7 +94,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
       } catch (err) {
         if (!quiet) {
           setLive(false);
-          setError(err instanceof Error ? err.message : "Failed to load users");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить пользователей");
         }
       } finally {
         if (!quiet) setBusy(false);
@@ -180,10 +184,10 @@ function UsersBody({ accessToken }: { accessToken: string }) {
     setMessage(null);
     try {
       await suspendAdminOrganizationMember(accessToken, row.shop_id, row.user_id);
-      setMessage(`Suspended ${row.full_name || row.email || row.user_id}`);
+      setMessage(`Приостановлено ${row.full_name || row.email || row.user_id}`);
       await load(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Suspend failed");
+      setError(err instanceof Error ? err.message : "Не удалось приостановить");
     } finally {
       setActionKey(null);
     }
@@ -196,10 +200,10 @@ function UsersBody({ accessToken }: { accessToken: string }) {
     setMessage(null);
     try {
       await activateAdminOrganizationMember(accessToken, row.shop_id, row.user_id);
-      setMessage(`Activated ${row.full_name || row.email || row.user_id}`);
+      setMessage(`Активировано ${row.full_name || row.email || row.user_id}`);
       await load(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Activate failed");
+      setError(err instanceof Error ? err.message : "Не удалось активировать");
     } finally {
       setActionKey(null);
     }
@@ -218,10 +222,10 @@ function UsersBody({ accessToken }: { accessToken: string }) {
         row.shop_id,
         row.user_id,
       );
-      const hint = result.dev_token ? ` (dev token: ${result.dev_token})` : "";
-      setMessage(`Password reset sent for ${label} via ${result.channel}${hint}`);
+      const hint = result.dev_token ? ` (токен разработки: ${result.dev_token})` : "";
+      setMessage(`Ссылка для сброса пароля отправлена для ${label} через ${result.channel}${hint}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Password reset failed");
+      setError(err instanceof Error ? err.message : "Не удалось сбросить пароль");
     } finally {
       setActionKey(null);
     }
@@ -232,7 +236,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
     const label = row.full_name || row.email || row.phone || row.user_id;
     if (
       !window.confirm(
-        `Initialize a new temporary password for ${label}? Their current sessions will be signed out.`,
+        `Задать новый временный пароль для ${label}? Текущие сессии будут завершены.`,
       )
     ) {
       return;
@@ -248,34 +252,34 @@ function UsersBody({ accessToken }: { accessToken: string }) {
         row.user_id,
       );
       setTempPassword(result.temporary_password);
-      setMessage(`Temporary password set for ${label}. Copy it now — it will not be shown again.`);
+      setMessage(`Временный пароль задан для ${label}. Скопируйте сейчас — повторно он не появится.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Password initialize failed");
+      setError(err instanceof Error ? err.message : "Не удалось задать пароль");
     } finally {
       setActionKey(null);
     }
   }
 
-  if (error && !data) return <p className="text-sm text-red-700">{error}</p>;
-  if (!data) return <p className="text-sm text-[var(--muted)]">{busy ? "Loading…" : "No data"}</p>;
+  if (error && !data) return <p className="text-sm text-red-700">{ruError(error)}</p>;
+  if (!data) return <p className="text-sm text-[var(--muted)]">{busy ? "Загрузка…" : "Нет данных"}</p>;
 
   return (
     <div className="flex h-[calc(100dvh-7.25rem)] flex-col gap-4 overflow-hidden sm:h-[calc(100dvh-7.75rem)] md:h-[calc(100dvh-9.25rem)] md:gap-5">
       <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
-        <h1 className="page-title">Users</h1>
+        <h1 className="page-title">Пользователи</h1>
         <LiveBadge live={live} />
       </div>
 
       <section className="grid shrink-0 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Memberships" value={String(data.total)} />
-        <Stat label="Unique users" value={String(stats.unique)} />
-        <Stat label="Online now" value={String(stats.online)} tone="text-emerald-700" />
-        <Stat label="Active" value={String(stats.active)} tone="text-emerald-700" />
+        <Stat label="Участия" value={String(data.total)} />
+        <Stat label="Уникальные пользователи" value={String(stats.unique)} />
+        <Stat label="Сейчас в сети" value={String(stats.online)} tone="text-emerald-700" />
+        <Stat label="Активно" value={String(stats.active)} tone="text-emerald-700" />
       </section>
 
       {error && (
         <p className="shrink-0 rounded-xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-sm text-red-700">
-          {error}
+          {ruError(error)}
         </p>
       )}
       {message && (
@@ -285,7 +289,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
       )}
       {tempPassword ? (
         <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-2xl border border-amber-300/80 bg-amber-50/90 px-4 py-3 text-sm shadow-[var(--shadow-soft)]">
-          <span className="text-amber-900">Temporary password:</span>
+          <span className="text-amber-900">Временный пароль:</span>
           <code className="rounded bg-white px-2 py-1 font-mono text-base text-amber-950">
             {tempPassword}
           </code>
@@ -294,19 +298,19 @@ function UsersBody({ accessToken }: { accessToken: string }) {
             className="rounded-md border border-amber-400 px-2 py-1 text-xs text-amber-900"
             onClick={() => void navigator.clipboard.writeText(tempPassword)}
           >
-            Copy
+            Копировать
           </button>
         </div>
       ) : null}
 
       <Panel
         className="flex min-h-0 flex-1 flex-col"
-        title={`Members (${filtered.length})`}
+        title={`Сотрудники (${filtered.length})`}
         action={
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name, email, shop, role…"
+            placeholder="Поиск по имени, почте, автосервису, роли…"
             className="w-full max-w-xs rounded-md border border-[var(--line)] px-3 py-1.5 text-sm"
           />
         }
@@ -315,13 +319,13 @@ function UsersBody({ accessToken }: { accessToken: string }) {
           <table className="min-w-full text-left text-sm">
             <thead className="sticky top-0 z-10 border-b border-[var(--line)] bg-[var(--background)] text-[var(--muted)]">
               <tr>
-                <th className="px-5 py-2 font-medium">Name</th>
-                <th className="px-5 py-2 font-medium">Contact</th>
-                <th className="px-5 py-2 font-medium">Role</th>
-                <th className="px-5 py-2 font-medium">Shop</th>
-                <th className="px-5 py-2 font-medium">Online</th>
-                <th className="px-5 py-2 font-medium">Status</th>
-                <th className="px-5 py-2 font-medium">Actions</th>
+                <th className="px-5 py-2 font-medium">Имя</th>
+                <th className="px-5 py-2 font-medium">Контакт</th>
+                <th className="px-5 py-2 font-medium">Роль</th>
+                <th className="px-5 py-2 font-medium">Автосервис</th>
+                <th className="px-5 py-2 font-medium">В сети</th>
+                <th className="px-5 py-2 font-medium">Статус</th>
+                <th className="px-5 py-2 font-medium">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -354,7 +358,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                         <div className="text-xs text-[var(--muted)]">{u.phone}</div>
                       ) : null}
                     </td>
-                    <td className="px-5 py-3 capitalize">{u.role}</td>
+                    <td className="px-5 py-3 capitalize">{ruLabel(u.role)}</td>
                     <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>
                       <Link
                         href={`/admin/shops/${u.shop_id}`}
@@ -374,7 +378,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                         {online ? "online" : "offline"}
                       </span>
                     </td>
-                    <td className={`px-5 py-3 capitalize ${statusTone(status)}`}>{status}</td>
+                    <td className={`px-5 py-3 capitalize ${statusTone(status)}`}>{ruLabel(status)}</td>
                     <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-wrap gap-2">
                         {u.is_active ? (
@@ -384,7 +388,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                             onClick={() => void onSuspend(u)}
                             className="rounded-md border border-[var(--line)] px-2 py-1 text-xs text-red-700 disabled:opacity-50"
                           >
-                            Suspend
+                            Приостановить
                           </button>
                         ) : (
                           <button
@@ -393,7 +397,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                             onClick={() => void onActivate(u)}
                             className="rounded-md border border-[var(--line)] px-2 py-1 text-xs disabled:opacity-50"
                           >
-                            Activate
+                            Активировать
                           </button>
                         )}
                         <button
@@ -401,9 +405,9 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                           disabled={rowBusy || !u.is_active}
                           onClick={() => void onPasswordInitialize(u)}
                           className="rounded-md border border-[var(--line)] px-2 py-1 text-xs disabled:opacity-50"
-                          title="Set a new temporary password"
+                          title="Задать новый временный пароль"
                         >
-                          Init password
+                          Задать пароль
                         </button>
                         <button
                           type="button"
@@ -411,10 +415,10 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                           onClick={() => void onPasswordReset(u)}
                           className="rounded-md border border-[var(--line)] px-2 py-1 text-xs disabled:opacity-50"
                           title={
-                            !u.email && !u.phone ? "No email or phone" : "Send password reset link"
+                            !u.email && !u.phone ? "Нет почты и телефона" : "Отправить ссылку для сброса пароля"
                           }
                         >
-                          Reset link
+                          Ссылка для сброса
                         </button>
                       </div>
                     </td>
@@ -424,7 +428,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-5 py-8 text-center text-[var(--muted)]">
-                    No users found.
+                    Пользователи не найдены.
                   </td>
                 </tr>
               )}
@@ -450,24 +454,24 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                 <h2 id="user-detail-title" className="truncate text-base font-semibold">
                   {selected.full_name || "—"}
                 </h2>
-                <p className="mt-0.5 text-xs text-[var(--muted)]">Membership details</p>
+                <p className="mt-0.5 text-xs text-[var(--muted)]">Сведения об участии</p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedKey(null)}
                 className="shrink-0 rounded-md border border-[var(--line)] px-2 py-1 text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
               >
-                Close
+                Закрыть
               </button>
             </div>
 
             <dl className="grid gap-3 sm:grid-cols-2">
-              <DetailField label="Email">{selected.email || "—"}</DetailField>
-              <DetailField label="Phone">{selected.phone || "—"}</DetailField>
-              <DetailField label="Role">
-                <span className="capitalize">{selected.role}</span>
+              <DetailField label="Эл. почта">{selected.email || "—"}</DetailField>
+              <DetailField label="Телефон">{selected.phone || "—"}</DetailField>
+              <DetailField label="Роль">
+                <span className="capitalize">{ruLabel(selected.role)}</span>
               </DetailField>
-              <DetailField label="Status">
+              <DetailField label="Статус">
                 <span
                   className={`capitalize ${statusTone(
                     selected.is_active ? "active" : "suspended",
@@ -476,7 +480,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                   {selected.is_active ? "active" : "suspended"}
                 </span>
               </DetailField>
-              <DetailField label="Online">
+              <DetailField label="В сети">
                 <span
                   className={`inline-flex items-center gap-1.5 ${
                     selected.online ? "" : "text-[var(--muted)]"
@@ -486,7 +490,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                   {selected.online ? "online" : "offline"}
                 </span>
               </DetailField>
-              <DetailField label="Shop">
+              <DetailField label="Автосервис">
                 <Link
                   href={`/admin/shops/${selected.shop_id}`}
                   className="font-medium hover:underline"
@@ -495,7 +499,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                 </Link>
                 <div className="font-mono text-xs text-[var(--muted)]">{selected.shop_slug}</div>
               </DetailField>
-              <DetailField label="Twilio number">
+              <DetailField label="Номер Twilio">
                 {selected.twilio_phone_e164 ? (
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <span className="font-mono text-sm">{selected.twilio_phone_e164}</span>
@@ -506,32 +510,32 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                         void navigator.clipboard.writeText(selected.twilio_phone_e164 || "")
                       }
                     >
-                      Copy
+                      Копировать
                     </button>
                   </div>
                 ) : (
-                  <span className="text-[var(--muted)]">Not provisioned</span>
+                  <span className="text-[var(--muted)]">Не настроено</span>
                 )}
                 {selected.sms_phone_e164 &&
                 selected.voice_phone_e164 &&
                 selected.sms_phone_e164 !== selected.voice_phone_e164 ? (
                   <div className="mt-1 space-y-0.5 font-mono text-xs text-[var(--muted)]">
                     <div>SMS: {selected.sms_phone_e164}</div>
-                    <div>Voice: {selected.voice_phone_e164}</div>
+                    <div>Звонки: {selected.voice_phone_e164}</div>
                   </div>
                 ) : null}
                 <p className="mt-1 text-[11px] text-[var(--muted)]">
-                  Shop-level Twilio channel for {selected.shop_name}
+                  Канал Twilio автосервиса для {selected.shop_name}
                 </p>
               </DetailField>
-              <DetailField label="User ID">
+              <DetailField label="ID пользователя">
                 <span className="font-mono text-xs">{selected.user_id}</span>
               </DetailField>
               {selected.review_decision ? (
-                <DetailField label="Review decision">{selected.review_decision}</DetailField>
+                <DetailField label="Проверить решение">{selected.review_decision}</DetailField>
               ) : null}
               {selected.reviewer_notes ? (
-                <DetailField label="Reviewer notes">{selected.reviewer_notes}</DetailField>
+                <DetailField label="Примечания проверяющего">{selected.reviewer_notes}</DetailField>
               ) : null}
             </dl>
 
@@ -543,7 +547,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                   onClick={() => void onSuspend(selected)}
                   className="rounded-md border border-[var(--line)] px-3 py-1.5 text-xs text-red-700 disabled:opacity-50"
                 >
-                  Suspend
+                  Приостановить
                 </button>
               ) : (
                 <button
@@ -552,7 +556,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                   onClick={() => void onActivate(selected)}
                   className="rounded-md border border-[var(--line)] px-3 py-1.5 text-xs disabled:opacity-50"
                 >
-                  Activate
+                  Активировать
                 </button>
               )}
               <button
@@ -563,7 +567,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                 onClick={() => void onPasswordInitialize(selected)}
                 className="rounded-md border border-[var(--line)] px-3 py-1.5 text-xs disabled:opacity-50"
               >
-                Init password
+                Задать пароль
               </button>
               <button
                 type="button"
@@ -576,7 +580,7 @@ function UsersBody({ accessToken }: { accessToken: string }) {
                 onClick={() => void onPasswordReset(selected)}
                 className="rounded-md border border-[var(--line)] px-3 py-1.5 text-xs disabled:opacity-50"
               >
-                Reset link
+                Ссылка для сброса
               </button>
             </div>
           </div>

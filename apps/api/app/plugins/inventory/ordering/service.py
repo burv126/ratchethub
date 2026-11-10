@@ -41,9 +41,9 @@ class OrderingService:
                     lead_time_days=lead,
                     estimated_cost=est_cost,
                     urgency="high" if lead >= 3 or line.status == StockStatus.OUT else "normal",
-                    reason=f"Insufficient stock for {line.name} ({line.status.value})",
+                    reason=f'Недостаточно на складе: {line.name} ({line.status.value})',
                     confidence=0.86,
-                    rationale="Purchase recommendation — AI decide-only; Workflow may order",
+                    rationale='Рекомендация закупки — решение ИИ; заказ может выполнить процесс',
                 )
             )
         return decisions

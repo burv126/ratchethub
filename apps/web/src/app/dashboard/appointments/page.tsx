@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import {
   FormEvent,
@@ -47,9 +51,7 @@ function searchNeedle(query: string): string {
 }
 
 function hourLabel(h: number) {
-  const ampm = h >= 12 ? "PM" : "AM";
-  const hr = ((h + 11) % 12) + 1;
-  return `${hr}${ampm}`;
+  return `${String(h).padStart(2, "0")}:00`;
 }
 
 /**
@@ -103,7 +105,7 @@ function formatTime(iso: string) {
 function formatDay(iso: string) {
   const date = iso.length >= 10 ? iso.slice(0, 10) : wallClockParts(iso).date;
   // Noon local avoids DST/backdate quirks for YYYY-MM-DD labels.
-  return new Date(`${date}T12:00:00`).toLocaleDateString([], {
+  return new Date(`${date}T12:00:00`).toLocaleDateString("ru-RU", {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -309,13 +311,13 @@ function weekDaysFor(day: string): string[] {
 function weekdayShort(day: string) {
   const d = new Date(`${day.slice(0, 10)}T12:00:00`);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-US", { weekday: "short" });
+  return d.toLocaleDateString("ru-RU", { weekday: "short" });
 }
 
 function monthYearLabel(day: string) {
   const d = new Date(`${day.slice(0, 10)}T12:00:00`);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  return d.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
 }
 
 function personInitials(name: string) {
@@ -476,7 +478,7 @@ function priorityTone(priority: string): {
 function formatMoney(value: string | number | null | undefined) {
   const n = Number(value ?? 0);
   if (!Number.isFinite(n)) return "$0";
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("ru-RU", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
@@ -527,10 +529,10 @@ function IconSpinner({ className = "h-3.5 w-3.5" }: { className?: string }) {
 }
 
 function formatPreferredStartLabel(value: string) {
-  if (!value) return "Pick a start time";
+  if (!value) return "Выберите время начала";
   const d = parseLocalDateTime(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString([], {
+  return d.toLocaleString("ru-RU", {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -540,26 +542,26 @@ function formatPreferredStartLabel(value: string) {
 }
 
 const VEHICLE_OPTIONS = [
-  { id: "suv", label: "SUV" },
-  { id: "crossover", label: "Crossover" },
-  { id: "pickup", label: "Pickup" },
-  { id: "sedan", label: "Sedan" },
-  { id: "truck", label: "Truck" },
-  { id: "minivan", label: "Minivan" },
-  { id: "van", label: "Van" },
-  { id: "cargo_van", label: "Cargo van" },
-  { id: "hatchback", label: "Hatchback" },
-  { id: "coupe", label: "Coupe" },
-  { id: "convertible", label: "Convertible" },
-  { id: "hybrid", label: "Hybrid" },
-  { id: "phev", label: "Plug-in hybrid" },
-  { id: "ev", label: "EV" },
-  { id: "motorcycle", label: "Motorcycle" },
-  { id: "rv", label: "RV" },
-  { id: "trailer", label: "Trailer" },
-  { id: "fleet", label: "Fleet" },
-  { id: "commercial", label: "Commercial" },
-  { id: "other", label: "Other" },
+  { id: "suv", label: "Внедорожник" },
+  { id: "crossover", label: "Кроссовер" },
+  { id: "pickup", label: "Пикап" },
+  { id: "sedan", label: "Седан" },
+  { id: "truck", label: "Грузовик" },
+  { id: "minivan", label: "Минивэн" },
+  { id: "van", label: "Фургон" },
+  { id: "cargo_van", label: "Грузовой фургон" },
+  { id: "hatchback", label: "Хетчбэк" },
+  { id: "coupe", label: "Купе" },
+  { id: "convertible", label: "Кабриолет" },
+  { id: "hybrid", label: "Гибрид" },
+  { id: "phev", label: "Подключаемый гибрид" },
+  { id: "ev", label: "Электромобиль" },
+  { id: "motorcycle", label: "Мотоцикл" },
+  { id: "rv", label: "Автодом" },
+  { id: "trailer", label: "Прицеп" },
+  { id: "fleet", label: "Автопарк" },
+  { id: "commercial", label: "Коммерческий" },
+  { id: "other", label: "Другое" },
 ] as const;
 
 const PRIORITY_OPTIONS = ["low", "normal", "high", "emergency"] as const;
@@ -755,7 +757,7 @@ function AppointmentsContent() {
         (err) => ({
           ok: false as const,
           members: [] as ShopMember[],
-          message: err instanceof Error ? err.message : "Failed to load team",
+          message: err instanceof Error ? err.message : "Не удалось загрузить команду",
         }),
       ),
       searchCustomers().then(
@@ -763,7 +765,7 @@ function AppointmentsContent() {
         (err) => ({
           ok: false as const,
           customers: [] as Customer[],
-          message: err instanceof Error ? err.message : "Failed to load customers",
+          message: err instanceof Error ? err.message : "Не удалось загрузить клиентов",
         }),
       ),
     ]);
@@ -783,10 +785,10 @@ function AppointmentsContent() {
     setServiceId((prev) => prev || (svc[0]?.id ?? ""));
     if (!membersResult.ok && membersResult.message) {
       // Non-fatal: Assign to still falls back to calendar.mechanics.
-      console.warn("Team roster unavailable for Assign to:", membersResult.message);
+      console.warn("Список сотрудников недоступен для назначения:", membersResult.message);
     }
     if (!customersResult.ok && customersResult.message) {
-      console.warn("Customer list unavailable for booking:", customersResult.message);
+      console.warn("Список клиентов недоступен для записи:", customersResult.message);
     }
     return cal;
   }, []);
@@ -824,7 +826,7 @@ function AppointmentsContent() {
           if (hit) selectAppointment(hit);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load schedule");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить расписание");
       } finally {
         setLoading(false);
       }
@@ -935,7 +937,7 @@ function AppointmentsContent() {
           if (requestPick && cal.anchor) setPickedDay(cal.anchor);
         } catch (err) {
           if (token !== navTokenRef.current) return;
-          setError(err instanceof Error ? err.message : "Failed to load schedule");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить расписание");
         }
       })();
     }, 120);
@@ -987,7 +989,7 @@ function AppointmentsContent() {
     // Team roster names win; calendar fills any scheduling-only ids.
     calendar?.mechanics.forEach((x) => m.set(x.id, x.name));
     teamMembers.forEach((member) => {
-      m.set(member.user_id, member.full_name || "Team member");
+      m.set(member.user_id, member.full_name || "Сотрудник");
     });
     return m;
   }, [calendar, teamMembers]);
@@ -996,8 +998,8 @@ function AppointmentsContent() {
     const m = new Map<string, string>();
     calendar?.mechanics.forEach((x) => {
       const role = (x.role || "").toLowerCase();
-      if (role === "owner") m.set(x.id, "Owner");
-      else if (role) m.set(x.id, "Staff");
+      if (role === "owner") m.set(x.id, "Владелец");
+      else if (role) m.set(x.id, "Сотрудник");
     });
     teamMembers.forEach((member) => {
       m.set(member.user_id, SHOP_TEAM_ROLE_LABELS[inferShopTeamRole(member)]);
@@ -1013,7 +1015,7 @@ function AppointmentsContent() {
       if (member.role === "ai_agent") continue;
       byId.set(member.user_id, {
         id: member.user_id,
-        name: member.full_name || "Team member",
+        name: member.full_name || "Сотрудник",
       });
     }
     for (const mech of calendar?.mechanics ?? []) {
@@ -1022,8 +1024,8 @@ function AppointmentsContent() {
       }
     }
     return [...byId.values()].sort((a, b) => {
-      const roleA = mechanicRoleMap.get(a.id) === "Owner" ? 0 : 1;
-      const roleB = mechanicRoleMap.get(b.id) === "Owner" ? 0 : 1;
+      const roleA = mechanicRoleMap.get(a.id) === SHOP_TEAM_ROLE_LABELS.owner ? 0 : 1;
+      const roleB = mechanicRoleMap.get(b.id) === SHOP_TEAM_ROLE_LABELS.owner ? 0 : 1;
       if (roleA !== roleB) return roleA - roleB;
       return a.name.localeCompare(b.name);
     });
@@ -1139,33 +1141,33 @@ function AppointmentsContent() {
   async function onBook(e: FormEvent) {
     e.preventDefault();
     if (!serviceId) {
-      setError("Select a service first");
+      setError("Сначала выберите услугу");
       return;
     }
     if (!preferredStart) {
-      setError("Pick a preferred start time");
+      setError("Выберите желаемое время начала");
       return;
     }
     const start = parseLocalDateTime(preferredStart);
     if (Number.isNaN(start.getTime())) {
-      setError("Invalid preferred start time");
+      setError("Некорректное время начала");
       return;
     }
     const now = new Date();
     now.setSeconds(0, 0);
     if (start.getTime() < now.getTime()) {
-      setError("Preferred start cannot be in the past. Pick a current or future time.");
+      setError("Время начала не может быть в прошлом. Выберите текущее или будущее время.");
       return;
     }
 
     let customerId = selectedCustomerId.trim();
     if (customerMode === "existing") {
       if (!customerId) {
-        setError("Select a customer or switch to New customer");
+        setError("Выберите клиента или переключитесь на нового клиента");
         return;
       }
     } else if (!newCustomerName.trim()) {
-      setError("Enter a customer name");
+      setError("Введите имя клиента");
       return;
     }
 
@@ -1198,9 +1200,9 @@ function AppointmentsContent() {
           ? (result.alternatives as { start?: string }[])
           : [];
         const nextStart = alts[0]?.start;
-        const base = String(result.message || "Requested start time is unavailable");
+        const base = String(result.message || "Запрошенное время начала недоступно");
         const hint = nextStart
-          ? ` Next available: ${formatDay(nextStart)} ${formatTime(nextStart)}.`
+          ? ` Ближайшее доступное: ${formatDay(nextStart)} ${formatTime(nextStart)}.`
           : "";
         throw new Error(`${base}${hint}`);
       }
@@ -1209,7 +1211,7 @@ function AppointmentsContent() {
       resetCustomerFields();
       clearSelection();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Book failed");
+      setError(err instanceof Error ? err.message : "Не удалось записать");
     } finally {
       setBooking(false);
     }
@@ -1218,15 +1220,15 @@ function AppointmentsContent() {
   async function onCancel() {
     if (!selected) return;
     if (!canDragAppointment(selected)) {
-      setError("Completed or closed appointments cannot be changed");
+      setError("Завершённые или закрытые записи нельзя изменять");
       return;
     }
     try {
-      await cancelAppointment(selected.id, "Cancelled from dashboard");
+      await cancelAppointment(selected.id, "Отменено из панели управления");
       setSelected(null);
       await load(dayAnchor || null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Cancel failed");
+      setError(err instanceof Error ? err.message : "Не удалось отменить");
     }
   }
 
@@ -1287,7 +1289,7 @@ function AppointmentsContent() {
   async function onReschedule() {
     if (!selected) return;
     if (!canDragAppointment(selected)) {
-      setError("Completed or closed appointments cannot be changed");
+      setError("Завершённые или закрытые записи нельзя изменять");
       return;
     }
     const currentServiceId =
@@ -1301,23 +1303,23 @@ function AppointmentsContent() {
     const timeChanged = Boolean(rescheduleAt) && rescheduleAt !== originalLocal;
 
     if (!serviceChanged && !timeChanged) {
-      setError("Change the service or pick a new date and time to reschedule");
+      setError("Измените услугу или выберите новую дату и время для переноса");
       return;
     }
     if (serviceChanged && !detailServiceId) {
-      setError("Select a service");
+      setError("Выберите услугу");
       return;
     }
     if (timeChanged) {
       const preferredStartAt = parseLocalDateTime(rescheduleAt);
       if (Number.isNaN(preferredStartAt.getTime())) {
-        setError("Invalid reschedule time");
+        setError("Некорректное время переноса");
         return;
       }
       const now = new Date();
       now.setSeconds(0, 0);
       if (preferredStartAt.getTime() < now.getTime()) {
-        setError("Reschedule time cannot be in the past. Pick a current or future time.");
+        setError("Время переноса не может быть в прошлом. Выберите текущее или будущее время.");
         return;
       }
     }
@@ -1332,7 +1334,7 @@ function AppointmentsContent() {
           detailServiceId,
         );
         if (!serviceResult.success) {
-          throw new Error(String(serviceResult.message || "Failed to change service"));
+          throw new Error(String(serviceResult.message || "Не удалось изменить услугу"));
         }
         const updated = serviceResult.appointment as Appointment | undefined;
         if (updated?.id) appointmentId = updated.id;
@@ -1342,12 +1344,12 @@ function AppointmentsContent() {
           appointmentId,
           localDateTimeToIso(rescheduleAt),
         );
-        if (!result.success) throw new Error(String(result.message || "Reschedule failed"));
+        if (!result.success) throw new Error(String(result.message || "Не удалось перенести"));
       }
       setSelected(null);
       await load(dayAnchor || null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Reschedule failed");
+      setError(err instanceof Error ? err.message : "Не удалось перенести");
     } finally {
       setRescheduling(false);
     }
@@ -1382,7 +1384,7 @@ function AppointmentsContent() {
       <div className="flex shrink-0 flex-wrap items-end gap-3">
         <div className="flex items-center gap-2">
           <IconCalendar className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-          <h1 className="page-title">Schedule</h1>
+          <h1 className="page-title">Расписание</h1>
         </div>
       </div>
 
@@ -1391,7 +1393,7 @@ function AppointmentsContent() {
           className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -1499,7 +1501,7 @@ function AppointmentsContent() {
         <button
           type="button"
           onClick={openCreate}
-          aria-label="Add appointment"
+          aria-label="Добавить запись"
           className="btn-primary fixed bottom-[5.75rem] right-8 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full p-0 shadow-[0_14px_32px_-12px_rgba(240,90,36,0.9)] md:bottom-9 md:right-10"
         >
           <IconCalendarPlus className="h-5 w-5" />
@@ -1565,9 +1567,9 @@ function DaySchedule({
   const columns =
     mechanics.length > 0
       ? hasOrphans
-        ? [...mechanics, { id: "__unassigned__", name: "Unassigned" }]
+        ? [...mechanics, { id: "__unassigned__", name: "Не назначено" }]
         : mechanics
-      : [{ id: "__unassigned__", name: "Unassigned" }];
+      : [{ id: "__unassigned__", name: "Не назначено" }];
 
   const [nowParts, setNowParts] = useState(() =>
     wallClockParts(new Date().toISOString()),
@@ -1691,11 +1693,11 @@ function DaySchedule({
   ) {
     const anchor = dayAnchorRef.current;
     if (!appt || mechanicId === "__unassigned__") {
-      return { allowed: false, reason: "Pick a teammate column" as string | null };
+      return { allowed: false, reason: "Выберите столбец сотрудника" as string | null };
     }
     const { minute } = wallClockParts(appt.start);
     if (isMoveTargetInPast(anchor, hour, minute, shopTodayRef.current)) {
-      return { allowed: false, reason: "Past time" as string | null };
+      return { allowed: false, reason: "Время в прошлом" as string | null };
     }
     const orig = wallClockParts(appt.start);
     const sameSlot =
@@ -1715,7 +1717,7 @@ function DaySchedule({
     });
     return {
       allowed: free,
-      reason: free ? null : ("Overlaps another appointment" as string | null),
+      reason: free ? null : ("Пересекается с другой записью" as string | null),
     };
   }
 
@@ -2206,7 +2208,7 @@ function DaySchedule({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="truncate font-display text-base font-semibold tracking-tight text-[var(--ink)] sm:text-lg">
-                {dayAnchor ? monthYearLabel(dayAnchor) : "Schedule"}
+                {dayAnchor ? monthYearLabel(dayAnchor) : "Расписание"}
               </p>
             </div>
             <button
@@ -2218,7 +2220,7 @@ function DaySchedule({
                   : "text-[var(--foreground)] hover:bg-[var(--background)]"
               }`}
             >
-              Today
+              Сегодня
             </button>
           </div>
 
@@ -2227,7 +2229,7 @@ function DaySchedule({
               type="button"
               onClick={() => onPrevWeek()}
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--foreground)] transition hover:bg-[var(--background)]"
-              aria-label="Previous week"
+              aria-label="Предыдущая неделя"
             >
               <IconChevron dir="left" className="h-4 w-4" />
             </button>
@@ -2235,7 +2237,7 @@ function DaySchedule({
             <div
               className="asa-schedule-date-strip grid min-w-0 flex-1 touch-pan-y grid-cols-7 gap-0.5 sm:gap-1"
               role="listbox"
-              aria-label="Select a day. Drag horizontally to change week."
+              aria-label="Выберите день. Перетащите по горизонтали для смены недели."
               onPointerDown={onDateStripPointerDown}
             >
               {weekDays.map((day) => {
@@ -2297,7 +2299,7 @@ function DaySchedule({
               type="button"
               onClick={() => onNextWeek()}
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--foreground)] transition hover:bg-[var(--background)]"
-              aria-label="Next week"
+              aria-label="Следующая неделя"
             >
               <IconChevron dir="right" className="h-4 w-4" />
             </button>
@@ -2309,7 +2311,7 @@ function DaySchedule({
         <div
           className="flex min-h-0 flex-1 items-center justify-center bg-[#f8f9fa] p-6 touch-pan-y overscroll-contain select-none"
           onPointerDown={onBoardDaySwipePointerDown}
-          aria-label="Closed day. Drag horizontally to change day."
+          aria-label="Выходной день. Перетащите по горизонтали для смены дня."
         >
           <div
             className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white px-6 py-8 text-center shadow-[var(--shadow-soft)]"
@@ -2319,10 +2321,10 @@ function DaySchedule({
               <IconCalendar className="h-5 w-5" />
             </span>
             <p className="mt-4 font-display text-lg font-semibold tracking-tight">
-              Closed
+              Закрыто
             </p>
             <p className="mt-1.5 text-sm text-[var(--muted)]">
-              {dayAnchor ? formatDay(dayAnchor) : "This day"} is not a business day.
+              {dayAnchor ? formatDay(dayAnchor) : "Этот день"} — нерабочий день.
             </p>
           </div>
         </div>
@@ -2331,7 +2333,7 @@ function DaySchedule({
           ref={scrollRef}
           className="asa-scroll min-h-0 flex-1 overflow-auto overscroll-contain bg-white touch-pan-y select-none [-webkit-overflow-scrolling:touch]"
           onPointerDown={onBoardDaySwipePointerDown}
-          aria-label="Schedule grid. Drag horizontally to change day."
+          aria-label="Сетка расписания. Перетащите по горизонтали для смены дня."
         >
           <div style={boardMinWidth != null ? { minWidth: `${boardMinWidth}px` } : undefined}>
             {/* Sticky resource headers */}
@@ -2344,7 +2346,7 @@ function DaySchedule({
               <div className="sticky left-0 z-40 border-r border-[var(--line)] bg-white">
                 <div className="flex h-full min-h-[3.75rem] items-center justify-center px-0.5 md:px-1">
                   <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9aa0a6]">
-                    Team
+                    Команда
                   </span>
                 </div>
               </div>
@@ -2358,7 +2360,7 @@ function DaySchedule({
                     ? !a.mechanic_id || !knownIds.has(a.mechanic_id)
                     : a.mechanic_id === m.id,
                 ).length;
-                const roleLabel = role ?? (unassigned ? "Open bay" : "Staff");
+                const roleLabel = role ?? (unassigned ? "Свободный пост" : "Сотрудник");
                 return (
                   <button
                     key={m.id}
@@ -2377,10 +2379,10 @@ function DaySchedule({
                     }`}
                     title={
                       unassigned
-                        ? "Jobs without an assignee"
+                        ? "Работы без исполнителя"
                         : active
-                          ? "Using Auto assign"
-                          : `Assign next booking to ${m.name}`
+                          ? "Автоматическое назначение"
+                          : `Следующую запись назначить: ${m.name}`
                     }
                   >
                     <span
@@ -2445,7 +2447,7 @@ function DaySchedule({
                                 : "bg-[#f1f3f4] text-[var(--muted)]"
                             }`}
                           >
-                            {active ? "Assigning" : roleLabel}
+                            {active ? "Назначение" : roleLabel}
                           </span>
                         </span>
                       </span>
@@ -2587,7 +2589,7 @@ function DaySchedule({
                         className="pointer-events-none absolute inset-x-0 z-20"
                         style={{ top: `${nowTopPx}px` }}
                         role={colIndex === 0 ? "separator" : undefined}
-                        aria-label={colIndex === 0 ? "Current time" : undefined}
+                        aria-label={colIndex === 0 ? "Текущее время" : undefined}
                       >
                         <div className="asa-schedule-now-line h-0.5 w-full" />
                       </div>
@@ -2628,7 +2630,7 @@ function DaySchedule({
                                 if (!isMoving) onSelect(a);
                               }
                             }}
-                            title={canDrag ? "Drag to move" : undefined}
+                            title={canDrag ? "Перетащите для перемещения" : undefined}
                             className={`asa-schedule-event absolute z-[3] touch-none overflow-hidden px-1 py-0.5 text-left text-[10px] leading-tight select-none md:px-1.5 md:py-1 md:text-[11px] ${
                               selected ? tone.cardSelected : tone.card
                             } ${canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} ${
@@ -2659,7 +2661,7 @@ function DaySchedule({
                                     }`}
                                   >
                                     {isMoving
-                                      ? "Moving…"
+                                      ? "Перенос…"
                                       : `${formatTime(a.start)}–${formatTime(a.end)}`}
                                   </span>
                                 ) : null}
@@ -2777,11 +2779,11 @@ function BookForm({
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
   const summaryCustomer =
     customerMode === "existing"
-      ? selectedCustomer?.name || "Select customer"
-      : newCustomerName.trim() || "New customer";
+      ? selectedCustomer?.name || "Выберите клиента"
+      : newCustomerName.trim() || "Новый клиент";
   const summaryAssignee = mechanicId
-    ? assigneeOptions.find((m) => m.id === mechanicId)?.name || "Teammate"
-    : "Auto-assign";
+    ? assigneeOptions.find((m) => m.id === mechanicId)?.name || "Сотрудник"
+    : "Автоматически";
   const canSubmit = Boolean(serviceId && preferredStart && customerReady && !booking);
   const fieldClass =
     "mt-1.5 w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-sm text-[var(--foreground)] outline-none transition-[box-shadow,border-color] focus:border-[var(--accent)]/40 focus:ring-2 focus:ring-[var(--accent)]/20 disabled:opacity-60";
@@ -2859,7 +2861,7 @@ function BookForm({
             id="create-appointment-title"
             className="text-base font-semibold tracking-tight text-[var(--ink)]"
           >
-            Booking
+            Запись
           </p>
         </div>
       </div>
@@ -2870,16 +2872,16 @@ function BookForm({
             className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
             role="alert"
           >
-            {error}
+            {ruError(error)}
           </p>
         )}
 
         <section className="space-y-3">
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Customer
+              Клиент
             </h3>
-            <span className="text-[11px] text-[var(--muted)]">1 of 3</span>
+            <span className="text-[11px] text-[var(--muted)]">1 из 3</span>
           </div>
 
           <div className="grid grid-cols-2 gap-1 rounded-2xl bg-[var(--background)] p-1 ring-1 ring-[var(--line)]">
@@ -2893,7 +2895,7 @@ function BookForm({
                   : "text-[var(--muted)] hover:text-[var(--foreground)]"
               }`}
             >
-              Existing
+              Существующий
             </button>
             <button
               type="button"
@@ -2905,14 +2907,14 @@ function BookForm({
                   : "text-[var(--muted)] hover:text-[var(--foreground)]"
               }`}
             >
-              New customer
+              Новый клиент
             </button>
           </div>
 
           {customerMode === "existing" ? (
             <div className="space-y-2.5">
               <label className="block text-xs font-medium text-[var(--muted)]">
-                Search customer
+                Найти клиента
                 <div ref={comboRef} className="relative mt-1.5">
                   <div className="flex overflow-hidden rounded-xl border border-[var(--line)] bg-white focus-within:border-[var(--accent)]/40 focus-within:ring-2 focus-within:ring-[var(--accent)]/20">
                     <input
@@ -2929,7 +2931,7 @@ function BookForm({
                         setCustomerQuery(e.target.value);
                       }}
                       onFocus={() => openList(true)}
-                      placeholder="Name, phone, or email"
+                      placeholder="Имя, телефон или почта"
                       disabled={booking}
                       autoComplete="off"
                       className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2.5 text-sm text-[var(--foreground)] outline-none"
@@ -2937,7 +2939,7 @@ function BookForm({
                     <button
                       type="button"
                       disabled={booking}
-                      aria-label={listOpen ? "Hide customer list" : "Show customer list"}
+                      aria-label={listOpen ? "Скрыть список клиентов" : "Показать список клиентов"}
                       aria-expanded={listOpen}
                       aria-controls="customer-search-listbox"
                       onMouseDown={(e) => {
@@ -2971,14 +2973,14 @@ function BookForm({
                       ref={listRef}
                       id="customer-search-listbox"
                       role="listbox"
-                      aria-label="Customer list"
+                      aria-label="Список клиентов"
                       className="asa-scroll absolute left-0 right-0 z-20 mt-1.5 max-h-44 overflow-y-auto overscroll-contain rounded-xl border border-[var(--line)] bg-white shadow-[0_18px_40px_-24px_rgba(0,0,0,0.45)]"
                     >
                       {listItems.length === 0 ? (
                         <li className="px-3 py-3 text-xs text-[var(--muted)]">
                           {filtering && customerQuery.trim()
-                            ? "No matching customers. Switch to New customer or clear search."
-                            : "No customers yet. Switch to New customer."}
+                            ? "Клиенты не найдены. Добавьте нового клиента или очистите поиск."
+                            : "Клиентов пока нет. Добавьте нового клиента."}
                         </li>
                       ) : (
                         listItems.map((c) => {
@@ -3010,7 +3012,7 @@ function BookForm({
                                     active ? "text-[var(--accent)]/80" : "text-[var(--muted)]"
                                   }`}
                                 >
-                                  {c.phone || c.email || "No contact info"}
+                                  {c.phone || c.email || "Нет контактных данных"}
                                 </span>
                               </button>
                             </li>
@@ -3025,11 +3027,11 @@ function BookForm({
               {selectedCustomer && (
                 <div className="rounded-2xl bg-[var(--background)] px-3.5 py-3 ring-1 ring-[var(--line)]">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                    Selected
+                    Выбрано
                   </p>
                   <p className="mt-1 font-medium">{selectedCustomer.name}</p>
                   <p className="mt-0.5 text-xs text-[var(--muted)]">
-                    {selectedCustomer.phone || selectedCustomer.email || "No contact info"}
+                    {selectedCustomer.phone || selectedCustomer.email || "Нет контактных данных"}
                   </p>
                 </div>
               )}
@@ -3038,7 +3040,7 @@ function BookForm({
             <div className="space-y-2.5">
               <div className="grid grid-cols-2 gap-2.5">
                 <label className="block min-w-0 text-xs font-medium text-[var(--muted)]">
-                  Name
+                  Имя
                   <input
                     type="text"
                     value={newCustomerName}
@@ -3050,7 +3052,7 @@ function BookForm({
                   />
                 </label>
                 <label className="block min-w-0 text-xs font-medium text-[var(--muted)]">
-                  Phone
+                  Телефон
                   <input
                     type="tel"
                     value={newCustomerPhone}
@@ -3063,7 +3065,7 @@ function BookForm({
                 </label>
               </div>
               <label className="block text-xs font-medium text-[var(--muted)]">
-                Email <span className="font-normal">(optional)</span>
+                Эл. почта <span className="font-normal">(необязательно)</span>
                 <input
                   type="email"
                   value={newCustomerEmail}
@@ -3080,13 +3082,13 @@ function BookForm({
         <section className="space-y-3">
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Service &amp; timing
+              Услуга и время
             </h3>
-            <span className="text-[11px] text-[var(--muted)]">2 of 3</span>
+            <span className="text-[11px] text-[var(--muted)]">2 из 3</span>
           </div>
 
           <label className="block text-xs font-medium text-[var(--muted)]">
-            Service
+            Услуга
             <select
               className={fieldClass}
               value={serviceId}
@@ -3095,11 +3097,11 @@ function BookForm({
               disabled={booking}
             >
               {services.length === 0 ? (
-                <option value="">No active services — add in Service Catalog</option>
+                <option value="">Нет активных услуг — добавьте их в каталог</option>
               ) : (
                 services.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name} ({s.duration_minutes} min)
+                    {s.name} ({s.duration_minutes} мин)
                   </option>
                 ))
               )}
@@ -3108,14 +3110,14 @@ function BookForm({
 
           <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
             <label className="block min-w-0 text-xs font-medium text-[var(--muted)]">
-              Assign to
+              Назначить
               <select
                 className={fieldClass}
                 value={mechanicId}
                 onChange={(e) => setMechanicId(e.target.value)}
                 disabled={booking}
               >
-                <option value="">Auto — next free teammate</option>
+                <option value="">Автоматически — свободному сотруднику</option>
                 {assigneeOptions.map((m) => {
                   const role = mechanicRoleMap.get(m.id);
                   return (
@@ -3128,7 +3130,7 @@ function BookForm({
               </select>
             </label>
             <label className="block min-w-0 text-xs font-medium text-[var(--muted)]">
-              Preferred start
+              Желаемое время начала
               <input
                 type="datetime-local"
                 value={preferredStart}
@@ -3144,13 +3146,13 @@ function BookForm({
         <section className="space-y-3">
           <div className="flex items-baseline justify-between gap-2">
             <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Details
+              Сведения
             </h3>
-            <span className="text-[11px] text-[var(--muted)]">3 of 3</span>
+            <span className="text-[11px] text-[var(--muted)]">3 из 3</span>
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-[var(--muted)]">Vehicle</p>
+            <p className="text-xs font-medium text-[var(--muted)]">Автомобиль</p>
             <div className="flex flex-wrap gap-1.5">
               {VEHICLE_OPTIONS.map((v) => {
                 const active = vehicleType === v.id;
@@ -3174,7 +3176,7 @@ function BookForm({
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium text-[var(--muted)]">Priority</p>
+            <p className="text-xs font-medium text-[var(--muted)]">Приоритет</p>
             <div className="flex flex-wrap gap-1.5">
               {PRIORITY_OPTIONS.map((p) => {
                 const active = priority === p;
@@ -3191,7 +3193,7 @@ function BookForm({
                         : "bg-[var(--background)] text-[var(--muted)] ring-1 ring-[var(--line)] hover:text-[var(--foreground)]"
                     }`}
                   >
-                    {p}
+                    {ruLabel(p)}
                   </button>
                 );
               })}
@@ -3209,8 +3211,8 @@ function BookForm({
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium leading-tight">{summaryCustomer}</p>
               <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
-                {selectedService?.name || "Choose a service"}
-                {selectedService ? ` · ${selectedService.duration_minutes} min` : ""}
+                {selectedService?.name || "Выберите услугу"}
+                {selectedService ? ` · ${selectedService.duration_minutes} мин` : ""}
                 {" · "}
                 {summaryAssignee}
               </p>
@@ -3236,7 +3238,7 @@ function BookForm({
             <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--background)] text-[var(--muted)] ring-1 ring-[var(--line)]">
               <IconCancel className="h-3 w-3" />
             </span>
-            <span>Cancel</span>
+            <span>Отмена</span>
           </button>
           <button
             type="submit"
@@ -3248,14 +3250,14 @@ function BookForm({
                 <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
                   <IconSpinner className="h-3 w-3" />
                 </span>
-                <span>Booking…</span>
+                <span>Запись…</span>
               </>
             ) : (
               <>
                 <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20">
                   <IconCalendarCheck className="h-3.5 w-3.5" />
                 </span>
-                <span>Book</span>
+                <span>Записать</span>
               </>
             )}
           </button>
@@ -3297,7 +3299,7 @@ function AppointmentDetail({
   error: string | null;
 }) {
   const assigneeRole = selected.mechanic_id
-    ? (mechanicRoleMap.get(selected.mechanic_id) ?? "Staff")
+    ? (mechanicRoleMap.get(selected.mechanic_id) ?? "Сотрудник")
     : null;
   const assigneeName = selected.mechanic_id
     ? (mechanicMap.get(selected.mechanic_id) ?? selected.mechanic_id)
@@ -3317,7 +3319,7 @@ function AppointmentDetail({
   const customerLabel = customerName
     ? customerName
     : selected.customer_id
-      ? "Linked customer"
+      ? "Привязанный клиент"
       : "—";
 
   return (
@@ -3345,7 +3347,7 @@ function AppointmentDetail({
               </span>
               <div className="min-w-0 pt-0.5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
-                  Appointment
+                  Запись
                 </p>
                 <h2
                   id="appointment-detail-title"
@@ -3362,7 +3364,7 @@ function AppointmentDetail({
               type="button"
               onClick={onClose}
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-white/80 text-[var(--muted)] backdrop-blur-sm transition-colors hover:bg-white hover:text-[var(--foreground)]"
-              aria-label="Close appointment detail"
+              aria-label="Закрыть сведения о записи"
             >
               <IconCancel className="h-3.5 w-3.5" />
             </button>
@@ -3371,16 +3373,16 @@ function AppointmentDetail({
             <span
               className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ring-1 ${priorityTone(selected.priority).chip}`}
             >
-              {selected.priority}
+              {ruLabel(selected.priority)}
             </span>
             <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-[var(--muted)] ring-1 ring-[var(--line)] backdrop-blur-sm">
-              {selected.estimated_duration_min} min
+              {selected.estimated_duration_min} мин
             </span>
             <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-[var(--muted)] ring-1 ring-[var(--line)] backdrop-blur-sm">
               {formatMoney(selected.estimated_revenue)}
             </span>
             <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold capitalize text-[var(--muted)] ring-1 ring-[var(--line)] backdrop-blur-sm">
-              {selected.status.replace(/_/g, " ")}
+              {ruLabel(selected.status)}
             </span>
           </div>
         </div>
@@ -3388,20 +3390,20 @@ function AppointmentDetail({
         <div className="asa-scroll min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-4 text-sm">
           {error && (
             <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-              {error}
+              {ruError(error)}
             </p>
           )}
 
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl bg-[var(--background)] px-3 py-2.5 ring-1 ring-[var(--line)]">
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                Customer
+                Клиент
               </p>
               <p className="mt-1 break-words font-medium">{customerLabel}</p>
             </div>
             <div className="rounded-xl bg-[var(--background)] px-3 py-2.5 ring-1 ring-[var(--line)]">
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                Assigned to
+                Исполнитель
               </p>
               <div className="mt-1.5 flex min-w-0 items-center gap-2">
                 {selected.mechanic_id ? (
@@ -3432,7 +3434,7 @@ function AppointmentDetail({
           </div>
 
           <label className="block text-xs text-[var(--muted)]">
-            Service
+            Услуга
             <select
               className="mt-1 w-full rounded-lg border border-[var(--line)] px-2.5 py-2.5 text-sm text-[var(--foreground)]"
               value={detailServiceId}
@@ -3440,7 +3442,7 @@ function AppointmentDetail({
               disabled={rescheduling || !canEdit}
             >
               {services.length === 0 ? (
-                <option value="">No active services — add in Service Catalog</option>
+                <option value="">Нет активных услуг — добавьте их в каталог</option>
               ) : (
                 <>
                   {!services.some((s) => s.id === detailServiceId) && detailServiceId ? (
@@ -3448,12 +3450,12 @@ function AppointmentDetail({
                       {typeof selected.metadata?.service_name === "string"
                         ? selected.metadata.service_name
                         : selected.repair_type}{" "}
-                      (current)
+                      (текущий)
                     </option>
                   ) : null}
                   {services.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} ({s.duration_minutes} min)
+                      {s.name} ({s.duration_minutes} мин)
                     </option>
                   ))}
                 </>
@@ -3462,12 +3464,12 @@ function AppointmentDetail({
           </label>
           {serviceChanged ? (
             <p className="text-[11px] text-[var(--muted)]">
-              Duration and revenue update when you reschedule.
+              При переносе длительность и выручка обновляются.
             </p>
           ) : null}
 
           <label className="block text-xs text-[var(--muted)]">
-            New time
+            Новое время
             <input
               type="datetime-local"
               value={rescheduleAt}
@@ -3487,7 +3489,7 @@ function AppointmentDetail({
                   className="btn-ghost inline-flex min-h-9 items-center gap-1.5 px-4 py-2 text-xs disabled:opacity-60"
                 >
                   <IconTrash />
-                  Remove
+                  Удалить
                 </button>
                 <button
                   type="button"
@@ -3496,14 +3498,14 @@ function AppointmentDetail({
                   className="btn-primary inline-flex min-h-9 items-center gap-1.5 px-4 py-2 text-xs disabled:opacity-60"
                 >
                   {!rescheduling ? <IconReschedule /> : null}
-                  {rescheduling ? "Rescheduling…" : "Reschedule"}
+                  {rescheduling ? "Перенос…" : "Перенести"}
                 </button>
               </>
             ) : (
               <p className="w-full text-xs text-[var(--muted)]">
                 {isCompleted
-                  ? "Completed automatically after the scheduled end time."
-                  : `This appointment is ${selected.status.replace(/_/g, " ")}.`}
+                  ? "Завершено автоматически после запланированного времени окончания."
+                  : `Статус записи: ${ruLabel(selected.status)}.`}
               </p>
             )}
           </div>

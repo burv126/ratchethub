@@ -91,9 +91,9 @@ async def send_otp(body: SendOtpRequest, request: Request) -> SendOtpResponse:
         email=result.email,
         dev_code=result.dev_code,
         message=(
-            "Verification code sent by SMS"
+            'Код подтверждения отправлен по SMS'
             if result.channel == "phone"
-            else "Verification code sent by email"
+            else 'Код подтверждения отправлен по почте'
         ),
     )
 
@@ -227,7 +227,7 @@ async def me(
     if current.shop_id is None or current.role is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Shop profile unavailable for platform admin",
+            detail='Профиль автосервиса недоступен администратору платформы',
         )
     service = AuthService(uow)
     try:

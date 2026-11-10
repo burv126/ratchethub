@@ -15,7 +15,7 @@ class MitchellAdapter(BaseAdapter):
     provider = IntegrationProvider.MITCHELL
     category = IntegrationCategory.DMS
     display_name = "Mitchell"
-    description = "Mitchell shop management — estimates, repair orders, and customers."
+    description = 'Управление автосервисом Mitchell — сметы, заказ-наряды и клиенты.'
     auth_method = AuthMethod.API_KEY
     docs_url = "https://www.mitchell.com"
     credential_fields = ["api_key"]

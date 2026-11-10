@@ -17,7 +17,7 @@ function SsoCallbackInner() {
   const [status, setStatus] = useState<"idle" | "working" | "ok" | "error">(
     idpError ? "error" : "idle",
   );
-  const [message, setMessage] = useState(idpError ? `IdP error: ${idpError}` : "");
+  const [message, setMessage] = useState(idpError ? `Ошибка провайдера идентификации: ${idpError}` : "");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ function SsoCallbackInner() {
       }
     } catch (err) {
       setStatus("error");
-      setMessage(err instanceof Error ? err.message : "SSO completion failed");
+      setMessage(err instanceof Error ? err.message : "Не удалось завершить SSO");
     }
   }
 
@@ -62,37 +62,37 @@ function SsoCallbackInner() {
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-6 px-6 py-16">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
-          Enterprise SSO
+          Корпоративный SSO
         </p>
-        <h1 className="font-display mt-2 text-2xl font-semibold tracking-tight">Sign-in callback</h1>
+        <h1 className="font-display mt-2 text-2xl font-semibold tracking-tight">Завершение входа</h1>
       </div>
 
       {status === "working" && (
-        <p className="text-sm text-[var(--muted)]">Completing sign-in…</p>
+        <p className="text-sm text-[var(--muted)]">Выполняется вход…</p>
       )}
 
       {status === "error" && (
         <p className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
-          {message || "Something went wrong."}
+          {message || "Что-то пошло не так."}
         </p>
       )}
 
       {status === "ok" && result && (
         <div className="space-y-3 rounded-md border border-[var(--line)] p-4 text-sm">
-          <p className="font-medium text-emerald-700 dark:text-emerald-400">SSO session established</p>
+          <p className="font-medium text-emerald-700 dark:text-emerald-400">Сессия SSO установлена</p>
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[var(--muted)]">
-            <dt>Email</dt>
+            <dt>Эл. почта</dt>
             <dd className="text-[var(--fg)]">{String(result.email ?? "")}</dd>
-            <dt>Role</dt>
+            <dt>Роль</dt>
             <dd className="text-[var(--fg)]">{String(result.role ?? "")}</dd>
-            <dt>Org</dt>
+            <dt>Организация</dt>
             <dd className="font-mono text-xs text-[var(--fg)]">{String(result.organization_id ?? "")}</dd>
           </dl>
           <Link
             href="/dashboard/enterprise"
             className="inline-block rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white"
           >
-            Open Enterprise dashboard
+            Открыть панель организации
           </Link>
         </div>
       )}
@@ -100,7 +100,7 @@ function SsoCallbackInner() {
       {(status === "idle" || (status === "error" && demo)) && !code && state && (
         <form onSubmit={onDemoSubmit} className="surface-panel space-y-3 p-4">
           <p className="text-sm text-[var(--muted)]">
-            Demo SSO: confirm the email to finish membership login.
+            Демо SSO: подтвердите почту для входа участника.
           </p>
           <input
             type="email"
@@ -111,19 +111,19 @@ function SsoCallbackInner() {
             placeholder="you@company.com"
           />
           <button type="submit" className="btn-primary">
-            Complete demo SSO
+            Завершить демовход SSO
           </button>
         </form>
       )}
 
       {!state && status !== "error" && (
         <p className="text-sm text-[var(--muted)]">
-          Missing <code className="text-xs">state</code> query parameter. Start SSO from Enterprise → SSO.
+          Отсутствует <code className="text-xs">state</code> параметр запроса. Запустите SSO в разделе Организация → SSO.
         </p>
       )}
 
       <Link href="/?login=1" className="text-sm text-[var(--muted)] underline-offset-2 hover:underline">
-        Back to login
+        К странице входа
       </Link>
     </main>
   );
@@ -131,7 +131,7 @@ function SsoCallbackInner() {
 
 export default function SsoCallbackPage() {
   return (
-    <Suspense fallback={<main className="p-8 text-sm text-[var(--muted)]">Loading…</main>}>
+    <Suspense fallback={<main className="p-8 text-sm text-[var(--muted)]">Загрузка…</main>}>
       <SsoCallbackInner />
     </Suspense>
   );

@@ -105,7 +105,7 @@ class AnalyticsService:
     ) -> ExportArtifact:
         report = self._store.get_report(shop_id, report_id)
         if report is None:
-            raise KeyError(f"Report not found: {report_id}")
+            raise KeyError(f'Отчёт не найден: {report_id}')
         artifact = self.exports.export_report(report, fmt=fmt)
         return self._store.save_export(artifact)
 

@@ -41,6 +41,6 @@ class StaffFeedbackService:
         return {
             "feedback": fb.to_dict(),
             "auto_applied": False,
-            "note": "Staff feedback recorded; Workflow review required for any rule change",
+            "note": 'Отзыв сотрудника сохранён; любые изменения правил требуют проверки процесса',
             "ai_actions_allowed": False,
         }

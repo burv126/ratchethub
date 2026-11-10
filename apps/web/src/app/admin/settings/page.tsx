@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { AdminShell, LiveBadge, Panel } from "@/components/admin/AdminShell";
@@ -67,7 +69,7 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
       } catch (err) {
         if (!quiet) {
           setLive(false);
-          setError(err instanceof Error ? err.message : "Failed to load settings");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить настройки");
           setData(null);
         }
       } finally {
@@ -120,9 +122,9 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
       });
       applySettings(next);
       formDirtyRef.current = false;
-      setSuccess("Settings saved.");
+      setSuccess("Настройки сохранены.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save settings");
+      setError(err instanceof Error ? err.message : "Не удалось сохранить настройки");
     } finally {
       setSaving(false);
     }
@@ -133,11 +135,11 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
     setError(null);
     setPasswordSuccess(null);
     if (newPassword !== confirmPassword) {
-      setError("New password and confirmation do not match.");
+      setError("Новый пароль и подтверждение не совпадают.");
       return;
     }
     if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters.");
+      setError("Новый пароль должен содержать не менее 8 символов.");
       return;
     }
     setSavingPassword(true);
@@ -149,31 +151,31 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordSuccess("Password updated.");
+      setPasswordSuccess("Пароль обновлён.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to change password");
+      setError(err instanceof Error ? err.message : "Не удалось изменить пароль");
     } finally {
       setSavingPassword(false);
     }
   }
 
   if (error && !data) {
-    return <p className="text-sm text-red-700">{error}</p>;
+    return <p className="text-sm text-red-700">{ruError(error)}</p>;
   }
   if (!data) {
-    return <p className="text-sm text-[var(--muted)]">{busy ? "Loading…" : "No data"}</p>;
+    return <p className="text-sm text-[var(--muted)]">{busy ? "Загрузка…" : "Нет данных"}</p>;
   }
 
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h1 className="page-title">Setting</h1>
+        <h1 className="page-title">Настройки</h1>
         <LiveBadge live={live} />
       </div>
 
       {error ? (
         <p className="rounded-xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-sm text-red-700">
-          {error}
+          {ruError(error)}
         </p>
       ) : null}
       {success ? (
@@ -182,21 +184,21 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
         </p>
       ) : null}
 
-      <Panel title="Change password">
+      <Panel title="Изменить пароль">
         <form onSubmit={onChangePassword} className="space-y-4 px-5 py-4">
           <p className="text-xs text-[var(--muted)]">
-            Enter your current password, then choose a new one (at least 8 characters).
+            Введите текущий пароль, затем новый (не менее 8 символов).
           </p>
           <div className="max-w-md space-y-3">
             <PasswordField
-              label="Current password"
+              label="Текущий пароль"
               value={currentPassword}
               onChange={setCurrentPassword}
               required
               autoComplete="current-password"
             />
             <PasswordField
-              label="New password"
+              label="Новый пароль"
               value={newPassword}
               onChange={setNewPassword}
               required
@@ -204,7 +206,7 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
               autoComplete="new-password"
             />
             <PasswordField
-              label="Confirm new password"
+              label="Подтвердите новый пароль"
               value={confirmPassword}
               onChange={setConfirmPassword}
               required
@@ -222,18 +224,18 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
             disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}
             className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
-            {savingPassword ? "Updating…" : "Update password"}
+            {savingPassword ? "Обновление…" : "Обновить пароль"}
           </button>
         </form>
       </Panel>
 
       <form onSubmit={onSave} className="space-y-6">
-        <Panel title="Operational">
+        <Panel title="Работа системы">
           <div className="space-y-4 px-5 py-4">
             <label className="block text-sm">
-              <span className="font-medium">Dashboard poll seconds</span>
+              <span className="font-medium">Интервал обновления панели (сек.)</span>
               <span className="mt-0.5 block text-xs text-[var(--muted)]">
-                SSE poll interval (3–60). Applies to all live admin streams.
+                Интервал опроса SSE (3–60). Применяется ко всем потокам администратора.
               </span>
               <input
                 type="number"
@@ -252,9 +254,9 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
             </label>
 
             <label className="block text-sm">
-              <span className="font-medium">Notification retention (days)</span>
+              <span className="font-medium">Хранение уведомлений (дни)</span>
               <span className="mt-0.5 block text-xs text-[var(--muted)]">
-                How long durable admin notifications are kept (1–365).
+                Срок хранения уведомлений администратора (1–365).
               </span>
               <input
                 type="number"
@@ -283,9 +285,9 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
                 className="mt-1"
               />
               <span>
-                <span className="font-medium">Toast notifications</span>
+                <span className="font-medium">Всплывающие уведомления</span>
                 <span className="mt-0.5 block text-xs text-[var(--muted)]">
-                  Show live toast popups for new admin events.
+                  Показывать всплывающие уведомления о новых событиях.
                 </span>
               </span>
             </label>
@@ -301,9 +303,9 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
                 className="mt-1"
               />
               <span>
-                <span className="font-medium">Maintenance mode</span>
+                <span className="font-medium">Режим обслуживания</span>
                 <span className="mt-0.5 block text-xs text-[var(--muted)]">
-                  Show a maintenance banner across the admin console.
+                  Показывать баннер обслуживания в консоли администратора.
                 </span>
               </span>
             </label>
@@ -322,10 +324,9 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
                 className="mt-1"
               />
               <span>
-                <span className="font-medium">Auto-create Twilio number on account creation</span>
+                <span className="font-medium">Создавать номер Twilio при регистрации</span>
                 <span className="mt-0.5 block text-xs text-[var(--muted)]">
-                  When enabled, new shop signups get an SMS/Voice number automatically.
-                  Admin can still assign numbers manually on the Twilio Numbers page.
+                  При включении новые автосервисы автоматически получают номер для SMS и звонков. Администратор также может назначать номера вручную на странице номеров Twilio.
                 </span>
               </span>
             </label>
@@ -336,11 +337,11 @@ function SettingsBody({ accessToken }: { accessToken: string }) {
                 disabled={saving}
                 className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
               >
-                {saving ? "Saving…" : "Save settings"}
+                {saving ? "Сохранение…" : "Сохранить настройки"}
               </button>
               {data.updated_at ? (
                 <p className="mt-2 text-xs text-[var(--muted)]">
-                  Last updated {new Date(data.updated_at).toLocaleString()}
+                  Последнее обновление {new Date(data.updated_at).toLocaleString("ru-RU")}
                 </p>
               ) : null}
             </div>

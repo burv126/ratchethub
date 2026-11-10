@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useEffect, useState } from "react";
 import { getApiUrl, loadSession } from "@/lib/api";
@@ -37,7 +41,7 @@ function formatDate(iso: string | null | undefined): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString(undefined, {
+  return d.toLocaleDateString("ru-RU", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -55,19 +59,19 @@ function MetaValue({ value }: { value: string }) {
 function statusMeta(status: string): { label: string; tone: string } {
   const s = status.toLowerCase();
   if (s === "active") {
-    return { label: "Active", tone: "bg-emerald-400/15 text-emerald-300 ring-emerald-400/30" };
+    return { label: "Активно", tone: "bg-emerald-400/15 text-emerald-300 ring-emerald-400/30" };
   }
   if (s === "trialing") {
-    return { label: "Trial", tone: "bg-[var(--accent)]/20 text-[var(--signal)] ring-[var(--accent)]/35" };
+    return { label: "Пробный период", tone: "bg-[var(--accent)]/20 text-[var(--signal)] ring-[var(--accent)]/35" };
   }
   if (s === "past_due" || s === "unpaid") {
-    return { label: "Past due", tone: "bg-red-400/15 text-red-300 ring-red-400/30" };
+    return { label: "Просрочено", tone: "bg-red-400/15 text-red-300 ring-red-400/30" };
   }
   if (s === "canceled" || s === "cancelled") {
-    return { label: "Canceled", tone: "bg-white/8 text-white/60 ring-white/15" };
+    return { label: "Отменено", tone: "bg-white/8 text-white/60 ring-white/15" };
   }
   return {
-    label: status.replace(/_/g, " "),
+    label: ruLabel(status),
     tone: "bg-white/8 text-white/60 ring-white/15",
   };
 }
@@ -83,7 +87,7 @@ function planBlurb(plan: Plan): string {
   if (plan.id === "enterprise") return "";
   const raw = (plan.description || "").trim();
   // Hide legacy quota copy that still mentions SMS.
-  if (!raw || /\bsms\b/i.test(raw)) return "Custom plan for your shop";
+  if (!raw || /\bsms\b/i.test(raw)) return "Индивидуальный тариф для вашего автосервиса";
   return raw;
 }
 
@@ -109,10 +113,10 @@ function UsageMeter({
           {label}
         </p>
         <p className="font-display text-sm font-semibold tabular-nums tracking-tight text-white">
-          {used.toLocaleString()}
+          {used.toLocaleString("ru-RU")}
           <span className="font-sans text-xs font-medium text-white/45">
             {" "}
-            / {limit.toLocaleString()}
+            / {limit.toLocaleString("ru-RU")}
             {unit ? ` ${unit}` : ""}
           </span>
         </p>
@@ -129,7 +133,7 @@ function UsageMeter({
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="mt-1.5 text-[11px] tabular-nums text-white/40">{pct}% used</p>
+      <p className="mt-1.5 text-[11px] tabular-nums text-white/40">{pct}% использовано</p>
     </div>
   );
 }
@@ -142,7 +146,7 @@ export default function BillingPage() {
 
   async function authFetch(path: string, init?: RequestInit) {
     const s = loadSession();
-    if (!s) throw new Error("Not signed in");
+    if (!s) throw new Error("Вход не выполнен");
     const res = await fetch(`${getApiUrl()}${path}`, {
       ...init,
       headers: {
@@ -165,7 +169,7 @@ export default function BillingPage() {
       session.role === "owner" ||
       (session.capabilities || []).includes("payment_handling");
     if (!canBilling) {
-      setError("Payments permission required to manage billing.");
+      setError("Для управления оплатой нужно разрешение на платежи.");
       return;
     }
     void (async () => {
@@ -177,7 +181,7 @@ export default function BillingPage() {
         setData(sub);
         setPlans(planList.plans || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load billing");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить оплату");
       }
     })();
   }, [loading, session]);
@@ -215,7 +219,7 @@ export default function BillingPage() {
       <header className="hero-motion">
         <div className="flex items-center gap-2">
           <IconCard className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-          <h1 className="page-title">Billing</h1>
+          <h1 className="page-title">Оплата</h1>
         </div>
       </header>
 
@@ -224,7 +228,7 @@ export default function BillingPage() {
           className="hero-motion-delay rounded-xl border border-red-200/80 bg-red-50 px-4 py-3 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -250,23 +254,23 @@ export default function BillingPage() {
                   </span>
                   {data.subscription.cancel_at_period_end && (
                     <span className="inline-flex items-center rounded-full bg-white/8 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/65 ring-1 ring-inset ring-white/15">
-                      Cancels at period end
+                      Отмена в конце периода
                     </span>
                   )}
                 </div>
 
                 <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 sm:mt-5">
-                  Current plan
+                  Текущий тариф
                 </p>
                 <div className="mt-1.5 flex flex-wrap items-end gap-x-3 gap-y-1 sm:gap-x-4">
                   <h2 className="font-display text-2xl font-extrabold tracking-tight sm:text-4xl">
-                    {data.subscription.plan.name}
+                    {ruLabel(data.subscription.plan.name)}
                   </h2>
                   <p className="mb-0.5 flex items-baseline gap-1 sm:mb-1">
                     <span className="font-display text-xl font-extrabold tracking-tight text-white/95 sm:text-3xl">
                       {price}
                     </span>
-                    <span className="text-sm font-medium text-white/45">/ mo</span>
+                    <span className="text-sm font-medium text-white/45">/ мес.</span>
                   </p>
                 </div>
 
@@ -286,7 +290,7 @@ export default function BillingPage() {
                   {showTrialEnds && (
                     <div className="flex min-h-[4.5rem] w-full min-w-0 max-w-[9rem] flex-col justify-between rounded-xl bg-white/[0.06] px-3 py-2.5 ring-1 ring-inset ring-white/10 sm:min-h-[5rem] sm:max-w-[10rem] sm:px-3.5 sm:py-3">
                       <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/45">
-                        Trial ends
+                        Пробный период до
                       </dt>
                       <MetaValue value={trialEnds!} />
                     </div>
@@ -294,7 +298,7 @@ export default function BillingPage() {
                   {showPeriodEnds && (
                     <div className="flex min-h-[4.5rem] w-full min-w-0 max-w-[9rem] flex-col justify-between rounded-xl bg-white/[0.06] px-3 py-2.5 ring-1 ring-inset ring-white/10 sm:min-h-[5rem] sm:max-w-[10rem] sm:px-3.5 sm:py-3">
                       <dt className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/45">
-                        Period ends
+                        Период до
                       </dt>
                       <MetaValue value={periodEnds!} />
                     </div>
@@ -306,18 +310,18 @@ export default function BillingPage() {
             <div className="flex min-w-0 flex-1 flex-col justify-center rounded-2xl bg-white/[0.06] p-3 ring-1 ring-inset ring-white/10 backdrop-blur-sm sm:p-5">
               <div className="flex items-center justify-between gap-2 sm:gap-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/45 sm:text-[11px]">
-                  This period
+                  Текущий период
                 </p>
                 <IconPulse className="h-4 w-4 text-white/35" />
               </div>
               <div className="mt-4 space-y-4 sm:mt-5 sm:space-y-5">
                 <UsageMeter
-                  label="AI calls"
+                  label="Звонки ИИ"
                   used={data.usage.usage.ai_calls}
                   limit={data.usage.limits.ai_calls}
                 />
                 <UsageMeter
-                  label="Seats"
+                  label="Места"
                   used={data.usage.usage.seats}
                   limit={data.usage.limits.seats}
                 />
@@ -329,9 +333,9 @@ export default function BillingPage() {
 
       <section id="plans" className="hero-motion-late space-y-5">
         <div>
-          <p className="section-label">Plans</p>
+          <p className="section-label">Тарифы</p>
           <h2 className="font-display mt-1.5 text-xl font-extrabold tracking-tight sm:text-2xl">
-            Choose what fits your shop
+            Выберите тариф для вашего автосервиса
           </h2>
         </div>
 
@@ -341,16 +345,16 @@ export default function BillingPage() {
             const isPro = plan.id === "pro";
             const planPrice = formatMoney(plan.price_cents_monthly);
             const features = [
-              "Walk-in + VIN decode",
-              "Appointments",
-              "Customer CRM",
-              "Team roles & permissions",
-              "CSV / data import",
-              `${plan.ai_calls_monthly.toLocaleString()} AI calls / mo`,
-              plan.id === "enterprise" ? "10+ seats" : `${plan.seats} seats`,
+              "Живая очередь и расшифровка VIN",
+              "Записи",
+              "CRM клиентов",
+              "Роли и разрешения команды",
+              "Импорт CSV / данных",
+              `${plan.ai_calls_monthly.toLocaleString("ru-RU")} звонков ИИ / мес.`,
+              plan.id === "enterprise" ? "10+ мест" : `${plan.seats} мест`,
             ];
             const ctaLabel =
-              plan.price_cents_monthly === 0 ? "Included" : "Upgrade";
+              plan.price_cents_monthly === 0 ? "Включено" : "Повысить тариф";
 
             return (
               <div
@@ -360,7 +364,7 @@ export default function BillingPage() {
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="font-display text-xl font-bold tracking-tight sm:text-2xl">
-                    {plan.name}
+                    {ruLabel(plan.name)}
                   </h3>
                 </div>
 
@@ -368,7 +372,7 @@ export default function BillingPage() {
                   <span className="font-display text-[2.6rem] font-extrabold leading-none tracking-[-0.04em] sm:text-[2.75rem]">
                     {planPrice}
                   </span>
-                  <span className="mb-1 text-sm text-[#8a8a8a]">/mo</span>
+                  <span className="mb-1 text-sm text-[#8a8a8a]">/мес.</span>
                 </p>
 
                 <div className="my-5 h-px bg-gradient-to-r from-black/10 via-black/5 to-transparent" aria-hidden />

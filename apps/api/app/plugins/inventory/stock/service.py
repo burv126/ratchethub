@@ -76,12 +76,12 @@ class StockService:
         """Workflow-only mutation — AI must not call this during decide-only analysis."""
         part = self._store.get_part_by_sku(sku)
         if part is None:
-            return {"ok": False, "error": f"Unknown SKU {sku}"}
+            return {"ok": False, "error": f'Неизвестный артикул {sku}'}
         level = self._store.get_stock(shop_id, part.id)
         if level is None or level.available < quantity:
             return {
                 "ok": False,
-                "error": "Insufficient stock",
+                "error": 'Недостаточно на складе',
                 "available": level.available if level else 0,
             }
         level.quantity_reserved += quantity
@@ -128,9 +128,9 @@ class StockService:
                     reservation = r
                     break
         if reservation is None or reservation.status != "active":
-            return {"ok": False, "error": "Active reservation not found"}
+            return {"ok": False, "error": 'Активный резерв не найден'}
         if reservation.shop_id != shop_id:
-            return {"ok": False, "error": "Reservation shop mismatch"}
+            return {"ok": False, "error": 'Автосервис резерва не совпадает'}
 
         qty = quantity or reservation.quantity
         part_id = reservation.part_id

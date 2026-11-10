@@ -1,4 +1,8 @@
 "use client";
+import { ruError, ruDiagnostic, ruWorkflowLog } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -28,9 +32,9 @@ import {
 type Tab = "builder" | "history" | "debugger";
 
 const TABS: { id: Tab; short: string; full: string }[] = [
-  { id: "builder", short: "Builder", full: "Workflow Builder" },
-  { id: "history", short: "History", full: "Workflow History" },
-  { id: "debugger", short: "Debugger", full: "Workflow Debugger" },
+  { id: "builder", short: "Конструктор", full: "Конструктор процессов" },
+  { id: "history", short: "История", full: "История процессов" },
+  { id: "debugger", short: "Отладчик", full: "Отладка процессов" },
 ];
 
 export default function WorkflowsPage() {
@@ -73,7 +77,7 @@ export default function WorkflowsPage() {
 
   useEffect(() => {
     if (authLoading || !session) return;
-    void refresh().catch((err) => setError(err instanceof Error ? err.message : "Load failed"));
+    void refresh().catch((err) => setError(err instanceof Error ? err.message : "Не удалось загрузить"));
   }, [authLoading, session, refresh]);
 
   async function onCreate(e: FormEvent) {
@@ -84,10 +88,10 @@ export default function WorkflowsPage() {
       await createWorkflow({
         name,
         trigger,
-        description: "Created from workflow builder",
+        description: "Создано в конструкторе процессов",
         actions: [
           { type: actionType, name: actionType, order: 1, config: {} },
-          { type: "update_dashboard", name: "Refresh dashboard", order: 2, config: {} },
+          { type: "update_dashboard", name: "Обновить панель", order: 2, config: {} },
         ],
         retry: { max_attempts: 3, backoff_ms: 500 },
         status: "active",
@@ -95,7 +99,7 @@ export default function WorkflowsPage() {
       setName("");
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Create failed");
+      setError(err instanceof Error ? err.message : "Не удалось создать");
     } finally {
       setBusy(false);
     }
@@ -119,7 +123,7 @@ export default function WorkflowsPage() {
         setFrame(await debugRun(result.runs[0].id, 0));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Emit failed");
+      setError(err instanceof Error ? err.message : "Не удалось отправить событие");
     } finally {
       setBusy(false);
     }
@@ -143,9 +147,9 @@ export default function WorkflowsPage() {
     <div className="min-w-0 space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="page-title">Workflows</h1>
+          <h1 className="page-title">Рабочие процессы</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Event-driven automation — trigger · condition · action · retry · rollback
+            Автоматизация по событиям — триггер · условие · действие · повтор · откат
           </p>
         </div>
         <button
@@ -160,20 +164,20 @@ export default function WorkflowsPage() {
                 await processRetries();
                 await refresh();
               } catch (err) {
-                setError(err instanceof Error ? err.message : "Process retries failed");
+                setError(err instanceof Error ? err.message : "Не удалось обработать повторы");
               } finally {
                 setBusy(false);
               }
             })()
           }
         >
-          Process retries
+          Обработать повторы
         </button>
       </div>
 
       {metrics && (
         <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-xs text-[var(--muted)]">
-          <span className="font-medium text-[var(--foreground)]">Metrics:</span>{" "}
+          <span className="font-medium text-[var(--foreground)]">Метрики:</span>{" "}
           {Object.entries(metrics)
             .slice(0, 8)
             .map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : String(v)}`)
@@ -201,7 +205,7 @@ export default function WorkflowsPage() {
 
       {error && (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -211,16 +215,16 @@ export default function WorkflowsPage() {
             onSubmit={onCreate}
             className="min-w-0 space-y-3 rounded-md border border-[var(--line)] bg-[var(--panel)] p-4 sm:p-5"
           >
-            <h2 className="text-sm font-medium">New workflow</h2>
+            <h2 className="text-sm font-medium">Новый процесс</h2>
             <input
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2.5 text-sm"
-              placeholder="Name"
+              placeholder="Имя"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
             <label className="block text-xs text-[var(--muted)]">
-              Trigger event
+              Событие запуска
               <select
                 className="mt-1 w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2.5 text-sm"
                 value={trigger}
@@ -234,7 +238,7 @@ export default function WorkflowsPage() {
               </select>
             </label>
             <label className="block text-xs text-[var(--muted)]">
-              Primary action
+              Основное действие
               <select
                 className="mt-1 w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2.5 text-sm"
                 value={actionType}
@@ -252,7 +256,7 @@ export default function WorkflowsPage() {
               disabled={busy}
               className="min-h-10 w-full rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60 sm:w-auto"
             >
-              {busy ? "Saving…" : "Create workflow"}
+              {busy ? "Сохранение…" : "Создать процесс"}
             </button>
           </form>
 
@@ -260,7 +264,7 @@ export default function WorkflowsPage() {
             onSubmit={onEmit}
             className="min-w-0 space-y-3 rounded-md border border-[var(--line)] bg-[var(--panel)] p-4 sm:p-5"
           >
-            <h2 className="text-sm font-medium">Emit test event</h2>
+            <h2 className="text-sm font-medium">Отправить тестовое событие</h2>
             <select
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2.5 text-sm"
               value={emitType}
@@ -286,20 +290,20 @@ export default function WorkflowsPage() {
               disabled={busy}
               className="min-h-10 w-full rounded-md border border-[var(--line)] px-4 py-2 text-sm disabled:opacity-60 sm:w-auto"
             >
-              Fire event
+              Запустить событие
             </button>
             <p className="text-xs text-[var(--muted)]">
-              Example cascade: appointment.booked → reminder → CRM → revenue → dashboard
+              Пример цепочки: appointment.booked → напоминание → CRM → выручка → панель
             </p>
           </form>
 
           <div className="min-w-0 space-y-3 lg:col-span-2">
-            <h2 className="text-sm font-medium">Definitions</h2>
+            <h2 className="text-sm font-medium">Определения</h2>
 
             {/* Mobile cards */}
             <div className="space-y-3 md:hidden">
               {workflows.length === 0 && (
-                <p className="text-sm text-[var(--muted)]">No workflows yet</p>
+                <p className="text-sm text-[var(--muted)]">Процессов пока нет</p>
               )}
               {workflows.map((w) => (
                 <article
@@ -316,13 +320,13 @@ export default function WorkflowsPage() {
                     onClick={() => setSelected(w)}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-medium">{w.name}</p>
+                      <p className="font-medium">{ruLabel(w.name)}</p>
                       <span className="shrink-0 text-xs capitalize text-[var(--muted)]">
-                        {w.status}
+                        {ruLabel(w.status)}
                       </span>
                     </div>
                     {w.is_template && (
-                      <span className="mt-1 inline-block text-xs text-[var(--muted)]">template</span>
+                      <span className="mt-1 inline-block text-xs text-[var(--muted)]">шаблон</span>
                     )}
                     <p className="mt-2 break-all font-mono text-xs text-[var(--muted)]">{w.trigger}</p>
                     <p className="mt-1 break-words text-xs text-[var(--muted)]">
@@ -337,7 +341,7 @@ export default function WorkflowsPage() {
                         void cloneWorkflow(w.id).then(refresh).catch((err) => setError(String(err)))
                       }
                     >
-                      Clone
+                      Клонировать
                     </button>
                     {!w.is_template && (
                       <>
@@ -352,7 +356,7 @@ export default function WorkflowsPage() {
                               .catch((err) => setError(String(err)))
                           }
                         >
-                          {w.status === "active" ? "Disable" : "Enable"}
+                          {w.status === "active" ? "Отключить" : "Включить"}
                         </button>
                         <button
                           type="button"
@@ -361,7 +365,7 @@ export default function WorkflowsPage() {
                             void deleteWorkflow(w.id).then(refresh).catch((err) => setError(String(err)))
                           }
                         >
-                          Delete
+                          Удалить
                         </button>
                       </>
                     )}
@@ -375,10 +379,10 @@ export default function WorkflowsPage() {
               <table>
                 <thead className="bg-[var(--panel)] text-xs uppercase tracking-wide text-[var(--muted)]">
                   <tr>
-                    <th className="px-3 py-2 font-medium">Name</th>
-                    <th className="px-3 py-2 font-medium">Trigger</th>
-                    <th className="px-3 py-2 font-medium">Actions</th>
-                    <th className="px-3 py-2 font-medium">Status</th>
+                    <th className="px-3 py-2 font-medium">Имя</th>
+                    <th className="px-3 py-2 font-medium">Триггер</th>
+                    <th className="px-3 py-2 font-medium">Действия</th>
+                    <th className="px-3 py-2 font-medium">Статус</th>
                     <th className="px-3 py-2 font-medium" />
                   </tr>
                 </thead>
@@ -396,10 +400,10 @@ export default function WorkflowsPage() {
                           className="text-left font-medium"
                           onClick={() => setSelected(w)}
                         >
-                          {w.name}
+                          {ruLabel(w.name)}
                         </button>
                         {w.is_template && (
-                          <span className="ml-2 text-xs text-[var(--muted)]">template</span>
+                          <span className="ml-2 text-xs text-[var(--muted)]">шаблон</span>
                         )}
                       </td>
                       <td className="max-w-[12rem] truncate px-3 py-2 font-mono text-xs">
@@ -408,7 +412,7 @@ export default function WorkflowsPage() {
                       <td className="max-w-[16rem] truncate px-3 py-2 text-xs text-[var(--muted)]">
                         {w.actions.map((a) => a.type).join(" → ")}
                       </td>
-                      <td className="px-3 py-2">{w.status}</td>
+                      <td className="px-3 py-2">{ruLabel(w.status)}</td>
                       <td className="px-3 py-2 text-right">
                         <div className="flex flex-wrap justify-end gap-2">
                           <button
@@ -420,7 +424,7 @@ export default function WorkflowsPage() {
                                 .catch((err) => setError(String(err)))
                             }
                           >
-                            Clone
+                            Клонировать
                           </button>
                           {!w.is_template && (
                             <>
@@ -435,7 +439,7 @@ export default function WorkflowsPage() {
                                     .catch((err) => setError(String(err)))
                                 }
                               >
-                                {w.status === "active" ? "Disable" : "Enable"}
+                                {w.status === "active" ? "Отключить" : "Включить"}
                               </button>
                               <button
                                 type="button"
@@ -446,7 +450,7 @@ export default function WorkflowsPage() {
                                     .catch((err) => setError(String(err)))
                                 }
                               >
-                                Delete
+                                Удалить
                               </button>
                             </>
                           )}
@@ -470,7 +474,7 @@ export default function WorkflowsPage() {
       {tab === "history" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="min-w-0 space-y-2">
-            <h2 className="text-sm font-medium">Runs</h2>
+            <h2 className="text-sm font-medium">Запуски</h2>
             <div className="space-y-2">
               {runs.map((r) => (
                 <button
@@ -479,17 +483,17 @@ export default function WorkflowsPage() {
                   onClick={() => void openDebug(r)}
                   className="block w-full rounded-md border border-[var(--line)] bg-[var(--panel)] px-4 py-3 text-left hover:border-[var(--accent)]"
                 >
-                  <p className="break-words text-sm font-medium">{r.workflow_name}</p>
+                  <p className="break-words text-sm font-medium">{ruLabel(r.workflow_name)}</p>
                   <p className="mt-1 break-words text-xs text-[var(--muted)]">
-                    {r.trigger_event_type} · {r.status} · {r.steps.length} steps
+                    {r.trigger_event_type} · {ruLabel(r.status)} · {r.steps.length} шагов
                   </p>
                 </button>
               ))}
-              {runs.length === 0 && <p className="text-sm text-[var(--muted)]">No runs yet</p>}
+              {runs.length === 0 && <p className="text-sm text-[var(--muted)]">Запусков пока нет</p>}
             </div>
           </div>
           <div className="min-w-0 space-y-2">
-            <h2 className="text-sm font-medium">Event log</h2>
+            <h2 className="text-sm font-medium">Журнал событий</h2>
             <div className="max-h-[28rem] space-y-2 overflow-y-auto">
               {events.map((e) => (
                 <div
@@ -498,7 +502,7 @@ export default function WorkflowsPage() {
                 >
                   <p className="break-all font-mono font-medium">{e.event_type}</p>
                   <p className="mt-1 text-[var(--muted)]">
-                    {e.source} · {e.occurred_at ? new Date(e.occurred_at).toLocaleString() : "—"}
+                    {e.source} · {e.occurred_at ? new Date(e.occurred_at).toLocaleString("ru-RU") : "—"}
                   </p>
                 </div>
               ))}
@@ -510,14 +514,14 @@ export default function WorkflowsPage() {
       {tab === "debugger" && (
         <div className="min-w-0 space-y-4">
           {!selectedRun && (
-            <p className="text-sm text-[var(--muted)]">Select a run from History</p>
+            <p className="text-sm text-[var(--muted)]">Выберите запуск в истории</p>
           )}
           {selectedRun && (
             <>
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <div className="min-w-0 flex-1">
-                  <p className="break-words text-sm font-medium">{selectedRun.workflow_name}</p>
-                  <span className="text-xs text-[var(--muted)]">{selectedRun.status}</span>
+                  <p className="break-words text-sm font-medium">{ruLabel(selectedRun.workflow_name)}</p>
+                  <span className="text-xs text-[var(--muted)]">{ruLabel(selectedRun.status)}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -525,14 +529,14 @@ export default function WorkflowsPage() {
                     className="min-h-9 rounded-md border border-[var(--line)] px-3 py-1.5 text-xs"
                     onClick={() => void moveStep(-1)}
                   >
-                    Prev step
+                    Предыдущий шаг
                   </button>
                   <button
                     type="button"
                     className="min-h-9 rounded-md border border-[var(--line)] px-3 py-1.5 text-xs"
                     onClick={() => void moveStep(1)}
                   >
-                    Next step
+                    Следующий шаг
                   </button>
                   <button
                     type="button"
@@ -546,7 +550,7 @@ export default function WorkflowsPage() {
                         .catch((err) => setError(String(err)))
                     }
                   >
-                    Pause
+                    Пауза
                   </button>
                   <button
                     type="button"
@@ -561,7 +565,7 @@ export default function WorkflowsPage() {
                         .catch((err) => setError(String(err)))
                     }
                   >
-                    Resume
+                    Продолжить
                   </button>
                   <button
                     type="button"
@@ -576,7 +580,7 @@ export default function WorkflowsPage() {
                         .catch((err) => setError(String(err)))
                     }
                   >
-                    Rollback
+                    Откатить
                   </button>
                 </div>
               </div>
@@ -598,7 +602,7 @@ export default function WorkflowsPage() {
                         : "border border-[var(--line)] text-[var(--muted)]"
                     }`}
                   >
-                    {i + 1}. {s.action_name} ({s.status})
+                    {i + 1}. {ruLabel(s.action_name)} ({ruLabel(s.status)})
                   </button>
                 ))}
               </div>
@@ -607,27 +611,27 @@ export default function WorkflowsPage() {
                 <div className="grid gap-4 lg:grid-cols-2">
                   <div className="min-w-0 rounded-md border border-[var(--line)] bg-[var(--panel)] p-4">
                     <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-                      Current step
+                      Текущий шаг
                     </h3>
                     <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words text-xs">
-                      {JSON.stringify(frame.current_step, null, 2)}
+                      {JSON.stringify(ruDiagnostic(frame.current_step), null, 2)}
                     </pre>
                   </div>
                   <div className="min-w-0 rounded-md border border-[var(--line)] bg-[var(--panel)] p-4">
                     <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-                      Context
+                      Контекст
                     </h3>
                     <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words text-xs">
-                      {JSON.stringify(frame.context, null, 2)}
+                      {JSON.stringify(ruDiagnostic(frame.context), null, 2)}
                     </pre>
                   </div>
                   <div className="min-w-0 rounded-md border border-[var(--line)] bg-[var(--panel)] p-4 lg:col-span-2">
                     <h3 className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-                      Logs
+                      Журналы
                     </h3>
                     <ul className="mt-2 space-y-1 break-words text-xs text-[var(--muted)]">
                       {frame.logs.map((line, i) => (
-                        <li key={`${i}-${line}`}>{line}</li>
+                        <li key={`${i}-${line}`}>{ruWorkflowLog(line)}</li>
                       ))}
                     </ul>
                   </div>

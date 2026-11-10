@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -16,14 +20,14 @@ function formatDate(value?: string | null) {
   if (!value) return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString();
+  return d.toLocaleDateString("ru-RU");
 }
 
 function formatDateTime(value?: string | null) {
   if (!value) return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString();
+  return d.toLocaleString("ru-RU");
 }
 
 function OnlineDot({ online }: { online: boolean }) {
@@ -32,8 +36,8 @@ function OnlineDot({ online }: { online: boolean }) {
       className={`inline-flex h-2.5 w-2.5 shrink-0 rounded-full ${
         online ? "bg-emerald-500" : "bg-red-500"
       }`}
-      title={online ? "Online" : "Offline"}
-      aria-label={online ? "Online" : "Offline"}
+      title={online ? "В сети" : "Не в сети"}
+      aria-label={online ? "В сети" : "Не в сети"}
     />
   );
 }
@@ -82,7 +86,7 @@ function ShopsBody({ accessToken }: { accessToken: string }) {
       } catch (err) {
         if (!quiet) {
           setLive(false);
-          setError(err instanceof Error ? err.message : "Failed to load shops");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить автосервисы");
         }
       } finally {
         if (!quiet) setBusy(false);
@@ -147,7 +151,7 @@ function ShopsBody({ accessToken }: { accessToken: string }) {
       await suspendAdminShop(accessToken, shopId);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Suspend failed");
+      setError(err instanceof Error ? err.message : "Не удалось приостановить");
     } finally {
       setActionId(null);
     }
@@ -160,43 +164,43 @@ function ShopsBody({ accessToken }: { accessToken: string }) {
       await activateAdminShop(accessToken, shopId);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Activate failed");
+      setError(err instanceof Error ? err.message : "Не удалось активировать");
     } finally {
       setActionId(null);
     }
   }
 
-  if (error && !data) return <p className="text-sm text-red-700">{error}</p>;
-  if (!data) return <p className="text-sm text-[var(--muted)]">{busy ? "Loading…" : "No data"}</p>;
+  if (error && !data) return <p className="text-sm text-red-700">{ruError(error)}</p>;
+  if (!data) return <p className="text-sm text-[var(--muted)]">{busy ? "Загрузка…" : "Нет данных"}</p>;
 
   const suspended = data.shops.filter((s) => s.status === "suspended").length;
 
   return (
     <div className="flex h-[calc(100dvh-7.25rem)] flex-col gap-4 overflow-hidden sm:h-[calc(100dvh-7.75rem)] md:h-[calc(100dvh-9.25rem)] md:gap-5">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
-        <h1 className="page-title">Shops</h1>
+        <h1 className="page-title">Автосервисы</h1>
         <LiveBadge live={live} />
       </div>
 
       <section className="grid shrink-0 gap-2.5 sm:grid-cols-2">
-        <Stat label="Shops" value={String(data.shops.length)} />
-        <Stat label="Suspended" value={String(suspended)} />
+        <Stat label="Автосервисы" value={String(data.shops.length)} />
+        <Stat label="Приостановлено" value={String(suspended)} />
       </section>
 
       {error && (
         <p className="shrink-0 rounded-xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-sm text-red-700">
-          {error}
+          {ruError(error)}
         </p>
       )}
 
       <Panel
         className="flex min-h-0 flex-1 flex-col"
-        title={`Tenants (${filtered.length})`}
+        title={`Автосервисы (${filtered.length})`}
         action={
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search shop, owner, plan…"
+            placeholder="Поиск по автосервису, владельцу, тарифу…"
             className="w-full max-w-xs rounded-xl border border-[var(--line)] bg-white/90 px-3 py-1.5 text-sm shadow-[var(--shadow-soft)] outline-none ring-[var(--accent)] focus:ring-2"
           />
         }
@@ -205,14 +209,14 @@ function ShopsBody({ accessToken }: { accessToken: string }) {
           <table className="min-w-full text-left text-sm">
             <thead className="sticky top-0 z-10 border-b border-[var(--line)] bg-[var(--background)] text-[var(--muted)]">
               <tr>
-                <th className="px-5 py-2 font-medium">Shop</th>
-                <th className="px-5 py-2 font-medium">Owner</th>
-                <th className="px-5 py-2 font-medium">Online</th>
-                <th className="px-5 py-2 font-medium">Plan</th>
-                <th className="px-5 py-2 font-medium">Status</th>
-                <th className="px-5 py-2 font-medium">Created</th>
-                <th className="px-5 py-2 font-medium">Last activity</th>
-                <th className="px-5 py-2 font-medium">Actions</th>
+                <th className="px-5 py-2 font-medium">Автосервис</th>
+                <th className="px-5 py-2 font-medium">Владелец</th>
+                <th className="px-5 py-2 font-medium">В сети</th>
+                <th className="px-5 py-2 font-medium">Тариф</th>
+                <th className="px-5 py-2 font-medium">Статус</th>
+                <th className="px-5 py-2 font-medium">Создано</th>
+                <th className="px-5 py-2 font-medium">Последняя активность</th>
+                <th className="px-5 py-2 font-medium">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -268,12 +272,12 @@ function ShopsBody({ accessToken }: { accessToken: string }) {
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-[var(--muted)]">
                           <OnlineDot online={false} />
-                          offline
+                          не в сети
                         </span>
                       )}
                     </td>
-                    <td className="px-5 py-3">{s.plan_name}</td>
-                    <td className={`px-5 py-3 capitalize ${statusTone(s.status)}`}>{s.status}</td>
+                    <td className="px-5 py-3">{ruLabel(s.plan_name)}</td>
+                    <td className={`px-5 py-3 capitalize ${statusTone(s.status)}`}>{ruLabel(s.status)}</td>
                     <td className="px-5 py-3 text-[var(--muted)]">{formatDate(s.created_at)}</td>
                     <td className="px-5 py-3 text-[var(--muted)]">
                       {formatDateTime(s.last_activity_at)}
@@ -286,7 +290,7 @@ function ShopsBody({ accessToken }: { accessToken: string }) {
                           onClick={() => void onActivate(s.shop_id)}
                           className="rounded-md border border-[var(--line)] px-2 py-1 text-xs disabled:opacity-50"
                         >
-                          Activate
+                          Активировать
                         </button>
                       ) : (
                         <button
@@ -295,7 +299,7 @@ function ShopsBody({ accessToken }: { accessToken: string }) {
                           onClick={() => void onSuspend(s.shop_id)}
                           className="rounded-md border border-[var(--line)] px-2 py-1 text-xs text-red-700 disabled:opacity-50"
                         >
-                          Suspend
+                          Приостановить
                         </button>
                       )}
                     </td>
@@ -305,7 +309,7 @@ function ShopsBody({ accessToken }: { accessToken: string }) {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-5 py-8 text-center text-[var(--muted)]">
-                    No shops found.
+                    Автосервисы не найдены.
                   </td>
                 </tr>
               )}

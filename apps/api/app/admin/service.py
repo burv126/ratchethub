@@ -246,7 +246,7 @@ class AdminConsoleService:
         except ValueError as exc:
             from app.domain.exceptions import NotFoundError
 
-            raise NotFoundError("Shop not found") from exc
+            raise NotFoundError('Автосервис не найден') from exc
 
         period = _period_ym()
         by_shop = await self._usage_by_shop()
@@ -274,11 +274,11 @@ class AdminConsoleService:
             raise ValidationError("plan_id is required")
         detail = await self.organization_detail(shop_id)
         if detail is None:
-            raise NotFoundError("Shop not found")
+            raise NotFoundError('Автосервис не найден')
         try:
             shop_uuid = UUID(shop_id)
         except ValueError as exc:
-            raise NotFoundError("Shop not found") from exc
+            raise NotFoundError('Автосервис не найден') from exc
         return await self._billing.admin_set_plan(shop_uuid, plan_id)
 
     async def set_member_active(self, shop_id: str, user_id: str, *, is_active: bool) -> dict:
@@ -288,7 +288,7 @@ class AdminConsoleService:
             shop_uuid = UUID(shop_id)
             user_uuid = UUID(user_id)
         except ValueError as exc:
-            raise NotFoundError("Member not found") from exc
+            raise NotFoundError('Сотрудник не найден') from exc
 
         async with SessionLocal() as session:
             membership = await session.scalar(
@@ -298,12 +298,12 @@ class AdminConsoleService:
                 )
             )
             if membership is None:
-                raise NotFoundError("Member not found")
+                raise NotFoundError('Сотрудник не найден')
             user = await session.get(UserModel, user_uuid)
             if user is None:
-                raise NotFoundError("Member not found")
+                raise NotFoundError('Сотрудник не найден')
             if (user.account_type or "").strip().lower() == "platform_admin":
-                raise ValidationError("Cannot change platform admin account status here")
+                raise ValidationError('Здесь нельзя изменить статус администратора платформы')
             user.is_active = bool(is_active)
             await session.commit()
             return {
@@ -321,7 +321,7 @@ class AdminConsoleService:
             shop_uuid = UUID(shop_id)
             user_uuid = UUID(user_id)
         except ValueError as exc:
-            raise NotFoundError("Member not found") from exc
+            raise NotFoundError('Сотрудник не найден') from exc
 
         async with SessionLocal() as session:
             membership = await session.scalar(
@@ -331,15 +331,15 @@ class AdminConsoleService:
                 )
             )
             if membership is None:
-                raise NotFoundError("Member not found")
+                raise NotFoundError('Сотрудник не найден')
             user = await session.get(UserModel, user_uuid)
             if user is None or not user.is_active:
-                raise NotFoundError("Member not found")
+                raise NotFoundError('Сотрудник не найден')
             email = user.email
             phone = user.phone
 
         if not email and not phone:
-            raise ValidationError("Member has no email or phone for password reset")
+            raise ValidationError('У сотрудника нет почты или телефона для сброса пароля')
 
         result = await PasswordResetService().request_reset(email=email, phone=None if email else phone)
         return {
@@ -368,14 +368,14 @@ class AdminConsoleService:
             shop_uuid = UUID(shop_id)
             user_uuid = UUID(user_id)
         except ValueError as exc:
-            raise NotFoundError("Member not found") from exc
+            raise NotFoundError('Сотрудник не найден') from exc
 
         password = (new_password or "").strip()
         if password:
             if len(password) < 8:
-                raise ValidationError("Password must be at least 8 characters")
+                raise ValidationError('Пароль должен содержать не менее 8 символов')
             if len(password) > 128:
-                raise ValidationError("Password must be at most 128 characters")
+                raise ValidationError('Пароль должен содержать не более 128 символов')
         else:
             alphabet = string.ascii_letters + string.digits
             password = "".join(secrets.choice(alphabet) for _ in range(12))
@@ -388,14 +388,14 @@ class AdminConsoleService:
                 )
             )
             if membership is None:
-                raise NotFoundError("Member not found")
+                raise NotFoundError('Сотрудник не найден')
             user = await session.get(UserModel, user_uuid)
             if user is None:
-                raise NotFoundError("Member not found")
+                raise NotFoundError('Сотрудник не найден')
             if (user.account_type or "").strip().lower() == "platform_admin":
-                raise ValidationError("Cannot initialize platform admin password here")
+                raise ValidationError('Здесь нельзя задать пароль администратора платформы')
             if not user.is_active:
-                raise ValidationError("Cannot initialize password for inactive member")
+                raise ValidationError('Нельзя задать пароль неактивному сотруднику')
 
             user.password_hash = hash_password(password)
             now = datetime.now(timezone.utc)
@@ -432,13 +432,13 @@ class AdminConsoleService:
         try:
             shop_uuid = UUID(shop_id)
         except ValueError as exc:
-            raise NotFoundError("Shop not found") from exc
+            raise NotFoundError('Автосервис не найден') from exc
 
         manual = (phone_e164 or "").strip()
         if manual:
             phone = normalize_phone(manual)
             if not phone or not phone.startswith("+") or len(phone) < 10:
-                raise ValidationError("Invalid phone number (use E.164, e.g. +12065550100)")
+                raise ValidationError('Некорректный телефон (формат E.164, например +12065550100)')
         else:
             phone = None
 
@@ -448,12 +448,12 @@ class AdminConsoleService:
         async with SessionLocal() as session:
             shop = await session.get(ShopModel, shop_uuid)
             if shop is None:
-                raise NotFoundError("Shop not found")
+                raise NotFoundError('Автосервис не найден')
 
             if phone is None:
                 if shop.sms_phone_e164 or shop.voice_phone_e164:
                     raise ValidationError(
-                        "Shop already has a Twilio number — delete or reset it first"
+                        'У автосервиса уже есть номер Twilio — сначала удалите или сбросьте его'
                     )
                 provisioned = await provision_shop_number(
                     shop_id=shop_uuid,
@@ -463,15 +463,14 @@ class AdminConsoleService:
                 )
                 if provisioned is None or not provisioned.phone_e164:
                     raise ValidationError(
-                        "Could not provision a Twilio number "
-                        "(check Twilio credentials / number availability)"
+                        'Не удалось получить номер Twilio (проверьте учётные данные и доступность номеров)'
                     )
                 phone = provisioned.phone_e164
                 provider = provisioned.provider
             else:
                 if shop.sms_phone_e164 or shop.voice_phone_e164:
                     raise ValidationError(
-                        "Shop already has a Twilio number — delete or reset it first"
+                        'У автосервиса уже есть номер Twilio — сначала удалите или сбросьте его'
                     )
                 provider = "manual"
                 # Manual assign: number must exist on this Twilio account and get
@@ -480,14 +479,12 @@ class AdminConsoleService:
                 if not webhook_status.get("skipped"):
                     if not webhook_status.get("found"):
                         raise ValidationError(
-                            f"{phone} is not an Incoming Phone Number on this Twilio "
-                            "account. Buy/port the number in Twilio Console, or Set a "
-                            "number that already belongs to the account."
+                            f'{phone} не является входящим номером этого аккаунта Twilio. Купите или перенесите номер в Twilio Console либо укажите номер, уже принадлежащий аккаунту.'
                         )
                     if not webhook_status.get("ok"):
                         err = webhook_status.get("error") or "unknown"
                         raise ValidationError(
-                            f"Could not configure Twilio webhooks for {phone}: {err}"
+                            f'Не удалось настроить вебхуки Twilio для {phone}: {err}'
                         )
 
             taken = await session.scalar(
@@ -500,7 +497,7 @@ class AdminConsoleService:
                 )
             )
             if taken is not None:
-                raise ConflictError("This Twilio number is already assigned to another shop")
+                raise ConflictError('Этот номер Twilio уже назначен другому автосервису')
 
             shop.sms_phone_e164 = phone
             shop.voice_phone_e164 = phone
@@ -533,17 +530,17 @@ class AdminConsoleService:
         try:
             shop_uuid = UUID(shop_id)
         except ValueError as exc:
-            raise NotFoundError("Shop not found") from exc
+            raise NotFoundError('Автосервис не найден') from exc
 
         async with SessionLocal() as session:
             shop = await session.get(ShopModel, shop_uuid)
             if shop is None:
-                raise NotFoundError("Shop not found")
+                raise NotFoundError('Автосервис не найден')
             previous_sms = shop.sms_phone_e164
             previous_voice = shop.voice_phone_e164
             previous = previous_sms or previous_voice
             if not previous:
-                raise ValidationError("Shop has no Twilio number to unassign")
+                raise ValidationError('У автосервиса нет номера Twilio для отвязки')
             shop.sms_phone_e164 = None
             shop.voice_phone_e164 = None
             await session.commit()
@@ -570,12 +567,12 @@ class AdminConsoleService:
         try:
             shop_uuid = UUID(shop_id)
         except ValueError as exc:
-            raise NotFoundError("Shop not found") from exc
+            raise NotFoundError('Автосервис не найден') from exc
 
         async with SessionLocal() as session:
             shop = await session.get(ShopModel, shop_uuid)
             if shop is None:
-                raise NotFoundError("Shop not found")
+                raise NotFoundError('Автосервис не найден')
             previous_sms = shop.sms_phone_e164
             previous_voice = shop.voice_phone_e164
             previous = previous_sms or previous_voice
@@ -590,15 +587,14 @@ class AdminConsoleService:
         )
         if provisioned is None or not provisioned.phone_e164:
             raise ValidationError(
-                "Could not provision a new Twilio number "
-                "(check Twilio credentials / number availability)"
+                'Не удалось получить номер Twilio (проверьте учётные данные и доступность номеров)'
             )
         phone = provisioned.phone_e164
 
         async with SessionLocal() as session:
             shop = await session.get(ShopModel, shop_uuid)
             if shop is None:
-                raise NotFoundError("Shop not found")
+                raise NotFoundError('Автосервис не найден')
             taken = await session.scalar(
                 select(ShopModel.id).where(
                     ShopModel.id != shop_uuid,
@@ -609,7 +605,7 @@ class AdminConsoleService:
                 )
             )
             if taken is not None:
-                raise ConflictError("Provisioned number collides with another shop")
+                raise ConflictError('Полученный номер уже назначен другому автосервису')
             shop.sms_phone_e164 = phone
             shop.voice_phone_e164 = phone
             await session.commit()
@@ -857,7 +853,7 @@ class AdminConsoleService:
                         "event_type": "runtime.voice",
                         "source": "voice",
                         "severity": "info",
-                        "title": "Voice activity",
+                        "title": 'Активность звонков',
                         "message": (
                             f"started={voice.get('calls_started', 0)} "
                             f"completed={voice.get('calls_completed', 0)} "

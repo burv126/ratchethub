@@ -67,7 +67,7 @@ class BaseAdapter:
         missing = [f for f in self.credential_fields if not credentials.fields.get(f)]
         demo = str(credentials.fields.get("demo", "")).lower() in {"1", "true", "yes"}
         if missing and not demo:
-            raise ValueError(f"Missing credentials: {', '.join(missing)}")
+            raise ValueError(f"Не указаны учётные данные: {', '.join(missing)}")
         if demo:
             credentials.fields["demo"] = "true"
         credentials.method = self.auth_method
@@ -76,7 +76,7 @@ class BaseAdapter:
 
     async def test_connection(self, connection: IntegrationConnection) -> dict[str, Any]:
         if connection.credentials is None:
-            raise ValueError("No credentials configured")
+            raise ValueError('Учётные данные не настроены')
         return {
             "ok": True,
             "provider": self.provider.value,
@@ -125,7 +125,7 @@ class BaseAdapter:
 
         safe = filter_records_for_tenant(records, context)
         if len(safe) != len(records):
-            raise TenantIsolationError("Adapter returned cross-tenant records")
+            raise TenantIsolationError('Адаптер вернул данные другого автосервиса')
 
         return CapabilityResult(
             ok=True,
@@ -379,7 +379,7 @@ class BaseAdapter:
             "id": payload.get("id") or f"{self.provider.value}-in-1",
             "to": payload.get("to"),
             "from": payload.get("from"),
-            "body": payload.get("body") or payload.get("message") or "Inbound demo",
+            "body": payload.get("body") or payload.get("message") or 'Входящий пример',
             "channel": payload.get("channel", self.provider.value),
             "customer_id": payload.get("customer_id"),
         }

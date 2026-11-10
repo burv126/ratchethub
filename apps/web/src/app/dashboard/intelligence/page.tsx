@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import { FormEvent, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -13,10 +15,10 @@ import {
 type Tab = "learning" | "inspection" | "inventory" | "advisor";
 
 const TABS: { id: Tab; label: string; caps: readonly string[] }[] = [
-  { id: "learning", label: "Learning", caps: LEARNING_CAPS },
-  { id: "inspection", label: "Inspection", caps: INSPECTION_CAPS },
-  { id: "inventory", label: "Inventory", caps: INVENTORY_CAPS },
-  { id: "advisor", label: "Advisor", caps: ADVISOR_CAPS },
+  { id: "learning", label: "Обучение", caps: LEARNING_CAPS },
+  { id: "inspection", label: "Осмотр", caps: INSPECTION_CAPS },
+  { id: "inventory", label: "Склад", caps: INVENTORY_CAPS },
+  { id: "advisor", label: "Консультант", caps: ADVISOR_CAPS },
 ];
 
 export default function IntelligencePage() {
@@ -49,7 +51,7 @@ export default function IntelligencePage() {
       const out = await invokeCapability(capability, arguments_);
       setResult(JSON.stringify(out, null, 2));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invoke failed");
+      setError(err instanceof Error ? err.message : "Не удалось вызвать");
     } finally {
       setBusy(false);
     }
@@ -64,22 +66,22 @@ export default function IntelligencePage() {
       const out = await invokeCapability(cap, args);
       setResult(JSON.stringify(out, null, 2));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invoke failed");
+      setError(err instanceof Error ? err.message : "Не удалось вызвать");
     } finally {
       setBusy(false);
     }
   }
 
   if (authLoading || !session) {
-    return <p className="text-sm text-[var(--muted)]">Loading…</p>;
+    return <p className="text-sm text-[var(--muted)]">Загрузка…</p>;
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="page-title">AI Intelligence</h1>
+        <h1 className="page-title">Возможности ИИ</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Invoke Learning / Inspection / Inventory / Advisor capabilities (decide-only)
+          Вызов возможностей обучения, осмотра, склада и консультанта (только принятие решений)
         </p>
       </div>
 
@@ -114,7 +116,7 @@ export default function IntelligencePage() {
             }
             className="rounded-md border border-[var(--line)] px-3 py-1.5 text-sm"
           >
-            Collect sample outcome
+            Собрать пример результата
           </button>
           <button
             type="button"
@@ -122,7 +124,7 @@ export default function IntelligencePage() {
             onClick={() => void quickLearning("EvaluateDecision")}
             className="rounded-md border border-[var(--line)] px-3 py-1.5 text-sm"
           >
-            Evaluate
+            Оценить
           </button>
           <button
             type="button"
@@ -130,7 +132,7 @@ export default function IntelligencePage() {
             onClick={() => void quickLearning("AnalyzeSuccessPattern")}
             className="rounded-md border border-[var(--line)] px-3 py-1.5 text-sm"
           >
-            Patterns
+            Закономерности
           </button>
           <button
             type="button"
@@ -138,7 +140,7 @@ export default function IntelligencePage() {
             onClick={() => void quickLearning("OptimizeRecommendation")}
             className="rounded-md border border-[var(--line)] px-3 py-1.5 text-sm"
           >
-            Optimize
+            Оптимизировать
           </button>
           <button
             type="button"
@@ -146,7 +148,7 @@ export default function IntelligencePage() {
             onClick={() => void quickLearning("GenerateLearningInsight")}
             className="rounded-md border border-[var(--line)] px-3 py-1.5 text-sm"
           >
-            Insight
+            Вывод
           </button>
         </div>
       )}
@@ -156,7 +158,7 @@ export default function IntelligencePage() {
         className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4"
       >
         <label className="block text-sm">
-          <span className="font-medium">Capability</span>
+          <span className="font-medium">Возможность</span>
           <select
             value={capability}
             onChange={(e) => setCapability(e.target.value)}
@@ -170,7 +172,7 @@ export default function IntelligencePage() {
           </select>
         </label>
         <label className="block text-sm">
-          <span className="font-medium">Arguments (JSON)</span>
+          <span className="font-medium">Аргументы (JSON)</span>
           <textarea
             value={argsJson}
             onChange={(e) => setArgsJson(e.target.value)}
@@ -183,13 +185,13 @@ export default function IntelligencePage() {
           disabled={busy}
           className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
         >
-          {busy ? "Invoking…" : "Invoke"}
+          {busy ? "Вызов…" : "Вызвать"}
         </button>
       </form>
 
       {error && (
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-          {error}
+          {ruError(error)}
         </p>
       )}
       {result && (

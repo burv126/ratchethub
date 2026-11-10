@@ -42,16 +42,14 @@ class VoicePlugin:
         return "voice"
 
     def plugin_name(self) -> str:
-        return "Production Voice AI"
+        return 'Голосовой ИИ'
 
     def plugin_version(self) -> str:
         return "1.0.0"
 
     def plugin_description(self) -> str:
         return (
-            "Voice communication adapter: calls, STT/TTS, sessions, recording, "
-            "and human transfer. Never executes business actions — Advisor decides, "
-            "Workflow executes."
+            'Адаптер голосовой связи: звонки, распознавание и синтез речи, сессии, запись и передача сотруднику. Бизнес-действия определяет консультант и выполняет процесс.'
         )
 
     def supported_capabilities(self) -> list[str]:
@@ -120,7 +118,7 @@ class VoicePlugin:
                 "advisor_notes": out.get("advisor_notes"),
                 "applied": False,
                 "business_actions_executed": False,
-                "note": "Decisions returned for Workflow Engine — Voice does not apply them",
+                "note": 'Решения переданы движку процессов — голосовой модуль их не применяет',
             }
         except Exception as exc:  # noqa: BLE001
             return {
@@ -142,7 +140,7 @@ class VoicePlugin:
 
         if cap in {Capability.RECEIVE_CALL.value, "ReceiveCall"}:
             if shop_id is None:
-                raise ValueError("shop_id required for ReceiveCall")
+                raise ValueError('Для ReceiveCall требуется shop_id')
             if isinstance(shop_id, str):
                 shop_id = UUID(shop_id)
             result = self._sessions.receive_call(
@@ -162,7 +160,7 @@ class VoicePlugin:
 
         if cap in {Capability.CREATE_VOICE_SESSION.value, "CreateVoiceSession"}:
             if shop_id is None:
-                raise ValueError("shop_id required for CreateVoiceSession")
+                raise ValueError('Для CreateVoiceSession требуется shop_id')
             if isinstance(shop_id, str):
                 shop_id = UUID(shop_id)
             conversation_id = payload.get("conversation_id")
@@ -225,7 +223,7 @@ class VoicePlugin:
         if cap in {Capability.TRANSFER_TO_HUMAN.value, "TransferToHuman"}:
             session_id = payload.get("session_id")
             if session_id is None:
-                raise ValueError("session_id required for TransferToHuman")
+                raise ValueError('Для TransferToHuman требуется session_id')
             if isinstance(session_id, str):
                 session_id = UUID(session_id)
             result = self._sessions.transfer_to_human(
@@ -244,7 +242,7 @@ class VoicePlugin:
         if cap in {Capability.END_CALL.value, "EndCall"}:
             session_id = payload.get("session_id")
             if session_id is None:
-                raise ValueError("session_id required for EndCall")
+                raise ValueError('Для EndCall требуется session_id')
             if isinstance(session_id, str):
                 session_id = UUID(session_id)
             result = self._sessions.end_call(
@@ -261,7 +259,7 @@ class VoicePlugin:
         if cap in {Capability.RECORD_CONVERSATION.value, "RecordConversation"}:
             session_id = payload.get("session_id")
             if session_id is None:
-                raise ValueError("session_id required for RecordConversation")
+                raise ValueError('Для RecordConversation требуется session_id')
             if isinstance(session_id, str):
                 session_id = UUID(session_id)
             recorded = self._sessions.record_conversation(
@@ -295,4 +293,4 @@ class VoicePlugin:
             recorded["business_actions_executed"] = False
             return recorded
 
-        raise LookupError(f"Unsupported voice capability: {cap}")
+        raise LookupError(f'Неподдерживаемая возможность звонков: {cap}')

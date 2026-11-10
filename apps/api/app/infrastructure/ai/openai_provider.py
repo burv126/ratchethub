@@ -20,9 +20,7 @@ from app.infrastructure.ai.provider import (
 from app.infrastructure.config import settings
 
 REPAIR_EXTRACTION_SYSTEM = (
-    "You extract structured auto-repair notes from mechanic speech. "
-    "Return ONLY valid JSON with keys: service, condition, recommendation, mileage. "
-    "mileage must be an integer or null. recommendation may be null."
+    'You extract structured auto-repair notes from mechanic speech. Return ONLY valid JSON with keys: service, condition, recommendation, mileage. mileage must be an integer or null. recommendation may be null. Write user-facing string values in professional Russian (ru-RU); preserve all JSON keys, numeric values, identifiers, and customer-provided names.'
 )
 
 
@@ -217,7 +215,7 @@ class OpenAIRepairExtraction(RepairExtractionPort):
             recommendation = str(recommendation).strip() or None
 
         return RepairExtractionResult(
-            service=str(data.get("service") or "General service").strip(),
+            service=str(data.get("service") or 'Общие работы').strip(),
             condition=str(data.get("condition") or transcript).strip(),
             recommendation=recommendation,
             mileage=mileage,

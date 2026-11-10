@@ -52,9 +52,9 @@ async def delete_shop(
     async with SessionLocal() as session:
         shop = await session.get(ShopModel, current.shop_id)
         if shop is None:
-            raise HTTPException(status_code=404, detail="Shop not found")
+            raise HTTPException(status_code=404, detail='Автосервис не найден')
         if shop.slug != body.confirm_slug.strip().lower():
-            raise HTTPException(status_code=400, detail="confirm_slug does not match shop slug")
+            raise HTTPException(status_code=400, detail='confirm_slug не совпадает с идентификатором автосервиса')
     await ComplianceService().delete_shop(current.shop_id)
     return {"ok": True, "deleted_shop_id": str(current.shop_id)}
 
@@ -111,7 +111,7 @@ async def _set_shop_subscription_status(shop_id: str, new_status: str) -> dict:
             select(ShopSubscriptionModel).where(ShopSubscriptionModel.shop_id == UUID(shop_id))
         )
         if sub is None:
-            raise HTTPException(status_code=404, detail="Subscription not found")
+            raise HTTPException(status_code=404, detail='Подписка не найдена')
         sub.status = new_status
         await session.commit()
     return {"ok": True, "shop_id": shop_id, "status": new_status}
@@ -180,7 +180,7 @@ async def platform_update_incident(
         resolve=body.resolve,
     )
     if item is None:
-        raise HTTPException(status_code=404, detail="Incident not found")
+        raise HTTPException(status_code=404, detail='Инцидент не найден')
     return {
         "id": str(item.id),
         "title": item.title,

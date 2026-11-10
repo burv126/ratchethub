@@ -267,7 +267,7 @@ class VoiceSessionService:
     def _require(self, session_id: UUID) -> VoiceSession:
         session = self._store.get(session_id)
         if session is None:
-            raise LookupError(f"Voice session not found: {session_id}")
+            raise LookupError(f'Голосовая сессия не найдена: {session_id}')
         return session
 
     def _session_payload(

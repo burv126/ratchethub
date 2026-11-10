@@ -1,4 +1,7 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+import { ruLabel } from "@/lib/ru";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
@@ -24,7 +27,7 @@ type ProviderGroup = {
 const PROVIDER_GROUPS: ProviderGroup[] = [
   {
     id: "shop",
-    title: "Shop Systems",
+    title: "Системы автосервиса",
     providers: [
       { id: "shopmonkey", label: "Shopmonkey", Icon: IconShopSystem },
       { id: "tekmetric", label: "Tekmetric", Icon: IconShopSystem },
@@ -34,20 +37,20 @@ const PROVIDER_GROUPS: ProviderGroup[] = [
   },
   {
     id: "communication",
-    title: "Customer Communication",
+    title: "Общение с клиентами",
     providers: [
       { id: "twilio", label: "Twilio", Icon: IconPhone },
-      { id: "email", label: "Email", Icon: IconMail },
+      { id: "email", label: "Эл. почта", Icon: IconMail },
     ],
   },
   {
     id: "accounting",
-    title: "Accounting",
+    title: "Бухгалтерия",
     providers: [{ id: "quickbooks", label: "QuickBooks", Icon: IconLedger }],
   },
   {
     id: "payments",
-    title: "Payments",
+    title: "Платежи",
     providers: [{ id: "stripe", label: "Stripe", Icon: IconCard }],
   },
 ];
@@ -92,14 +95,14 @@ function pickNumber(...values: unknown[]): number | null {
 }
 
 function formatWhen(value: string | null): string {
-  if (!value) return "Never";
+  if (!value) return "Никогда";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString();
+  return d.toLocaleString("ru-RU");
 }
 
 function formatCount(value: number | null): string {
-  return value == null ? "—" : value.toLocaleString();
+  return value == null ? "—" : value.toLocaleString("ru-RU");
 }
 
 function connectionFor(connections: ExternalConnection[], provider: string) {
@@ -138,13 +141,13 @@ function connectionStats(conn?: ExternalConnection) {
 }
 
 function statusLabel(conn?: ExternalConnection): string {
-  if (!conn) return "Not connected";
+  if (!conn) return "Не подключено";
   const s = (conn.status || "").toLowerCase();
-  if (s === "connected") return "Connected";
-  if (s === "error") return "Error";
-  if (s === "connecting") return "Connecting";
-  if (s === "disconnected") return "Disconnected";
-  return conn.status || "Unknown";
+  if (s === "connected") return "Подключено";
+  if (s === "error") return "Ошибка";
+  if (s === "connecting") return "Подключение";
+  if (s === "disconnected") return "Отключено";
+  return ruLabel(conn.status || "unknown");
 }
 
 function statusTone(conn?: ExternalConnection): string {
@@ -182,7 +185,7 @@ export default function ExternalIntegrationsPage() {
   useEffect(() => {
     if (authLoading || !session || session.role !== "owner") return;
     void refresh().catch((err) =>
-      setError(err instanceof Error ? err.message : "Failed to load connections"),
+      setError(err instanceof Error ? err.message : "Не удалось загрузить подключения"),
     );
   }, [authLoading, session, refresh]);
 
@@ -203,18 +206,18 @@ export default function ExternalIntegrationsPage() {
         const rest = prev.filter((c) => c.provider !== p);
         return [...rest, conn];
       });
-      setResult(`Connected ${p}`);
+      setResult(`Подключено ${p}`);
       try {
         await refresh();
       } catch (refreshErr) {
         setError(
           refreshErr instanceof Error
-            ? `Connected ${p}, but failed to refresh: ${refreshErr.message}`
-            : `Connected ${p}, but failed to refresh`,
+            ? `Подключено ${p}, но не удалось обновить: ${refreshErr.message}`
+            : `Подключено ${p}, но не удалось обновить`,
         );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Connect failed");
+      setError(err instanceof Error ? err.message : "Не удалось подключить");
     } finally {
       setBusy(false);
       setBusyProvider(null);
@@ -234,7 +237,7 @@ export default function ExternalIntegrationsPage() {
       await disconnectExternal(p);
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Disconnect failed");
+      setError(err instanceof Error ? err.message : "Не удалось отключить");
     } finally {
       setBusy(false);
       setBusyProvider(null);
@@ -249,7 +252,7 @@ export default function ExternalIntegrationsPage() {
       const out = await executeExternal({ capability, provider });
       setResult(JSON.stringify(out, null, 2));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Execute failed");
+      setError(err instanceof Error ? err.message : "Не удалось выполнить");
     } finally {
       setBusy(false);
     }
@@ -258,9 +261,9 @@ export default function ExternalIntegrationsPage() {
   if (!authLoading && session && session.role !== "owner") {
     return (
       <div className="space-y-6">
-        <h1 className="page-title">Connected Services</h1>
+        <h1 className="page-title">Подключённые сервисы</h1>
         <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Only shop owners can manage connected services.
+          Только владельцы могут управлять подключёнными сервисами.
         </p>
       </div>
     );
@@ -270,10 +273,10 @@ export default function ExternalIntegrationsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="page-title">Connected Services</h1>
+          <h1 className="page-title">Подключённые сервисы</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Connect your customer communication and payments.{" "}
-            {connectedCount} of {ALL_PROVIDERS.length} connected.
+            Подключите общение с клиентами и платежи.{" "}
+            {connectedCount} из {ALL_PROVIDERS.length} подключено.
           </p>
         </div>
         <button
@@ -281,13 +284,13 @@ export default function ExternalIntegrationsPage() {
           onClick={() => setShowAdvanced((v) => !v)}
           className="text-sm text-[var(--muted)] underline-offset-2 hover:underline"
         >
-          {showAdvanced ? "Hide Advanced Settings" : "Advanced Settings"}
+          {showAdvanced ? "Скрыть расширенные настройки" : "Расширенные настройки"}
         </button>
       </div>
 
       {error && (
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -331,7 +334,7 @@ export default function ExternalIntegrationsPage() {
                             onClick={() => void onDisconnect(p.id)}
                             className="rounded-md border border-[var(--line)] px-2.5 py-1 text-xs disabled:opacity-60"
                           >
-                            Disconnect
+                            Отключить
                           </button>
                         ) : (
                           <button
@@ -340,7 +343,7 @@ export default function ExternalIntegrationsPage() {
                             onClick={() => void onConnectProvider(p.id)}
                             className="rounded-md bg-[var(--accent)] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
                           >
-                            {rowBusy ? "Connecting…" : "Connect"}
+                            {rowBusy ? "Подключение…" : "Подключить"}
                           </button>
                         )}
                       </div>
@@ -348,15 +351,15 @@ export default function ExternalIntegrationsPage() {
 
                     <dl className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
                       <div>
-                        <dt className="text-xs text-[var(--muted)]">Last sync</dt>
+                        <dt className="text-xs text-[var(--muted)]">Последняя синхронизация</dt>
                         <dd className="mt-0.5 font-medium">{formatWhen(stats.lastSync)}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs text-[var(--muted)]">Imported records</dt>
+                        <dt className="text-xs text-[var(--muted)]">Импортировано записей</dt>
                         <dd className="mt-0.5 font-medium">{formatCount(stats.imported)}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs text-[var(--muted)]">AI memory created</dt>
+                        <dt className="text-xs text-[var(--muted)]">Создано памяти ИИ</dt>
                         <dd className="mt-0.5 font-medium">{formatCount(stats.aiMemory)}</dd>
                       </div>
                     </dl>
@@ -371,15 +374,15 @@ export default function ExternalIntegrationsPage() {
       {showAdvanced && (
         <section className="space-y-4 rounded-xl border border-dashed border-[var(--line)] bg-[var(--panel)] p-4">
           <div>
-            <h2 className="text-sm font-semibold">Advanced Settings</h2>
+            <h2 className="text-sm font-semibold">Расширенные настройки</h2>
             <p className="mt-1 text-xs text-[var(--muted)]">
-              Capability debugging, adapter details, and raw JSON. Not needed for day-to-day shop use.
+              Диагностика возможностей, сведения об адаптерах и исходный JSON. Для повседневной работы не требуется.
             </p>
           </div>
 
           <form onSubmit={onConnect} className="flex flex-wrap items-end gap-3">
             <label className="text-sm">
-              <span className="font-medium">Provider</span>
+              <span className="font-medium">Провайдер</span>
               <select
                 value={provider}
                 onChange={(e) => setProvider(e.target.value)}
@@ -397,13 +400,13 @@ export default function ExternalIntegrationsPage() {
               disabled={busy}
               className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              Connect (demo)
+              Подключить (демо)
             </button>
           </form>
 
           <form onSubmit={onExecute} className="flex flex-wrap items-end gap-3">
             <label className="text-sm">
-              <span className="font-medium">Capability</span>
+              <span className="font-medium">Возможность</span>
               <select
                 value={capability}
                 onChange={(e) => setCapability(e.target.value)}
@@ -421,12 +424,12 @@ export default function ExternalIntegrationsPage() {
               disabled={busy}
               className="rounded-md border border-[var(--line)] px-4 py-2 text-sm disabled:opacity-60"
             >
-              Execute
+              Выполнить
             </button>
           </form>
 
           <div>
-            <h3 className="text-sm font-medium">Adapters ({adapters.length})</h3>
+            <h3 className="text-sm font-medium">Адаптеры ({adapters.length})</h3>
             <ul className="mt-2 grid gap-2 sm:grid-cols-2">
               {adapters.map((a, i) => (
                 <li
@@ -447,7 +450,7 @@ export default function ExternalIntegrationsPage() {
 
           {matrix && (
             <div>
-              <h3 className="text-sm font-medium">Capability map (JSON)</h3>
+              <h3 className="text-sm font-medium">Карта возможностей (JSON)</h3>
               <pre className="mt-2 overflow-auto rounded-lg border border-[var(--line)] bg-white p-3 text-xs">
                 {JSON.stringify(matrix, null, 2)}
               </pre>
@@ -456,7 +459,7 @@ export default function ExternalIntegrationsPage() {
 
           {result && (
             <div>
-              <h3 className="text-sm font-medium">Last result (JSON)</h3>
+              <h3 className="text-sm font-medium">Последний результат (JSON)</h3>
               <pre className="mt-2 overflow-auto rounded-lg border border-[var(--line)] bg-white p-3 text-xs">
                 {result}
               </pre>

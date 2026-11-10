@@ -1,4 +1,9 @@
 "use client";
+import { ruNotification, ruNotificationTitle } from "@/lib/ru-errors";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -29,7 +34,7 @@ function shopLabel(n: AdminNotification): string | null {
 }
 
 const FILTERS = [
-  { value: "", label: "All events" },
+  { value: "", label: "Все события" },
   ...Object.entries(ADMIN_NOTIFICATION_EVENT_LABELS).map(([value, label]) => ({
     value,
     label,
@@ -46,7 +51,7 @@ function severityClass(severity: string) {
 }
 
 function eventLabel(eventType?: string) {
-  if (!eventType) return "Activity";
+  if (!eventType) return "Активность";
   return ADMIN_NOTIFICATION_EVENT_LABELS[eventType] ?? eventType;
 }
 
@@ -106,7 +111,7 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
         );
       } catch (err) {
         if (!quiet) {
-          setError(err instanceof Error ? err.message : "Failed to load notifications");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить уведомления");
         }
       } finally {
         if (!quiet) setBusy(false);
@@ -207,20 +212,20 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
       await markAdminNotificationRead(accessToken, id);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to mark read");
+      setError(err instanceof Error ? err.message : "Не удалось отметить прочитанным");
     }
   }
 
   async function onDelete(id: string) {
     if (!isDurableNotification(id)) return;
-    if (!window.confirm("Delete this notification?")) return;
+    if (!window.confirm("Удалить это уведомление?")) return;
     setDeletingId(id);
     setError(null);
     try {
       await deleteAdminNotification(accessToken, id);
       removeFromFeed([id]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete notification");
+      setError(err instanceof Error ? err.message : "Не удалось удалить уведомление");
       await load();
     } finally {
       setDeletingId(null);
@@ -230,7 +235,7 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
   async function onDeleteSelected() {
     const ids = [...selectedIds].filter(isDurableNotification);
     if (ids.length === 0) return;
-    if (!window.confirm(`Delete ${ids.length} selected notification${ids.length === 1 ? "" : "s"}?`)) {
+    if (!window.confirm(`Удалить ${ids.length} выбранных уведомлений${ids.length === 1 ? "" : ""}?`)) {
       return;
     }
     setBulkDeleting(true);
@@ -239,7 +244,7 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
       await deleteAdminNotifications(accessToken, ids);
       removeFromFeed(ids);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete selected notifications");
+      setError(err instanceof Error ? err.message : "Не удалось удалить выбранные уведомления");
       await load();
     } finally {
       setBulkDeleting(false);
@@ -251,7 +256,7 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
       await markAllAdminNotificationsRead(accessToken);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to mark all read");
+      setError(err instanceof Error ? err.message : "Не удалось отметить все прочитанными");
     }
   }
 
@@ -260,14 +265,14 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
       <section className="flex min-h-0 flex-1 flex-col">
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-3">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-            Notification Center
+            Центр уведомлений
           </h2>
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={eventType}
               onChange={(e) => setEventType(e.target.value)}
               className="rounded-md border border-[var(--line)] bg-white px-2 py-1.5 text-sm"
-              aria-label="Filter by event type"
+              aria-label="Фильтр по типу события"
             >
               {FILTERS.map((f) => (
                 <option key={f.value || "all"} value={f.value}>
@@ -282,7 +287,7 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
                 checked={unreadOnly}
                 onChange={(e) => setUnreadOnly(e.target.checked)}
               />
-              Unread only
+              Только непрочитанные
             </label>
             <button
               type="button"
@@ -290,7 +295,7 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
               onClick={() => void onMarkAll()}
               className="rounded-md border border-[var(--line)] px-3 py-1.5 text-sm disabled:opacity-50"
             >
-              Mark all read
+              Прочитать все
             </button>
             <button
               type="button"
@@ -298,11 +303,11 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
               onClick={() => void onDeleteSelected()}
               className="rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-700 disabled:opacity-50"
             >
-              {bulkDeleting ? "Deleting…" : `Delete selected${selectedCount ? ` (${selectedCount})` : ""}`}
+              {bulkDeleting ? "Удаление…" : `Удалить выбранные${selectedCount ? ` (${selectedCount})` : ""}`}
             </button>
           </div>
         </div>
-        {error && <p className="shrink-0 py-2 text-sm text-red-700">{error}</p>}
+        {error && <p className="shrink-0 py-2 text-sm text-red-700">{ruError(error)}</p>}
         {durableIds.length > 0 ? (
           <div className="flex shrink-0 items-center gap-2 border-b border-[var(--line)] py-2.5">
             <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
@@ -310,12 +315,12 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
                 type="checkbox"
                 checked={allSelected}
                 onChange={toggleSelectAll}
-                aria-label="Select all notifications"
+                aria-label="Выбрать все уведомления"
               />
-              Select all
+              Выбрать все
             </label>
             {selectedCount > 0 ? (
-              <span className="text-xs text-[var(--muted)]">{selectedCount} selected</span>
+              <span className="text-xs text-[var(--muted)]">{selectedCount} выбрано</span>
             ) : null}
           </div>
         ) : null}
@@ -340,16 +345,16 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
                         className="mt-0.5"
                         checked={selected}
                         onChange={() => toggleSelected(n.id)}
-                        aria-label={`Select ${n.title}`}
+                        aria-label={`Выбрать ${ruNotificationTitle(n)}`}
                       />
                     ) : (
                       <span className="inline-block w-4" aria-hidden />
                     )}
                     <p className="text-sm font-medium">
-                      {n.title}
+                      {ruNotificationTitle(n)}
                       {unread && durable ? (
                         <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">
-                          unread
+                          не прочитано
                         </span>
                       ) : null}
                     </p>
@@ -358,11 +363,11 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
                     {eventLabel(n.event_type)}
                   </span>
                 </div>
-                <p className="mt-1 pl-6 text-xs text-[var(--muted)]">{n.message}</p>
+                <p className="mt-1 pl-6 text-xs text-[var(--muted)]">{ruNotification(n)}</p>
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2 pl-6">
                   <p className="text-xs text-[var(--muted)]">
-                    {n.status}
-                    {n.occurred_at ? ` · ${new Date(n.occurred_at).toLocaleString()}` : ""}
+                    {ruLabel(n.status)}
+                    {n.occurred_at ? ` · ${new Date(n.occurred_at).toLocaleString("ru-RU")}` : ""}
                     {shop ? " · " : ""}
                     {shop && n.shop_id ? (
                       <Link
@@ -383,7 +388,7 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
                           onClick={() => void onMarkRead(n.id)}
                           className="text-xs font-medium text-[var(--accent)] hover:underline"
                         >
-                          Mark read
+                          Прочитать
                         </button>
                       ) : null}
                       <button
@@ -392,7 +397,7 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
                         onClick={() => void onDelete(n.id)}
                         className="text-xs font-medium text-red-600 hover:underline disabled:opacity-50"
                       >
-                        {deletingId === n.id ? "Deleting…" : "Delete"}
+                        {deletingId === n.id ? "Удаление…" : "Удалить"}
                       </button>
                     </div>
                   ) : null}
@@ -402,8 +407,7 @@ function NotificationsBody({ accessToken }: { accessToken: string }) {
           })}
           {(feed?.notifications.length ?? 0) === 0 && (
             <li className="py-8 text-center text-sm text-[var(--muted)]">
-              No notifications yet. New signups, member joins, payments, quota warnings, and system
-              errors appear here.
+              Уведомлений пока нет. Здесь появятся регистрации, новые сотрудники, платежи, предупреждения о квотах и системные ошибки.
             </li>
           )}
         </ul>

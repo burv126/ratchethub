@@ -17,7 +17,7 @@ class NewCustomerPhoneScenario(BaseScenario):
         conversation = ctx.gen.conversation(
             customer=customer,
             channel="phone",
-            body=f"Hi, my {vehicle.make} has {repair.complaint}",
+            body=f'Здравствуйте, у моего {vehicle.make} проблема: {repair.complaint}',
             intent="maintenance_question",
         )
         appointment = ctx.gen.appointment(

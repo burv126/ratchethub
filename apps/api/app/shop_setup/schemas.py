@@ -23,13 +23,13 @@ class BusinessHoursIn(BaseModel):
         parts = raw.split(":")
         # Accept HH:MM or HH:MM:SS (browsers / time.isoformat()).
         if len(parts) not in (2, 3):
-            raise ValueError("Time must be HH:MM")
+            raise ValueError('Время должно быть в формате ЧЧ:ММ')
         try:
             hour, minute = int(parts[0]), int(parts[1])
         except ValueError as exc:
-            raise ValueError("Time must be HH:MM") from exc
+            raise ValueError('Время должно быть в формате ЧЧ:ММ') from exc
         if hour < 0 or hour > 23 or minute < 0 or minute > 59:
-            raise ValueError("Invalid time")
+            raise ValueError('Некорректное время')
         return f"{hour:02d}:{minute:02d}"
 
     @field_validator("closed", mode="before")

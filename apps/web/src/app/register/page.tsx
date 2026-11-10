@@ -70,13 +70,12 @@ export default function RegisterPage() {
               <BrandWordmark className="text-[1em] leading-none text-white" />
             </p>
             <p className="mt-5 max-w-md text-base font-medium leading-relaxed text-white/78 sm:text-lg">
-              Open your shop workspace — voice, SMS, scheduling, and vehicle knowledge ready from day
-              one.
+              Откройте рабочее пространство автосервиса: звонки, SMS, расписание и знания об автомобилях с первого дня.
             </p>
             <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm text-white/55">
-              <span>Setup in minutes</span>
+              <span>Настройка за несколько минут</span>
               <span className="hidden h-1 w-1 self-center rounded-full bg-white/30 sm:inline-block" />
-              <span>Shop-isolated by design</span>
+              <span>Изоляция данных автосервиса</span>
             </div>
           </div>
         </div>
@@ -92,7 +91,7 @@ export default function RegisterPage() {
                 wordmarkClassName="text-2xl font-extrabold tracking-tight text-[var(--ink)]"
               />
               <p className="mt-1.5 text-sm text-[var(--muted)]">
-                Elevated shop software for every bay and every call.
+                Современное ПО для каждого поста и каждого звонка.
               </p>
             </div>
 

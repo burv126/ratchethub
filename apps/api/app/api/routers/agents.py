@@ -59,7 +59,7 @@ async def process_inbound(
     runtime: AgentRuntime = Depends(get_agent_runtime),
 ) -> PipelineResponse:
     if not settings.agents_enabled:
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Agents disabled")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail='Агенты отключены')
 
     result = await runtime.orchestrator.handle_incoming(
         shop_id=user.shop_id,

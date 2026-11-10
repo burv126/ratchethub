@@ -205,8 +205,7 @@ class VoiceAiService:
         if await self._store.is_shop_ai_paused(shop_id):
             # Stop Voice AI processing only — no agent/TTS pipeline.
             notice = (
-                "Thanks for calling. Our phone assistant is paused right now. "
-                "Please try again later."
+                'Спасибо за звонок. Телефонный помощник сейчас приостановлен. Позвоните позже.'
             )
             twiml = self._provider.build_hangup_twiml(say_text=notice)
             live = await self._store.list_live_calls(shop_id)
@@ -284,9 +283,9 @@ class VoiceAiService:
         t0 = time.perf_counter()
         call = await self._store.get_call_by_sid(speech.call_sid, shop_id=shop_id)
         if call is None:
-            raise ValueError("Call not found for speech input")
+            raise ValueError('Звонок для голосового ввода не найден')
         if call.shop_id != shop_id:
-            raise ValueError("Shop mismatch for call")
+            raise ValueError('Автосервис звонка не совпадает')
 
         self._monitor.record_turn()
         now = datetime.now(timezone.utc)
@@ -307,8 +306,7 @@ class VoiceAiService:
             if empties >= hangup_after:
                 draft = VoiceReplyDraft(
                     text=(
-                        "I didn't catch anything, so I'll let you go. "
-                        "Feel free to call back anytime. Goodbye."
+                        'Я ничего не услышал, поэтому завершу звонок. Вы можете перезвонить в любое время. До свидания.'
                     ),
                     end_call=True,
                     reason="empty_gather_timeout",
@@ -333,8 +331,8 @@ class VoiceAiService:
 
             if empties >= 2:
                 draft = VoiceReplyDraft(
-                    text="I'm still here whenever you're ready.",
-                    follow_up_question="Go ahead when you're ready.",
+                    text='Я на линии и готов помочь.',
+                    follow_up_question='Говорите, когда будете готовы.',
                 )
                 spoken = await self._speech.speak(text=draft.text, synthesize=False)
                 assistant_turn = await self._persist_turn(
@@ -374,7 +372,7 @@ class VoiceAiService:
 
         if call.human_takeover:
             draft = VoiceReplyDraft(
-                text="Someone from the shop is jumping on  -  hang tight one sec.",
+                text='Сейчас подключится сотрудник — подождите немного.',
                 escalate_to_human=True,
                 reason="human_takeover",
             )
@@ -392,8 +390,7 @@ class VoiceAiService:
         if await self._store.is_shop_ai_paused(shop_id):
             # Caller speech may be recorded above; skip agent/TTS reply.
             notice = (
-                "Our phone assistant is paused right now. "
-                "Please try again later. Goodbye."
+                'Телефонный помощник сейчас приостановлен. Позвоните позже. До свидания.'
             )
             twiml = self._provider.build_hangup_twiml(say_text=notice)
             draft = VoiceReplyDraft(text=notice, end_call=True, reason="ai_paused")
@@ -900,7 +897,7 @@ class VoiceAiService:
         with shop_ai_scope(shop_id):
             call = await self._store.get_call(shop_id, call_id)
             if call is None:
-                raise ValueError("Call not found")
+                raise ValueError('Звонок не найден')
 
             if recording_sid:
                 call.recording_sid = recording_sid
@@ -981,7 +978,7 @@ class VoiceAiService:
         with shop_ai_scope(shop_id):
             call = await self._store.get_call(shop_id, call_id)
             if call is None:
-                raise ValueError("Call not found")
+                raise ValueError('Звонок не найден')
 
             memory = await self._memory.load(
                 shop_id=shop_id, call_id=call.id, caller_phone=call.caller_phone
@@ -1117,7 +1114,7 @@ class VoiceAiService:
     ) -> VoiceCall:
         call = await self._store.get_call(shop_id, call_id)
         if call is None:
-            raise ValueError("Call not found")
+            raise ValueError('Звонок не найден')
         call.human_takeover = enabled
         if enabled:
             call.status = VoiceCallStatus.ESCALATED.value
@@ -1128,10 +1125,10 @@ class VoiceAiService:
     async def delete_call(self, *, shop_id: UUID, call_id: UUID) -> None:
         call = await self._store.get_call(shop_id, call_id)
         if call is None:
-            raise ValueError("Call not found")
+            raise ValueError('Звонок не найден')
         deleted = await self._store.delete_call(shop_id, call_id)
         if not deleted:
-            raise ValueError("Call not found")
+            raise ValueError('Звонок не найден')
         live = await self._store.list_live_calls(shop_id)
         self._monitor.set_live_calls(len(live))
 
@@ -1172,17 +1169,16 @@ class VoiceAiService:
 
     def _build_call_summary(self, call: VoiceCall, transcript: str) -> str:
         parts = [
-            f"Call with {call.caller_phone}.",
+            f'Звонок с {call.caller_phone}.',
             f"Status: {call.status}.",
         ]
         if call.last_intent:
-            parts.append(f"Last intent: {call.last_intent}.")
+            parts.append(f'Последнее намерение: {call.last_intent}.')
         if call.escalate:
             parts.append(f"Escalated: {call.escalation_reason or 'yes'}.")
         if call.repair_notes:
             parts.append(
-                "Repair notes: "
-                f"{call.repair_notes.get('service')}  -  {call.repair_notes.get('condition')}."
+                f"Примечания о ремонте: {call.repair_notes.get('service')} — {call.repair_notes.get('condition')}."
             )
         turn_count = transcript.count("\n") + 1 if transcript else 0
         parts.append(f"Turns: {turn_count}.")

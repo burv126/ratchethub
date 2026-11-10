@@ -56,7 +56,7 @@ class PluginLifecycle:
 
     def _transition(self, target: LifecycleState) -> None:
         if not self.can_transition(target):
-            raise ValueError(f"Cannot transition {self.state.value} → {target.value}")
+            raise ValueError(f'Нельзя перейти из {self.state.value} в {target.value}')
         self.state = target
 
     async def install(self) -> None:
@@ -67,7 +67,7 @@ class PluginLifecycle:
             # Idempotent install from installed
             if self.state == LifecycleState.INSTALLED:
                 return
-            raise ValueError(f"Cannot install from state {self.state.value}")
+            raise ValueError(f'Нельзя установить из состояния {self.state.value}')
 
     async def initialize(self, context: PluginContext | None = None) -> None:
         if self.state == LifecycleState.INSTALLED:
@@ -76,7 +76,7 @@ class PluginLifecycle:
         elif self.state in {LifecycleState.INITIALIZED, LifecycleState.ENABLED, LifecycleState.DISABLED}:
             return
         else:
-            raise ValueError(f"Cannot initialize from state {self.state.value}")
+            raise ValueError(f'Нельзя инициализировать из состояния {self.state.value}')
 
     async def enable(self) -> None:
         if self.state == LifecycleState.INITIALIZED:
@@ -86,7 +86,7 @@ class PluginLifecycle:
         elif self.state == LifecycleState.ENABLED:
             return
         else:
-            raise ValueError(f"Cannot enable from state {self.state.value}")
+            raise ValueError(f'Нельзя включить из состояния {self.state.value}')
 
     async def disable(self) -> None:
         if self.state == LifecycleState.ENABLED:
@@ -94,11 +94,11 @@ class PluginLifecycle:
         elif self.state in {LifecycleState.DISABLED, LifecycleState.INITIALIZED}:
             self.state = LifecycleState.DISABLED
         else:
-            raise ValueError(f"Cannot disable from state {self.state.value}")
+            raise ValueError(f'Нельзя отключить из состояния {self.state.value}')
 
     async def upgrade(self, new_version: str) -> None:
         if self.state not in {LifecycleState.ENABLED, LifecycleState.DISABLED}:
-            raise ValueError(f"Cannot upgrade from state {self.state.value}")
+            raise ValueError(f'Нельзя обновить из состояния {self.state.value}')
         prev = self.state
         self.state = LifecycleState.UPGRADING
         self._version_history.append(new_version)
@@ -106,7 +106,7 @@ class PluginLifecycle:
 
     async def rollback(self) -> str:
         if len(self._version_history) < 2:
-            raise ValueError("No previous version to rollback to")
+            raise ValueError('Нет предыдущей версии для отката')
         self.state = LifecycleState.ROLLING_BACK
         self._version_history.pop()
         restored = self._version_history[-1]

@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -47,11 +51,11 @@ function KpiCard({ kpi }: { kpi: AnalyticsKpi }) {
       <p className="mt-1 text-xl font-semibold">{formatKpiValue(kpi)}</p>
       <p className="mt-1 text-xs text-[var(--muted)]">
         {kpi.delta_pct >= 0 ? "+" : ""}
-        {kpi.delta_pct.toFixed(1)}% · {kpi.trend}
+        {kpi.delta_pct.toFixed(1)}% · {ruLabel(kpi.trend)}
         {kpi.vs_benchmark_pct != null && (
           <span>
             {" "}
-            · vs bench {kpi.vs_benchmark_pct >= 0 ? "+" : ""}
+            · к эталону {kpi.vs_benchmark_pct >= 0 ? "+" : ""}
             {kpi.vs_benchmark_pct.toFixed(1)}%
           </span>
         )}
@@ -96,7 +100,7 @@ export default function AnalyticsPage() {
         await loadDashboard(true);
         await loadLists();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load analytics");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить аналитику");
       }
     })();
   }, [authLoading, session, loadDashboard, loadLists]);
@@ -107,7 +111,7 @@ export default function AnalyticsPage() {
     try {
       await loadDashboard(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Refresh failed");
+      setError(err instanceof Error ? err.message : "Не удалось обновить");
     } finally {
       setBusy(false);
     }
@@ -122,7 +126,7 @@ export default function AnalyticsPage() {
       await loadLists();
       setTab("reports");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Report failed");
+      setError(err instanceof Error ? err.message : "Не удалось сформировать отчёт");
     } finally {
       setBusy(false);
     }
@@ -141,7 +145,7 @@ export default function AnalyticsPage() {
       await loadLists();
       setTab("exports");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Export failed");
+      setError(err instanceof Error ? err.message : "Не удалось экспортировать");
     } finally {
       setBusy(false);
     }
@@ -151,12 +155,12 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="page-title">Analytics Engine</h1>
+          <h1 className="page-title">Аналитика</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            KPIs, forecasts, benchmarks, reports, and exports.
+            Показатели, прогнозы, сравнения, отчёты и экспорт.
             {data && (
               <span className="ml-2 text-xs">
-                · v{data.version} · {data.period_start} → {data.period_end}
+                · версия{data.version} · {data.period_start} → {data.period_end}
               </span>
             )}
           </p>
@@ -182,18 +186,18 @@ export default function AnalyticsPage() {
             onClick={() => void onRefresh()}
             className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
-            {busy ? "Working…" : "Refresh"}
+            {busy ? "Обработка…" : "Обновить"}
           </button>
         </div>
       </div>
 
       {error && (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{ruError(error)}</p>
       )}
 
       {analyticsMetrics && (
         <p className="rounded-md border border-[var(--line)] px-3 py-2 text-xs text-[var(--muted)]">
-          Metrics: {JSON.stringify(analyticsMetrics)}
+          Метрики: {JSON.stringify(analyticsMetrics)}
         </p>
       )}
 
@@ -216,7 +220,7 @@ export default function AnalyticsPage() {
 
           <section className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-md border border-[var(--line)] p-4">
-              <h2 className="text-sm font-medium uppercase tracking-wide text-[var(--muted)]">Forecast</h2>
+              <h2 className="text-sm font-medium uppercase tracking-wide text-[var(--muted)]">Прогноз</h2>
               <ul className="mt-3 space-y-3">
                 {data.forecasts.map((f: AnalyticsForecast) => (
                   <li key={f.kpi} className="text-sm">
@@ -224,7 +228,7 @@ export default function AnalyticsPage() {
                     <p className="text-xs text-[var(--muted)]">{f.summary}</p>
                     {f.points[0] && (
                       <p className="mt-1 text-xs">
-                        Next: {f.points[0].predicted.toLocaleString()} ({f.points[0].low}–{f.points[0].high})
+                        Далее: {f.points[0].predicted.toLocaleString("ru-RU")} ({f.points[0].low}–{f.points[0].high})
                       </p>
                     )}
                   </li>
@@ -232,7 +236,7 @@ export default function AnalyticsPage() {
               </ul>
             </div>
             <div className="rounded-md border border-[var(--line)] p-4">
-              <h2 className="text-sm font-medium uppercase tracking-wide text-[var(--muted)]">Benchmarks</h2>
+              <h2 className="text-sm font-medium uppercase tracking-wide text-[var(--muted)]">Сравнения</h2>
               <ul className="mt-3 space-y-2">
                 {data.benchmarks.map((b: AnalyticsBenchmark) => (
                   <li
@@ -241,7 +245,7 @@ export default function AnalyticsPage() {
                   >
                     <span>{b.label}</span>
                     <span className="text-xs text-[var(--muted)]">
-                      {b.status} · shop {b.shop_value.toFixed(2)} / avg {b.industry_avg.toFixed(2)}
+                      {ruLabel(b.status)} · автосервис {b.shop_value.toFixed(2)} / среднее {b.industry_avg.toFixed(2)}
                     </span>
                   </li>
                 ))}
@@ -256,7 +260,7 @@ export default function AnalyticsPage() {
               onClick={() => void onExport("csv")}
               className="rounded-md border border-[var(--line)] px-3 py-2 text-sm"
             >
-              Export dashboard CSV
+              Экспорт панели в CSV
             </button>
             <button
               type="button"
@@ -264,7 +268,7 @@ export default function AnalyticsPage() {
               onClick={() => void onExport("json")}
               className="rounded-md border border-[var(--line)] px-3 py-2 text-sm"
             >
-              Export dashboard JSON
+              Экспорт панели в JSON
             </button>
           </div>
         </>
@@ -273,7 +277,7 @@ export default function AnalyticsPage() {
       {tab === "reports" && (
         <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <div className="space-y-3 rounded-md border border-[var(--line)] p-4">
-            <h2 className="text-sm font-medium">Create report</h2>
+            <h2 className="text-sm font-medium">Создать отчёт</h2>
             <select
               value={reportType}
               onChange={(e) => setReportType(e.target.value)}
@@ -299,7 +303,7 @@ export default function AnalyticsPage() {
               onClick={() => void onCreateReport()}
               className="w-full rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              Generate
+              Сформировать
             </button>
             <ul className="max-h-80 space-y-1 overflow-auto text-sm">
               {reports.map((r) => (
@@ -314,18 +318,18 @@ export default function AnalyticsPage() {
                         .then(setSelectedReport)
                         .catch((err) => {
                           setSelectedReport(r);
-                          setError(err instanceof Error ? err.message : "Open report failed");
+                          setError(err instanceof Error ? err.message : "Не удалось открыть отчёт");
                         })
                     }
                   >
                     <span className="font-medium">{r.title}</span>
                     <span className="mt-0.5 block text-[11px] text-[var(--muted)]">
-                      {new Date(r.generated_at).toLocaleString()}
+                      {new Date(r.generated_at).toLocaleString("ru-RU")}
                     </span>
                   </button>
                 </li>
               ))}
-              {!reports.length && <li className="text-xs text-[var(--muted)]">No reports yet</li>}
+              {!reports.length && <li className="text-xs text-[var(--muted)]">Отчётов пока нет</li>}
             </ul>
           </div>
           <div className="rounded-md border border-[var(--line)] p-4">
@@ -342,14 +346,14 @@ export default function AnalyticsPage() {
                       className="rounded border border-[var(--line)] px-2 py-1 text-xs"
                       onClick={() => void onExport("csv", selectedReport.id)}
                     >
-                      Export CSV
+                      Экспорт в CSV
                     </button>
                     <button
                       type="button"
                       className="rounded border border-[var(--line)] px-2 py-1 text-xs"
                       onClick={() => void onExport("json", selectedReport.id)}
                     >
-                      Export JSON
+                      Экспорт в JSON
                     </button>
                   </div>
                 </div>
@@ -361,7 +365,7 @@ export default function AnalyticsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-[var(--muted)]">Select or generate a report</p>
+              <p className="text-sm text-[var(--muted)]">Выберите или создайте отчёт</p>
             )}
           </div>
         </section>
@@ -372,10 +376,10 @@ export default function AnalyticsPage() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[var(--line)] text-xs uppercase text-[var(--muted)]">
               <tr>
-                <th className="px-3 py-2">Filename</th>
-                <th className="px-3 py-2">Format</th>
-                <th className="px-3 py-2">Rows</th>
-                <th className="px-3 py-2">Created</th>
+                <th className="px-3 py-2">Имя файла</th>
+                <th className="px-3 py-2">Формат</th>
+                <th className="px-3 py-2">Строки</th>
+                <th className="px-3 py-2">Создано</th>
                 <th className="px-3 py-2" />
               </tr>
             </thead>
@@ -385,14 +389,14 @@ export default function AnalyticsPage() {
                   <td className="px-3 py-2">{ex.filename}</td>
                   <td className="px-3 py-2 uppercase">{ex.format}</td>
                   <td className="px-3 py-2">{ex.row_count}</td>
-                  <td className="px-3 py-2">{new Date(ex.created_at).toLocaleString()}</td>
+                  <td className="px-3 py-2">{new Date(ex.created_at).toLocaleString("ru-RU")}</td>
                   <td className="px-3 py-2">
                     <button
                       type="button"
                       className="text-xs text-[var(--accent)]"
                       onClick={() => void downloadAnalyticsExport(ex.id, ex.filename)}
                     >
-                      Download
+                      Скачать
                     </button>
                   </td>
                 </tr>
@@ -400,7 +404,7 @@ export default function AnalyticsPage() {
               {!exports.length && (
                 <tr>
                   <td colSpan={5} className="px-3 py-4 text-sm text-[var(--muted)]">
-                    No exports yet — export from Dashboard or Reports.
+                    Экспорта пока нет — экспортируйте данные из панели или отчётов.
                   </td>
                 </tr>
               )}

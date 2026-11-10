@@ -8,6 +8,13 @@ from uuid import UUID, uuid4
 from app.analytics.enums import ReportType
 from app.analytics.models import AnalyticsReport, AnalyticsSnapshot, ReportSection
 from app.analytics.monitoring import AnalyticsMonitor
+from app.localization import benchmark_label, kpi_label
+
+
+_REPORT_LABELS = {
+    "full": "Полный отчёт", "executive_summary": "Сводка руководителя", "revenue": "Выручка",
+    "retention": "Удержание клиентов", "marketing": "Маркетинг", "operations": "Операции", "ai_performance": "Эффективность ИИ",
+}
 
 
 class ReportBuilder:
@@ -26,15 +33,15 @@ class ReportBuilder:
 
         sections: list[ReportSection] = []
         if report_type in {ReportType.FULL, ReportType.EXECUTIVE_SUMMARY, ReportType.REVENUE}:
-            sections.append(self._kpi_section(snap, "revenue", "Revenue & ARO", {"revenue", "average_repair_order", "customer_lifetime_value"}))
+            sections.append(self._kpi_section(snap, "revenue", 'Выручка и средний заказ-наряд', {"revenue", "average_repair_order", "customer_lifetime_value"}))
         if report_type in {ReportType.FULL, ReportType.EXECUTIVE_SUMMARY, ReportType.RETENTION}:
-            sections.append(self._kpi_section(snap, "retention", "Retention & Conversion", {"retention", "appointment_conversion"}))
+            sections.append(self._kpi_section(snap, "retention", 'Удержание и конверсия', {"retention", "appointment_conversion"}))
         if report_type in {ReportType.FULL, ReportType.MARKETING}:
-            sections.append(self._kpi_section(snap, "marketing", "Marketing", {"marketing_roi"}))
+            sections.append(self._kpi_section(snap, "marketing", 'Маркетинг', {"marketing_roi"}))
         if report_type in {ReportType.FULL, ReportType.OPERATIONS}:
-            sections.append(self._kpi_section(snap, "operations", "Operations", {"mechanic_productivity"}))
+            sections.append(self._kpi_section(snap, "operations", 'Операции', {"mechanic_productivity"}))
         if report_type in {ReportType.FULL, ReportType.AI_PERFORMANCE}:
-            sections.append(self._kpi_section(snap, "ai", "AI Performance", {"ai_success_rate"}))
+            sections.append(self._kpi_section(snap, "ai", 'Эффективность ИИ', {"ai_success_rate"}))
         if report_type in {ReportType.FULL, ReportType.EXECUTIVE_SUMMARY}:
             sections.append(self._benchmark_section(snap))
             sections.append(self._forecast_section(snap))
@@ -44,7 +51,7 @@ class ReportBuilder:
             id=uuid4(),
             shop_id=snap.shop_id,
             report_type=report_type,
-            title=title or f"{report_type.value.replace('_', ' ').title()} Report",
+            title=title or f"Отчёт: {_REPORT_LABELS.get(report_type.value, report_type.value)}",
             generated_at=datetime.now(timezone.utc),
             period_start=snap.period_start,
             period_end=snap.period_end,
@@ -75,8 +82,8 @@ class ReportBuilder:
                     "trend": k.trend.value,
                 }
             )
-            lines.append(f"- {k.label}: {k.detail or k.value} ({k.delta_pct:+.1f}% vs prior)")
-        body = "\n".join(lines) if lines else "No metrics in this section."
+            lines.append(f'- {k.label}: {k.detail or k.value} ({k.delta_pct:+.1f}% к прошлому периоду)')
+        body = "\n".join(lines) if lines else 'В этом разделе нет показателей.'
         return ReportSection(id=sid, title=title, body=body, metrics=metrics)
 
     def _benchmark_section(self, snap: AnalyticsSnapshot) -> ReportSection:
@@ -84,8 +91,7 @@ class ReportBuilder:
         metrics = []
         for b in snap.benchmarks:
             lines.append(
-                f"- {b.label}: shop={b.shop_value:.2f} vs industry={b.industry_avg:.2f} "
-                f"(top={b.top_quartile:.2f}) → {b.status}"
+                f'- {b.label}: автосервис={b.shop_value:.2f}, отрасль={b.industry_avg:.2f} (лучшие={b.top_quartile:.2f}) → {benchmark_label(b.status)}'
             )
             metrics.append(
                 {
@@ -98,8 +104,8 @@ class ReportBuilder:
             )
         return ReportSection(
             id="benchmarks",
-            title="Benchmarks",
-            body="\n".join(lines) or "No benchmarks.",
+            title='Сравнения',
+            body="\n".join(lines) or 'Нет данных для сравнения.',
             metrics=metrics,
         )
 
@@ -107,11 +113,10 @@ class ReportBuilder:
         lines = []
         metrics = []
         for f in snap.forecasts:
-            lines.append(f"- {f.kpi.value}: {f.summary}")
+            lines.append(f"- {kpi_label(f.kpi.value)}: {f.summary}")
             if f.points:
                 lines.append(
-                    f"  Next day ~{f.points[0].predicted:.2f} "
-                    f"(band {f.points[0].low:.2f}–{f.points[0].high:.2f})"
+                    f'  Следующий день ~{f.points[0].predicted:.2f} (диапазон {f.points[0].low:.2f}–{f.points[0].high:.2f})'
                 )
             metrics.append(
                 {
@@ -123,8 +128,8 @@ class ReportBuilder:
             )
         return ReportSection(
             id="forecast",
-            title="Forecast",
-            body="\n".join(lines) or "No forecasts.",
+            title='Прогноз',
+            body="\n".join(lines) or 'Прогнозов нет.',
             metrics=metrics,
         )
 
@@ -132,7 +137,5 @@ class ReportBuilder:
         ahead = sum(1 for b in snap.benchmarks if b.status == "ahead")
         behind = sum(1 for b in snap.benchmarks if b.status == "behind")
         return (
-            f"{report_type.value.replace('_', ' ').title()} for "
-            f"{snap.period_start.isoformat()} → {snap.period_end.isoformat()}. "
-            f"Benchmarks: {ahead} ahead, {behind} behind industry."
+            f"{_REPORT_LABELS.get(report_type.value, report_type.value)} за {snap.period_start.isoformat()} → {snap.period_end.isoformat()}. Сравнение с отраслью: выше — {ahead}, ниже — {behind}."
         )

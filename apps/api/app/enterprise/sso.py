@@ -82,7 +82,7 @@ class SsoService:
     def begin_login(self, org_id: UUID, *, email: str | None = None) -> dict[str, Any]:
         cfg = self._store.get_sso(org_id)
         if cfg is None or not cfg.enabled:
-            raise ValueError("SSO not configured or disabled")
+            raise ValueError('SSO не настроен или отключён')
         state = secrets.token_urlsafe(24)
         nonce = secrets.token_urlsafe(16)
         client_secret = (cfg.metadata or {}).get("client_secret") or settings.oidc_client_secret
@@ -147,11 +147,11 @@ class SsoService:
     ) -> dict[str, Any]:
         pending = self._pending.pop(state, None)
         if pending is None:
-            raise ValueError("Invalid or expired SSO state")
+            raise ValueError('Состояние SSO недействительно или просрочено')
         org_id = UUID(pending["org_id"])
         cfg = self._store.get_sso(org_id)
         if cfg is None:
-            raise ValueError("SSO config missing")
+            raise ValueError('Настройки SSO отсутствуют')
 
         resolved_email = email or pending.get("email")
         demo_mode = bool(pending.get("demo_mode", True))
@@ -189,17 +189,17 @@ class SsoService:
                         external_role = external_role or profile.get("role")
             except Exception as exc:
                 logger.exception("sso.oidc_exchange_failed")
-                raise ValueError(f"OIDC token exchange failed: {exc}") from exc
+                raise ValueError(f'Не удалось обменять токен OIDC: {exc}') from exc
 
         if not resolved_email:
-            raise ValueError("email is required to complete SSO login")
+            raise ValueError('Для завершения входа SSO укажите почту')
 
         # Domain allow-list only for real OIDC completions (not demo exchange).
         if not demo_mode and cfg.domains:
             domain = resolved_email.split("@")[-1].lower()
             allowed = {d.lower() for d in cfg.domains}
             if domain not in allowed:
-                raise ValueError("Email domain is not allowed for this organization")
+                raise ValueError('Домен почты не разрешён для этой организации')
 
         return self._finalize_login(
             org_id=org_id,
@@ -221,15 +221,15 @@ class SsoService:
         """Sync wrapper for demo/tests; prefer complete_login_async in API."""
         pending = self._pending.get(state)
         if pending and not pending.get("demo_mode") and code:
-            raise ValueError("Use async OIDC completion for real SSO code exchange")
+            raise ValueError('Для обмена кодом SSO используйте асинхронное завершение OIDC')
         # Consume pending via async-compatible path without network
         pending = self._pending.pop(state, None)
         if pending is None:
-            raise ValueError("Invalid or expired SSO state")
+            raise ValueError('Состояние SSO недействительно или просрочено')
         org_id = UUID(pending["org_id"])
         cfg = self._store.get_sso(org_id)
         if cfg is None:
-            raise ValueError("SSO config missing")
+            raise ValueError('Настройки SSO отсутствуют')
         return self._finalize_login(
             org_id=org_id,
             cfg=cfg,
@@ -248,7 +248,7 @@ class SsoService:
         user_id: UUID | None,
     ) -> dict[str, Any]:
         if not email:
-            raise ValueError("email is required")
+            raise ValueError('Укажите почту')
         mapped = (cfg.role_mapping or {}).get(external_role or "user", EnterpriseRole.LOCATION_STAFF.value)
         try:
             role = EnterpriseRole(mapped)

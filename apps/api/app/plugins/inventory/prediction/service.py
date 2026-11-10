@@ -120,7 +120,7 @@ class PredictionService:
         decisions: list[Any] = []
         notes: list[str] = []
         lines = ctx.required_parts
-        notes.append(f"Predicted {len(lines)} required part line(s)")
+        notes.append(f'Предполагаемых строк запчастей: {len(lines)}')
 
         missing: list[dict[str, Any]] = []
         available_lines: list[dict[str, Any]] = []
@@ -160,7 +160,7 @@ class PredictionService:
                     reserve_recommended=sufficient,
                     lead_time_days=0 if sufficient else line.lead_time_days,
                     confidence=0.88,
-                    rationale=f"Availability check for {line.sku}",
+                    rationale=f'Проверка наличия {line.sku}',
                 )
             )
             decisions.append(
@@ -175,7 +175,7 @@ class PredictionService:
                     line_cost=line_cost,
                     list_price_hint=None,
                     confidence=0.85,
-                    rationale=f"Part cost estimate for {line.sku}",
+                    rationale=f'Оценка стоимости детали {line.sku}',
                 )
             )
 
@@ -195,10 +195,10 @@ class PredictionService:
                     message=(
                         f"{len(missing)} part(s) unavailable; estimated delay {delay} day(s)."
                         if missing
-                        else "Low stock risk detected for recommended repairs."
+                        else 'Выявлен риск нехватки запчастей для рекомендованных работ.'
                     ),
                     confidence=0.84,
-                    rationale="Inventory risk from parts availability gaps",
+                    rationale='Риск склада из-за нехватки запчастей',
                 )
             )
 
@@ -215,7 +215,7 @@ class PredictionService:
                 parts_cost_total=total_cost,
                 schedule_adjustment="delay" if delay > 0 else ("proceed" if ready else "noop"),
                 customer_message=(
-                    "Parts are ready — we can proceed with the repair."
+                    'Запчасти готовы — можно приступать к ремонту.'
                     if ready
                     else (
                         f"We're waiting on parts ({', '.join(blocking[:3])})"
@@ -223,7 +223,7 @@ class PredictionService:
                     )
                 ),
                 confidence=0.87,
-                rationale="Repair readiness from inventory analysis",
+                rationale='Готовность к ремонту по анализу склада',
             )
         )
 

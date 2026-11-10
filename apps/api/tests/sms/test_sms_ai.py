@@ -146,8 +146,8 @@ async def test_book_appointment_sms_flow(runtime, shop_id):
     assert result.pipeline.stages["scheduling"].data.action == "list_slots"
     assert result.pipeline.stages["scheduling"].data.message == "ask_preferred_time"
     body = result.reply.body.lower()
-    assert "what service" in body or "day and time" in body or "time" in body
-    assert "i've got" not in body
+    assert 'какая услуга' in body or 'день и время' in body or 'время' in body
+    assert "есть несколько свободных" not in body
     assert len(runtime.provider.sent) == 1
     assert runtime.monitor.snapshot()["inbound_received"] == 1
     assert runtime.monitor.snapshot()["outbound_sent"] == 1
@@ -174,7 +174,7 @@ async def test_availability_question_lists_slots(runtime, shop_id):
     assert result.pipeline.stages["scheduling"].data.action == "list_slots"
     assert len(result.pipeline.stages["scheduling"].data.available_slots) >= 2
     body = result.reply.body.lower()
-    assert "i've got" in body or "at" in body
+    assert "есть" in body or "at" in body
     assert "reply yes" in body or "yes" in body or "different time" in body
 
 
@@ -192,8 +192,8 @@ async def test_oil_change_asks_time_then_preferred_time_books(runtime, shop_id):
     )
     assert ask.pipeline.stages["intent"].data.entities.get("requested_service") == "Oil Change"
     assert ask.pipeline.stages["scheduling"].data.message == "ask_preferred_time"
-    assert "time" in ask.reply.body.lower()
-    assert "i've got" not in ask.reply.body.lower()
+    assert 'время' in ask.reply.body.lower()
+    assert "есть несколько свободных" not in ask.reply.body.lower()
 
     mem = await runtime.memory.load(shop_id=shop_id, customer_phone=phone)
     assert mem.pending_service == "Oil Change"
@@ -212,7 +212,7 @@ async def test_oil_change_asks_time_then_preferred_time_books(runtime, shop_id):
     slots = avail.pipeline.stages["scheduling"].data.available_slots
     assert slots
     first_start = slots[0].start
-    assert "i've got" in avail.reply.body.lower() or "at" in avail.reply.body.lower()
+    assert "есть" in avail.reply.body.lower() or "at" in avail.reply.body.lower()
 
     day = first_start.strftime("%A")
     clock = first_start.strftime("%I:%M %p").lstrip("0")
@@ -226,7 +226,7 @@ async def test_oil_change_asks_time_then_preferred_time_books(runtime, shop_id):
         ),
     )
     # New phone numbers are unnamed until we ask.
-    assert "name" in pending.reply.body.lower()
+    assert 'зовут' in pending.reply.body.lower()
     assert "go ahead and book" not in pending.reply.body.lower()
 
     named = await runtime.service.process_inbound(
@@ -239,7 +239,7 @@ async def test_oil_change_asks_time_then_preferred_time_books(runtime, shop_id):
         ),
     )
     assert (
-        "book" in named.reply.body.lower()
+        'запис' in named.reply.body.lower()
         or "shall i book" in named.reply.body.lower()
         or "should i book" in named.reply.body.lower()
     )
@@ -262,7 +262,7 @@ async def test_oil_change_asks_time_then_preferred_time_books(runtime, shop_id):
     assert sched.appointment is not None
     assert sched.appointment.start == first_start
     assert "oil change" in confirm.reply.body.lower()
-    assert "booked" in confirm.reply.body.lower()
+    assert 'записаны' in confirm.reply.body.lower()
 
     mem_after = await runtime.memory.load(shop_id=shop_id, customer_phone=phone)
     assert mem_after.appointment_id == str(sched.appointment.id)
@@ -284,7 +284,7 @@ async def test_soft_book_offer_then_yes_asks_for_time(runtime, shop_id):
     )
     assert offer.pipeline.stages["intent"].data.intent.value == "maintenance_question"
     assert offer.pipeline.stages["intent"].data.entities.get("requested_service") == "Oil Change"
-    assert "want me to book" in offer.reply.body.lower()
+    assert "записать вас" in offer.reply.body.lower()
 
     mem = await runtime.memory.load(shop_id=shop_id, customer_phone=phone)
     assert mem.pending_service == "Oil Change"
@@ -301,11 +301,11 @@ async def test_soft_book_offer_then_yes_asks_for_time(runtime, shop_id):
         ),
     )
     body = yes.reply.body.lower()
-    assert "what service" not in body
+    assert 'какая услуга' not in body
     assert yes.pipeline.stages["intent"].data.intent.value == "book_appointment"
     assert yes.pipeline.stages["scheduling"].data.message == "ask_preferred_time"
-    assert "time" in body
-    assert "i've got" not in body
+    assert 'время' in body
+    assert "есть несколько свободных" not in body
     mem_after = await runtime.memory.load(shop_id=shop_id, customer_phone=phone)
     assert mem_after.pending_service == "Oil Change"
 
@@ -350,7 +350,7 @@ async def test_oil_change_then_preferred_time_needs_confirm(runtime, shop_id):
         ),
     )
     assert pending.pipeline.stages["scheduling"].data.action == "list_slots"
-    assert "name" in pending.reply.body.lower()
+    assert 'зовут' in pending.reply.body.lower()
 
     named = await runtime.service.process_inbound(
         shop_id=shop_id,
@@ -361,7 +361,7 @@ async def test_oil_change_then_preferred_time_needs_confirm(runtime, shop_id):
             message_sid="SMoilTimeName",
         ),
     )
-    assert "book" in named.reply.body.lower() or "should i book" in named.reply.body.lower()
+    assert 'запис' in named.reply.body.lower() or "should i book" in named.reply.body.lower()
     assert "go ahead" not in named.reply.body.lower()
     assert "going" not in named.reply.body.lower()
 
@@ -475,7 +475,7 @@ async def test_delete_conversation_removes_thread_and_messages(runtime, shop_id)
 
 @pytest.mark.asyncio
 async def test_delete_conversation_not_found(runtime, shop_id):
-    with pytest.raises(ValueError, match="Conversation not found"):
+    with pytest.raises(ValueError, match='Переписка не найдена'):
         await runtime.service.delete_conversation(shop_id=shop_id, conversation_id=uuid4())
 
 
@@ -528,7 +528,7 @@ async def test_reply_generator_book_template():
         customer_name="Alex",
     )
     assert "Alex" in draft.body
-    assert "booked" in draft.body.lower()
+    assert 'записаны' in draft.body.lower()
 
 
 @pytest.mark.asyncio
@@ -586,7 +586,7 @@ async def test_reply_does_not_confirm_outside_hours_preferred_time():
     body = draft.body.lower()
     assert "8:00 pm" not in body
     assert "go ahead and book" not in body
-    assert "booked" not in body
+    assert 'записаны' not in body
 
 
 @pytest.mark.asyncio
@@ -619,7 +619,7 @@ async def test_reply_generator_book_asks_service_when_missing():
     )
     draft = gen.generate(pipeline=pipeline, memory=memory, customer_name="Alex")
     body = draft.body.lower()
-    assert "service" in body
+    assert 'услуг' in body
     assert "what can i help you with" not in body
 
 
@@ -654,7 +654,7 @@ async def test_reply_generator_other_after_purpose_asks_service():
     )
     draft = gen.generate(pipeline=pipeline, memory=memory, customer_name="Alex")
     body = draft.body.lower()
-    assert "service" in body
+    assert 'услуг' in body
     assert "what can i help you with" not in body
 
 
@@ -687,8 +687,8 @@ async def test_reply_generator_book_with_day_still_asks_service_first():
         ],
     )
     draft = gen.generate(pipeline=pipeline, memory=memory, customer_name="Alex")
-    assert "service" in draft.body.lower()
-    assert "day and time" not in draft.body.lower()
+    assert 'услуг' in draft.body.lower()
+    assert 'день и время' not in draft.body.lower()
 
 
 @pytest.mark.asyncio
@@ -733,8 +733,8 @@ async def test_reply_generator_reschedule_after_purpose_does_not_ask_service():
     )
     draft = gen.generate(pipeline=pipeline, memory=memory, customer_name="Alex")
     body = draft.body.lower()
-    assert "what service" not in body
-    assert "change" in body or "move" in body or "day" in body or "time" in body
+    assert 'какая услуга' not in body
+    assert 'перен' in body or 'перен' in body or 'день' in body or 'время' in body
     # Must not invent a random confirmation time the customer never chose.
     assert "want me to do that" not in body
     assert "should i book" not in body
@@ -783,8 +783,8 @@ async def test_reply_generator_appointment_time_change_does_not_ask_service():
         pipeline=pipeline, memory=memory, customer_name="Alex", shop_name="Shop"
     )
     body = draft.body.lower()
-    assert "what service" not in body
-    assert "day" in body or "time" in body or "change" in body
+    assert 'какая услуга' not in body
+    assert 'день' in body or 'время' in body or 'перен' in body
 
 
 @pytest.mark.asyncio
@@ -830,8 +830,8 @@ async def test_reply_generator_book_misclass_time_change_asks_time_not_service()
         pipeline=pipeline, memory=memory, customer_name="Alex", shop_name="Shop"
     )
     body = draft.body.lower()
-    assert "what service" not in body
-    assert "day" in body or "time" in body or "change" in body
+    assert 'какая услуга' not in body
+    assert 'день' in body or 'время' in body or 'перен' in body
 
 
 @pytest.mark.asyncio
@@ -911,7 +911,7 @@ async def test_reply_generator_reschedule_does_not_invent_slot_confirm():
     body = draft.body.lower()
     assert "want me to do that" not in body
     assert "wednesday" not in body
-    assert "new" in body or "day" in body or "time" in body
+    assert 'нов' in body or 'день' in body or 'время' in body
 
 
 @pytest.mark.asyncio
@@ -970,9 +970,9 @@ async def test_reply_generator_reschedule_affirms_change():
         ),
         customer_name="Sam",
     )
-    assert "change" in draft.body.lower()
+    assert 'перен' in draft.body.lower()
     assert "Oil Change" in draft.body
-    assert "got" in draft.body.lower() or "at" in draft.body.lower()
+    assert 'есть' in draft.body.lower() or "at" in draft.body.lower()
 
 
 @pytest.mark.asyncio
@@ -1016,9 +1016,9 @@ async def test_reply_generator_references_customer_and_schedule():
     )
     assert "Jordan" in draft.body
     assert "Oil Change" in draft.body
-    assert "Aug 10" in draft.body
-    assert "your oil change is on" in draft.body.lower() or "you've got" in draft.body.lower()
-    assert draft.body.startswith("Hello Jordan, this is Main Street Auto")
+    assert '10.08.2026' in draft.body
+    assert 'ваша запись на oil change' in draft.body.lower() or 'ваша запись' in draft.body.lower()
+    assert draft.body.startswith('Здравствуйте, Jordan! Это Main Street Auto')
 
     follow_up = gen.generate(
         pipeline=pipeline,
@@ -1106,9 +1106,9 @@ async def test_reply_asks_name_before_booking_new_customer():
         customer_name="Unknown Customer",
     )
     body = draft.body.lower()
-    assert "name" in body
+    assert 'зовут' in body
     assert "go ahead and book" not in body
-    assert "booked" not in body
+    assert 'записаны' not in body
 
 
 @pytest.mark.asyncio

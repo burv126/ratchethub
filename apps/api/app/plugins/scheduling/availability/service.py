@@ -118,9 +118,9 @@ class AvailabilityPluginService:
                         for b in bays
                     )
                     if not free_mech:
-                        conflicts.append("No available staff for this time")
+                        conflicts.append('Нет свободных сотрудников на это время')
                     if not free_bay:
-                        conflicts.append("No available bay for this time")
+                        conflicts.append('Нет свободного поста на это время')
                     return {
                         "has_conflict": bool(conflicts),
                         "conflicts": conflicts,
@@ -143,7 +143,7 @@ class AvailabilityPluginService:
                 if exclude_id and a.id == exclude_id:
                     continue
                 if a.start < end and start < a.end:
-                    conflicts.append(f"Overlaps appointment {a.id}")
+                    conflicts.append(f'Пересечение с записью {a.id}')
         return {"has_conflict": bool(conflicts), "conflicts": conflicts}
 
     async def validate_appointment(
@@ -168,9 +168,9 @@ class AvailabilityPluginService:
                         hours, availability.local_date(start)
                     )
                     if window is None:
-                        errors.append("Shop is closed on the selected day")
+                        errors.append('Автосервис закрыт в выбранный день')
                     elif start < window[0] or end > window[1]:
-                        errors.append("Appointment falls outside business hours")
+                        errors.append('Запись вне рабочих часов')
             except Exception:  # noqa: BLE001
                 pass
 

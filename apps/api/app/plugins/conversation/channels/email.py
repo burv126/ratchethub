@@ -24,7 +24,7 @@ class EmailChannelAdapter(BaseChannelAdapter):
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         meta = dict(metadata or {})
-        subject = meta.get("subject") or "Message from your shop"
+        subject = meta.get("subject") or 'Сообщение от вашего автосервиса'
         if self._email is not None:
             try:
                 if hasattr(self._email, "send"):

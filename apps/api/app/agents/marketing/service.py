@@ -16,24 +16,19 @@ from app.agents.marketing.models import (
 
 _TEMPLATES = {
     MarketingActionType.SMS_CAMPAIGN: (
-        "Hi{name}, it's {shop} — whenever you're ready for your next service, "
-        "just reply here or book online. We're happy to help."
+        'Здравствуйте{name}! Это {shop}. Когда вам понадобится обслуживание, ответьте на это сообщение или запишитесь онлайн. Будем рады помочь.'
     ),
     MarketingActionType.EMAIL_CAMPAIGN: (
-        "Hi{name}, thanks for trusting {shop}. Here's a simple tip that helps "
-        "a lot of drivers like you: {tip}"
+        'Здравствуйте{name}! Спасибо за доверие к {shop}. Полезный совет для вашего автомобиля: {tip}'
     ),
     MarketingActionType.REVIEW_REQUEST: (
-        "Hi{name}, hope everything's going well since your visit to {shop}! "
-        "If you have a moment, we'd love to hear how we did: {review_link}"
+        'Здравствуйте{name}! Надеемся, после визита в {shop} всё в порядке. Будем благодарны за отзыв: {review_link}'
     ),
     MarketingActionType.THANK_YOU: (
-        "Thank you{name} for choosing {shop}. It meant a lot having you in — "
-        "we're glad we could help with your vehicle."
+        'Спасибо{name}, что выбрали {shop}! Были рады помочь с вашим автомобилем.'
     ),
     MarketingActionType.MAINTENANCE_REMINDER: (
-        "Hi{name}, just a friendly heads-up — your {service} is coming up "
-        "(around {due_mileage} miles). Reply BOOK when you'd like us to save a spot."
+        'Здравствуйте{name}! Напоминаем: скоро потребуется {service} (около {due_mileage} миль). Ответьте BOOK, чтобы записаться.'
     ),
 }
 
@@ -82,8 +77,8 @@ class MarketingAgent(Agent[MarketingRequest, MarketingActionResult]):
         template = request.template or _TEMPLATES[template_key]
         ctx = {
             "name": "",
-            "shop": "our shop",
-            "tip": "check tire pressure monthly",
+            "shop": 'наш автосервис',
+            "tip": 'проверяйте давление в шинах ежемесячно',
             "review_link": "https://reviews.example.com",
             "service": "oil change",
             "due_mileage": "—",
@@ -102,7 +97,7 @@ class MarketingAgent(Agent[MarketingRequest, MarketingActionResult]):
             body=body,
             context=dict(request.context),
             scheduled_at=scheduled_at,
-            rationale=f"Compose {request.action_type.value} marketing message",
+            rationale=f'Составить маркетинговое сообщение: {request.action_type.value}',
         )
 
         action = MarketingActionResult(

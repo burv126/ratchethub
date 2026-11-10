@@ -38,11 +38,11 @@ async def get_current_user(
     uow: SqlAlchemyUnitOfWork = Depends(get_uow),
 ) -> CurrentUser:
     if credentials is None or credentials.scheme.lower() != "bearer":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Вход не выполнен')
     try:
         payload = decode_token(credentials.credentials)
         if payload.get("type") != "access":
-            raise ValueError("Not an access token")
+            raise ValueError('Токен не предназначен для доступа')
         user_id = UUID(payload["sub"])
         raw_role = payload.get("role")
         account_type = str(payload.get("account_type") or AccountType.SHOP.value).strip().lower()
@@ -63,7 +63,7 @@ async def get_current_user(
         shop_id = UUID(payload["shop_id"])
         role = normalize_user_role(raw_role)
     except (ValueError, KeyError, TypeError):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from None
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Недействительный токен') from None
 
     # Membership is the source of truth. JWT capabilities/role can go stale after
     # Settings → Team permission edits until the next token refresh.
@@ -116,7 +116,7 @@ def require_capabilities(
         if current.role is None or current.shop_id is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Shop access required",
+                detail='Требуется доступ к автосервису',
             )
         try:
             get_permission_service().require(
@@ -140,7 +140,7 @@ def require_owner():
         if current.role is None or not get_permission_service().is_owner(current.role):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Owner role required",
+                detail='Требуются права владельца',
             )
         return current
 
@@ -152,14 +152,14 @@ def require_dashboard_access():
         if current.role is None or current.shop_id is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Dashboard access denied",
+                detail='Доступ к панели запрещён',
             )
         if not get_permission_service().can_access_dashboard(
             current.role, list(current.capabilities)
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Dashboard access denied",
+                detail='Доступ к панели запрещён',
             )
         return current
 
@@ -171,14 +171,14 @@ def require_workflow_access():
         if current.role is None or current.shop_id is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Workflow access denied",
+                detail='Доступ к процессам запрещён',
             )
         if not get_permission_service().can_use_workflows(
             current.role, list(current.capabilities)
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Workflow access denied",
+                detail='Доступ к процессам запрещён',
             )
         return current
 

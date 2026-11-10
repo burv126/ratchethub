@@ -56,7 +56,7 @@ async def notify_member_joined(
     try:
         await AdminNotificationService().create(
             event_type=DomainEventType.SAAS_MEMBER_JOINED.value,
-            title="Member joined",
+            title='Новый сотрудник',
             message=message,
             severity="info",
             source=source,
@@ -135,7 +135,7 @@ async def notify_contact_changed(
     try:
         await AdminNotificationService().create(
             event_type=DomainEventType.SAAS_CONTACT_CHANGED.value,
-            title="Contact updated",
+            title='Контакт обновлён',
             message=message,
             severity="info",
             source=source,

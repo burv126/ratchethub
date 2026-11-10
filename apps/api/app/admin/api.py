@@ -182,7 +182,7 @@ async def admin_organization_detail(
 ) -> dict:
     detail = await _svc().organization_detail(shop_id)
     if detail is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shop not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Автосервис не найден')
     return detail
 
 
@@ -193,7 +193,7 @@ async def admin_organization_usage(
 ) -> dict:
     detail = await _svc().organization_detail(shop_id)
     if detail is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shop not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Автосервис не найден')
     return detail["usage"]
 
 
@@ -462,7 +462,7 @@ async def admin_me_get(
 ) -> AdminProfileOut:
     user = await uow.users.get_by_id(current.user_id)
     if user is None or not user.is_active:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
     return AdminProfileOut(
         user_id=user.id,
         username=username,
@@ -479,7 +479,7 @@ async def admin_me_patch(
     """Admin username is immutable after bootstrap."""
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="Admin username cannot be changed",
+        detail='Имя администратора нельзя изменить',
     )
 
 
@@ -492,22 +492,22 @@ async def admin_me_change_password(
 ) -> dict:
     user = await uow.users.get_by_id(current.user_id)
     if user is None or not user.is_active:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
     if not verify_password(body.current_password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect",
+            detail='Текущий пароль неверен',
         )
     if body.current_password == body.new_password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="New password must be different from the current password",
+            detail='Новый пароль должен отличаться от текущего',
         )
     updated = await uow.users.update_password(
         current.user_id, password_hash=hash_password(body.new_password)
     )
     if updated is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
     await uow.commit()
     return {"ok": True}
 
@@ -549,10 +549,10 @@ async def admin_notification_mark_read(
     try:
         nid = UUID(notification_id)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid id") from exc
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Некорректный ID') from exc
     item = await _svc().mark_notification_read(nid)
     if item is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Уведомление не найдено')
     return item
 
 
@@ -564,10 +564,10 @@ async def admin_notification_delete(
     try:
         nid = UUID(notification_id)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid id") from exc
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Некорректный ID') from exc
     deleted = await _svc().delete_notification(nid)
     if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Уведомление не найдено')
     return {"deleted": True, "id": notification_id}
 
 

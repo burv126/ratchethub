@@ -1,3 +1,5 @@
+
+import { readApiError } from "@/lib/ru-errors";
 import { getApiUrl, loadSession, refresh, saveSession } from "@/lib/api";
 import type { RepairHistory, Vehicle } from "@/lib/crm";
 import { searchCustomers, getCustomerDetail } from "@/lib/crm";
@@ -31,18 +33,12 @@ export type VehicleOption = {
 };
 
 async function parseError(res: Response): Promise<string> {
-  try {
-    const body = await res.json();
-    if (typeof body.detail === "string") return body.detail;
-    return res.statusText || "Request failed";
-  } catch {
-    return res.statusText || "Request failed";
-  }
+  return readApiError(res);
 }
 
 async function authHeaders(): Promise<HeadersInit> {
   const current = loadSession();
-  if (!current) throw new Error("Not authenticated");
+  if (!current) throw new Error("Вход не выполнен");
   return { Authorization: `Bearer ${current.accessToken}` };
 }
 
@@ -67,7 +63,7 @@ export async function uploadVoiceNote(
   filename: string,
 ): Promise<VoiceNoteProcessResult> {
   let current = loadSession();
-  if (!current) throw new Error("Not authenticated");
+  if (!current) throw new Error("Вход не выполнен");
 
   const body = new FormData();
   body.append("vehicle_id", vehicleId);

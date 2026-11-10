@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -60,7 +64,7 @@ export default function AiOperationsCenterPage() {
       setData(dash);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load AI Operations Center");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить центр управления ИИ");
     }
   }, []);
 
@@ -91,7 +95,7 @@ export default function AiOperationsCenterPage() {
       setSliceData(await getDashboardSlice(path));
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load slice");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить раздел");
     } finally {
       setBusy(false);
     }
@@ -110,18 +114,18 @@ export default function AiOperationsCenterPage() {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-            AI Operations Center
+            Центр управления ИИ
           </p>
-          <h1 className="page-title">Owner Dashboard</h1>
+          <h1 className="page-title">Панель владельца</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
             {session
               ? `${session.shopName} · ${session.fullName} · ${ROLE_LABELS[session.role]}`
-              : "Loading shop context…"}
+              : "Загрузка контекста автосервиса…"}
             {data && (
               <span className="ml-2 text-xs">
-                · v{data.version} · {new Date(data.generated_at).toLocaleTimeString()}
-                {data.read_only ? " · read-only" : ""}
-                {live ? " · live" : " · paused"}
+                · версия{data.version} · {new Date(data.generated_at).toLocaleTimeString("ru-RU")}
+                {data.read_only ? " · только чтение" : ""}
+                {live ? " · в реальном времени" : " · приостановлено"}
               </span>
             )}
           </p>
@@ -132,7 +136,7 @@ export default function AiOperationsCenterPage() {
             onClick={() => setLive((v) => !v)}
             className="touch-target rounded-md border border-[var(--line)] px-3 py-2 text-sm text-[var(--muted)]"
           >
-            {live ? "Pause" : "Resume"}
+            {live ? "Пауза" : "Продолжить"}
           </button>
           <button
             type="button"
@@ -140,25 +144,25 @@ export default function AiOperationsCenterPage() {
             onClick={() => void onRefresh()}
             className="touch-target rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
-            {busy ? "Refreshing…" : "Refresh"}
+            {busy ? "Обновление…" : "Обновить"}
           </button>
         </div>
       </header>
 
       {error && (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
+          {ruError(error)}
         </p>
       )}
 
       {data && (
         <>
           <section className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
-            <h2 className="text-sm font-medium">Dashboard slices</h2>
+            <h2 className="text-sm font-medium">Разделы панели</h2>
             <div className="flex flex-wrap gap-2">
               {SLICE_PATHS.map((p) => (
                 <button
-                  key={p}
+                  key={ruLabel(p)}
                   type="button"
                   disabled={busy}
                   onClick={() => void onLoadSlice(p)}
@@ -168,7 +172,7 @@ export default function AiOperationsCenterPage() {
                       : "border-[var(--line)] text-[var(--muted)]"
                   }`}
                 >
-                  {p}
+                  {ruLabel(p)}
                 </button>
               ))}
             </div>
@@ -180,24 +184,24 @@ export default function AiOperationsCenterPage() {
           </section>
 
           <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <SummaryTile label="Appointments" value={String(data.summary.appointments_today ?? 0)} />
-            <SummaryTile label="AI conversations" value={String(data.summary.ai_conversations ?? 0)} />
+            <SummaryTile label="Записи" value={String(data.summary.appointments_today ?? 0)} />
+            <SummaryTile label="Диалоги ИИ" value={String(data.summary.ai_conversations ?? 0)} />
             <SummaryTile
-              label="Revenue opps"
+              label="Возможности выручки"
               value={String(data.summary.revenue_opportunities ?? 0)}
             />
             <SummaryTile
-              label="Workflow success"
+              label="Успешность процессов"
               value={`${Math.round(Number(data.performance.workflow_success_rate ?? 0) * 100)}%`}
             />
             <SummaryTile
-              label="AI resolution"
+              label="Решено ИИ"
               value={`${Math.round(Number(data.performance.ai_resolution_rate ?? 0) * 100)}%`}
             />
             <SummaryTile
-              label="System"
+              label="Система"
               value={String(health?.status ?? "unknown")}
-              detail={`${health?.plugins_healthy ?? 0}/${health?.plugins_total ?? 0} plugins`}
+              detail={`${health?.plugins_healthy ?? 0}/${health?.plugins_total ?? 0} плагинов`}
             />
           </section>
 
@@ -215,7 +219,7 @@ export default function AiOperationsCenterPage() {
       )}
 
       {!data && !error && (
-        <p className="text-sm text-[var(--muted)]">Loading AI Operations Center…</p>
+        <p className="text-sm text-[var(--muted)]">Загрузка центра управления ИИ…</p>
       )}
     </div>
   );
@@ -247,7 +251,7 @@ function WidgetPanel({ widget, wide }: { widget?: DashboardWidget; wide?: boolea
           wide ? "lg:col-span-2" : ""
         }`}
       >
-        <p className="text-sm text-[var(--muted)]">Widget unavailable</p>
+        <p className="text-sm text-[var(--muted)]">Виджет недоступен</p>
       </div>
     );
   }
@@ -270,7 +274,7 @@ function WidgetPanel({ widget, wide }: { widget?: DashboardWidget; wide?: boolea
           )}
         </div>
         <span className="rounded bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--accent)]">
-          {widget.kind}
+          {ruLabel(widget.kind)}
         </span>
       </div>
 
@@ -311,7 +315,7 @@ function QueueRow({ item }: { item: DashboardQueueItem }) {
         </div>
         {item.status && (
           <span className="shrink-0 text-[11px] uppercase tracking-wide text-[var(--muted)]">
-            {item.status}
+            {ruLabel(item.status)}
           </span>
         )}
       </div>

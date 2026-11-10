@@ -37,7 +37,7 @@ class DiagnosisService:
                 urgency=self._urgency(safety, recommended),
                 findings_snapshot=[self._snap(f) for f in findings],
                 confidence=0.88 if findings else 0.4,
-                rationale="Inspection analysis from technician findings",
+                rationale='Анализ результатов осмотра специалиста',
             )
         ]
         for f in safety:
@@ -53,11 +53,10 @@ class DiagnosisService:
                     system=f.system,
                     urgent=f.severity == FindingSeverity.CRITICAL,
                     plain_language=(
-                        f"Safety concern: {f.title}. "
-                        f"{'Do not defer — critical.' if f.severity == FindingSeverity.CRITICAL else 'Please address soon.'}"
+                        f"Вопрос безопасности: {f.title}. {('Do not defer — critical.' if f.severity == FindingSeverity.CRITICAL else 'Please address soon.')}"
                     ),
                     confidence=0.9,
-                    rationale="Safety finding detected in inspection",
+                    rationale='Выявлена проблема безопасности при осмотре',
                 )
             )
         return decisions
@@ -78,13 +77,12 @@ class DiagnosisService:
         self, findings: list[InspectionFinding], safety: list[InspectionFinding]
     ) -> str:
         if not findings:
-            return "No notable inspection findings."
+            return 'Существенных замечаний по осмотру нет.'
         if safety:
             return (
-                f"Vehicle needs attention: {len(safety)} safety-related finding(s) "
-                f"among {len(findings)} total."
+                f'Автомобиль требует внимания: замечаний по безопасности — {len(safety)} из {len(findings)}.'
             )
-        return f"Inspection complete with {len(findings)} finding(s) requiring review."
+        return f'Осмотр завершён; замечаний для проверки: {len(findings)}.'
 
     def _snap(self, f: InspectionFinding) -> dict[str, Any]:
         return {

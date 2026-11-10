@@ -20,7 +20,7 @@ from app.simulation.reports.builder import render_summary_markdown
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Auto Repair Simulation Engine")
+    parser = argparse.ArgumentParser(description='Движок симуляции автосервиса')
     parser.add_argument(
         "--count",
         type=int,

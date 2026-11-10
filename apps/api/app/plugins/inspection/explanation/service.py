@@ -42,7 +42,7 @@ class ExplanationService:
                         channel=ctx.channel,
                         urgency="urgent" if alert.urgent else "high",
                         confidence=0.9,
-                        rationale="Safety warning explanation from inspection",
+                        rationale='Объяснение предупреждения по безопасности',
                     )
                 )
 
@@ -80,7 +80,7 @@ class ExplanationService:
                     channel=ctx.channel,
                     urgency=urgency,  # type: ignore[arg-type]
                     confidence=0.84,
-                    rationale=f"Customer explanation template={template}",
+                    rationale=f'Шаблон объяснения клиенту={template}',
                 )
             )
         return decisions

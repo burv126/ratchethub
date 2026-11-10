@@ -193,7 +193,7 @@ class CapabilityRegistry:
         target = capability.value if isinstance(capability, Capability) else str(capability)
         existing = self._aliases.get(alias)
         if existing and existing != target:
-            raise ValueError(f"Alias {alias!r} already maps to {existing!r}")
+            raise ValueError(f'Псевдоним {alias!r} уже связан с {existing!r}')
         self._aliases[alias] = target
 
     def canonicalize(self, capability: str | Capability) -> str:
@@ -257,9 +257,7 @@ class CapabilityRegistry:
                 )
                 return
             raise ValueError(
-                f"Duplicate capability registration: {key} "
-                f"(owned by {existing.plugin_id}@{existing.plugin_version}, "
-                f"attempted by {plugin_id}@{plugin_version})"
+                f'Дублирующая регистрация возможности: {key} (владелец {existing.plugin_id}@{existing.plugin_version}, попытка {plugin_id}@{plugin_version})'
             )
         self._bindings[key] = CapabilityBinding(
             capability=key,
@@ -273,21 +271,21 @@ class CapabilityRegistry:
         key = self.canonicalize(capability)
         binding = self._bindings.get(key)
         if binding is None:
-            raise LookupError(f"No plugin registered for capability: {key}")
+            raise LookupError(f'Для возможности не зарегистрирован плагин: {key}')
         return binding
 
     def resolve_plugin(self, capability: str | Capability) -> IPlugin:
         binding = self.resolve(capability)
         plugin = self._plugins.get(binding.plugin_id)
         if plugin is None:
-            raise LookupError(f"Plugin not loaded for capability: {binding.capability}")
+            raise LookupError(f'Плагин для возможности не загружен: {binding.capability}')
         return plugin
 
     def get_plugin(self, plugin_id: str, version: str | None = None) -> IPlugin:
         key = f"{plugin_id}@{version}" if version else plugin_id
         plugin = self._plugins.get(key)
         if plugin is None:
-            raise LookupError(f"Plugin not registered: {key}")
+            raise LookupError(f'Плагин не зарегистрирован: {key}')
         return plugin
 
     async def invoke(

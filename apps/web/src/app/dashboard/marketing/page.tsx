@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -13,7 +15,7 @@ import {
   type AudienceMember,
 } from "@/lib/marketing";
 
-const STEPS = ["AI Recommendations", "Review customers", "AI message"] as const;
+const STEPS = ["Рекомендации ИИ", "Просмотреть клиентов", "Сообщение ИИ"] as const;
 /** Drafts stay email for API compat — sending is disabled. */
 const PREVIEW_CHANNELS = ["email"] as const;
 
@@ -330,7 +332,7 @@ export default function MarketingPage() {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
-      setError("Could not copy message");
+      setError("Не удалось скопировать сообщение");
     }
   }, [aiPreview, selected]);
 
@@ -350,7 +352,7 @@ export default function MarketingPage() {
       try {
         await refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Load failed");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить");
       } finally {
         setLoadingList(false);
       }
@@ -398,7 +400,7 @@ export default function MarketingPage() {
     try {
       await loadPreview(selected, member.customer_id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load preview");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить предпросмотр");
     } finally {
       setPreviewBusy(false);
     }
@@ -406,7 +408,7 @@ export default function MarketingPage() {
 
   async function onSelectAction(action: SuggestedAction) {
     if (action.count <= 0) {
-      setError("No matching customers for this follow-up yet");
+      setError("Пока нет клиентов для этого повторного обращения");
       return;
     }
     setBusy(true);
@@ -417,7 +419,7 @@ export default function MarketingPage() {
     setSelectedCustomerId(null);
     try {
       const created = await createCampaign({
-        name: `${action.title} follow-up`,
+        name: `${action.title} повторное обращение`,
         campaign_type: action.campaign_type,
         channels_allowed: [...PREVIEW_CHANNELS],
         use_demo_audience: false,
@@ -440,7 +442,7 @@ export default function MarketingPage() {
       setSelectedCustomerId(initialId);
       await loadPreview(campaign, initialId, prefetched ?? null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not start follow-up");
+      setError(err instanceof Error ? err.message : "Не удалось начать повторное обращение");
     } finally {
       setBusy(false);
     }
@@ -479,10 +481,10 @@ export default function MarketingPage() {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <IconMarketing className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-              <h1 className="page-title">Marketing</h1>
+              <h1 className="page-title">Маркетинг</h1>
             </div>
             <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-[var(--muted)]">
-              AI suggests who to contact and drafts the message — preview only
+              ИИ предлагает клиентов для связи и готовит сообщение — только предпросмотр
             </p>
           </div>
         </div>
@@ -490,12 +492,12 @@ export default function MarketingPage() {
 
       {error && (
         <p className="shrink-0 rounded-xl border border-red-200/80 bg-red-50 px-4 py-2.5 text-sm text-red-700">
-          {error}
+          {ruError(error)}
         </p>
       )}
 
       <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-6 overflow-hidden">
-        <nav aria-label="Follow-up steps" className="w-full shrink-0">
+        <nav aria-label="Повторные обращения" className="w-full shrink-0">
           <ol className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] items-start">
             {STEPS.map((label, i) => {
               const done = i < flowStep;
@@ -541,7 +543,7 @@ export default function MarketingPage() {
         <section className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
           <div className="shrink-0">
             <p className="text-xs text-[var(--muted)]">
-              Pick a suggested action — browse every matching customer and draft
+              Выберите действие, чтобы просмотреть подходящих клиентов и черновики
             </p>
           </div>
 
@@ -560,9 +562,9 @@ export default function MarketingPage() {
                 <span className="mx-auto inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] ring-1 ring-[var(--accent)]/15">
                   <IconSpark className="h-5 w-5" />
                 </span>
-                <p className="mt-3 text-sm font-medium">No recommendations yet</p>
+                <p className="mt-3 text-sm font-medium">Рекомендаций пока нет</p>
                 <p className="mt-1 text-xs text-[var(--muted)]">
-                  AI will surface follow-ups when matching customers appear
+                  ИИ предложит повторные обращения при появлении подходящих клиентов
                 </p>
               </div>
             )}
@@ -620,10 +622,10 @@ export default function MarketingPage() {
                       <div className="mt-2.5 flex items-center justify-between gap-2">
                         <span className="text-[11px] text-[var(--muted)]">
                           {empty
-                            ? "No matching customers"
+                            ? "Нет подходящих клиентов"
                             : busy && active
-                              ? "Preparing preview…"
-                              : "Tap to draft preview"}
+                              ? "Подготовка предпросмотра…"
+                              : "Нажмите для создания черновика"}
                         </span>
                         {!empty && (
                           <span
@@ -633,7 +635,7 @@ export default function MarketingPage() {
                                 : "text-[var(--muted)] group-hover:text-[var(--accent)]"
                             }`}
                           >
-                            Open
+                            Открыть
                             <IconArrow className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                           </span>
                         )}
@@ -678,18 +680,18 @@ export default function MarketingPage() {
                       className="text-base font-semibold tracking-tight"
                       style={{ fontFamily: "var(--font-display)" }}
                     >
-                      Review customers
+                      Просмотреть клиентов
                     </h2>
                     <p className="mt-0.5 text-xs text-[var(--muted)]">
                       {selected.name}
                       {audience.length > 0
-                        ? ` · ${audience.length} customer${audience.length === 1 ? "" : "s"}`
+                        ? ` · ${audience.length} клиент${audience.length === 1 ? "" : ""}`
                         : ""}
                     </p>
                   </div>
                   <button
                     type="button"
-                    aria-label="Close"
+                    aria-label="Закрыть"
                     disabled={busy || previewBusy}
                     onClick={() => closeFollowupDialog()}
                     className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--muted)] transition hover:bg-black/[0.05] hover:text-[var(--foreground)] disabled:opacity-50"
@@ -703,7 +705,7 @@ export default function MarketingPage() {
                 <div>
                   <div className="mb-2.5 flex items-center justify-between gap-2">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                      Matching customers
+                      Подходящие клиенты
                     </p>
                     <span className="text-[11px] tabular-nums text-[var(--muted)]">
                       {audience.length}
@@ -711,7 +713,7 @@ export default function MarketingPage() {
                   </div>
                   {audience.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--background)]/50 px-4 py-6 text-center text-sm text-[var(--muted)]">
-                      No customers in this follow-up
+                      Нет клиентов для этого обращения
                     </div>
                   ) : (
                     <div ref={audienceListRef} className="space-y-2">
@@ -724,8 +726,8 @@ export default function MarketingPage() {
                           className="w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-xs font-semibold text-[var(--muted)] transition hover:bg-black/[0.03] hover:text-[var(--foreground)]"
                         >
                           {audienceExpanded
-                            ? "Show less"
-                            : `Show all ${audience.length} customers`}
+                            ? "Свернуть"
+                            : `Показать всех: ${audience.length} клиентов`}
                         </button>
                       ) : null}
                       <div className="relative">
@@ -770,7 +772,7 @@ export default function MarketingPage() {
                                   </span>
                                   <span className="min-w-0 flex-1">
                                     <span className="block truncate text-sm font-semibold tracking-tight">
-                                      {member.name || "Customer"}
+                                      {member.name || "Клиент"}
                                     </span>
                                     <span className="mt-0.5 block truncate text-xs text-[var(--muted)]">
                                       {contact}
@@ -783,7 +785,7 @@ export default function MarketingPage() {
                                   </span>
                                   {active && (
                                     <span className="mt-1 shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">
-                                      Selected
+                                      Выбрано
                                     </span>
                                   )}
                                 </button>
@@ -818,13 +820,13 @@ export default function MarketingPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                        Selected customer
+                        Выбранный клиент
                       </p>
                       <p className="mt-1 truncate text-base font-semibold tracking-tight">
                         {aiPreview?.customer_name
                           ? aiPreview.customer_name
                           : busy || previewBusy
-                            ? "Loading…"
+                            ? "Загрузка…"
                             : "—"}
                       </p>
                       <p className="mt-1 text-sm text-[var(--muted)]">
@@ -843,7 +845,7 @@ export default function MarketingPage() {
                     {confidencePct != null && (
                       <div className="shrink-0 text-right">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                          Confidence
+                          Уверенность
                         </p>
                         <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-[var(--accent)]">
                           {confidencePct}
@@ -878,7 +880,7 @@ export default function MarketingPage() {
                       <IconMail className="h-3.5 w-3.5" />
                     </span>
                     <h3 className="text-sm font-semibold tracking-tight">
-                      AI Message
+                      Сообщение ИИ
                     </h3>
                     <button
                       type="button"
@@ -889,12 +891,12 @@ export default function MarketingPage() {
                       {copied ? (
                         <>
                           <IconCheck className="h-3.5 w-3.5 text-[var(--accent)]" />
-                          Copied
+                          Скопировано
                         </>
                       ) : (
                         <>
                           <IconCopy className="h-3.5 w-3.5" />
-                          Copy
+                          Копировать
                         </>
                       )}
                     </button>
@@ -905,15 +907,15 @@ export default function MarketingPage() {
                       <span className="h-2 w-2 rounded-full bg-[#febc2e]" />
                       <span className="h-2 w-2 rounded-full bg-[#28c840]" />
                       <span className="ml-2 text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
-                        Preview
+                        Предпросмотр
                       </span>
                     </div>
                     <div className="asa-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-[var(--foreground)]">
                       {(busy || previewBusy) && !previewMessage
-                        ? "Generating…"
+                        ? "Формирование…"
                         : previewBusy
-                          ? "Updating…"
-                          : (previewMessage ?? "No AI draft yet")}
+                          ? "Обновление…"
+                          : (previewMessage ?? "Черновика ИИ пока нет")}
                     </div>
                   </div>
                 </div>

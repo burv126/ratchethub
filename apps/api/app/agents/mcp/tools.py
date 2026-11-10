@@ -71,7 +71,7 @@ def build_default_mcp_tools(**agents: Any) -> list[McpTool]:
         tools.append(
             McpTool(
                 name="customer.find_or_create",
-                description="Find an existing customer or create one",
+                description='Найти существующего клиента или создать нового',
                 input_schema={
                     "type": "object",
                     "required": ["shop_id"],
@@ -124,7 +124,7 @@ def build_default_mcp_tools(**agents: Any) -> list[McpTool]:
         tools.append(
             McpTool(
                 name="vehicle.resolve",
-                description="Find a vehicle by VIN or customer",
+                description='Найти автомобиль по VIN или клиенту',
                 input_schema={
                     "type": "object",
                     "required": ["shop_id"],
@@ -165,7 +165,7 @@ def build_default_mcp_tools(**agents: Any) -> list[McpTool]:
         tools.append(
             McpTool(
                 name="scheduling.list_slots",
-                description="List available appointment slots",
+                description='Показать свободное время для записи',
                 input_schema={
                     "type": "object",
                     "required": ["shop_id"],
@@ -214,8 +214,7 @@ def build_default_mcp_tools(**agents: Any) -> list[McpTool]:
             McpTool(
                 name="scheduling.book",
                 description=(
-                    "Propose booking via AppointmentDecision (Service Catalog match); "
-                    "Workflow validates availability and creates the appointment"
+                    'Предложить запись через AppointmentDecision по каталогу услуг; процесс проверяет доступность и создаёт запись'
                 ),
                 input_schema={
                     "type": "object",
@@ -226,7 +225,7 @@ def build_default_mcp_tools(**agents: Any) -> list[McpTool]:
                         "vehicle_id": {"type": "string", "format": "uuid"},
                         "service": {
                             "type": "string",
-                            "description": "Requested service name (matched to catalog)",
+                            "description": 'Запрошенная услуга (совпадение с каталогом)',
                         },
                         "requested_service": {"type": "string"},
                         "service_id": {"type": "string", "format": "uuid"},
@@ -272,7 +271,7 @@ def build_default_mcp_tools(**agents: Any) -> list[McpTool]:
         tools.append(
             McpTool(
                 name="crm.update_timeline",
-                description="Record communication and update customer timeline",
+                description='Записать сообщение и обновить историю клиента',
                 input_schema={
                     "type": "object",
                     "required": ["shop_id"],
@@ -313,7 +312,7 @@ def build_default_mcp_tools(**agents: Any) -> list[McpTool]:
         tools.append(
             McpTool(
                 name="revenue.analyze",
-                description="Analyze upsell opportunities and churn risk",
+                description='Проанализировать возможности дополнительных продаж и риск ухода',
                 input_schema={
                     "type": "object",
                     "required": ["shop_id"],
@@ -344,7 +343,7 @@ def build_default_mcp_tools(**agents: Any) -> list[McpTool]:
                     action_type=MarketingActionType.THANK_YOU,
                     channel=args.get("channel", "sms"),
                     customer_id=ctx.customer_id,
-                    context={"name": args.get("name", ""), "shop": args.get("shop", "our shop")},
+                    context={"name": args.get("name", ""), "shop": args.get("shop", 'наш автосервис')},
                 ),
                 ctx,
             )
@@ -365,7 +364,7 @@ def build_default_mcp_tools(**agents: Any) -> list[McpTool]:
         tools.append(
             McpTool(
                 name="marketing.thank_you",
-                description="Send a thank-you message to a customer",
+                description='Отправить клиенту благодарность',
                 input_schema={
                     "type": "object",
                     "required": ["shop_id"],

@@ -11,6 +11,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Literal, NamedTuple
 from zoneinfo import ZoneInfo
 
+from app.agents.intent.ru_input import normalize_datetime_input
+
 # Matches shop scheduling / availability engines in this project.
 DEFAULT_SHOP_TZ = ZoneInfo("America/Los_Angeles")
 
@@ -182,6 +184,7 @@ def parse_same_slot_preference(text: str) -> SameSlotPreference | None:
     """Detect 'same time' / keep-slot phrasing (needs an existing visit anchor)."""
     if not text or not text.strip():
         return None
+    text = normalize_datetime_input(text)
     if _SAME_BOTH.search(text):
         return SameSlotPreference(keep_day=True, keep_time=True)
     keep_time = bool(_SAME_TIME.search(text))
@@ -284,6 +287,7 @@ def parse_preferred_datetime(
     """
     if not text or not text.strip():
         return PreferredDatetime(None, None, "none")
+    text = normalize_datetime_input(text)
 
     base = now or datetime.now(tz)
     if base.tzinfo is None:

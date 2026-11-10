@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import dynamic from "next/dynamic";
 import { FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -40,42 +44,42 @@ const DISPLAY_STEPS: DisplayStep[] = ["Upload", "Review", "Import", "Complete"];
 const FILE_SOURCES = new Set(["csv", "excel"]);
 
 const MERGE_ACTIONS = [
-  { value: "merge", label: "Merge both" },
-  { value: "keep_existing", label: "Keep existing only" },
-  { value: "keep_incoming", label: "Use imported record" },
-  { value: "skip", label: "Skip this import" },
+  { value: "merge", label: "Объединить обе записи" },
+  { value: "keep_existing", label: "Оставить существующую" },
+  { value: "keep_incoming", label: "Использовать импортированную" },
+  { value: "skip", label: "Пропустить импорт" },
 ];
 
 const ENTITY_LABELS: Record<string, string> = {
-  customer: "Customer",
-  vehicle: "Vehicle",
-  repair_history: "Repair history",
-  invoice: "Invoice",
-  estimate: "Estimate",
-  appointment: "Appointment",
+  customer: "Клиент",
+  vehicle: "Автомобиль",
+  repair_history: "История ремонта",
+  invoice: "Счёт",
+  estimate: "Смета",
+  appointment: "Запись",
 };
 
 const MATCH_LABELS: Record<string, string> = {
-  phone: "same phone number",
-  email: "same email",
-  name: "similar name",
-  vin: "same VIN",
-  license_plate: "same license plate",
-  composite: "matching details",
+  phone: "одинаковый телефон",
+  email: "одинаковая почта",
+  name: "похожее имя",
+  vin: "одинаковый VIN",
+  license_plate: "одинаковый госномер",
+  composite: "совпадающие сведения",
 };
 
 const FIELD_LABELS: Record<string, string> = {
-  name: "Name",
-  phone: "Phone",
-  email: "Email",
-  address: "Address",
-  external_id: "External ID",
+  name: "Имя",
+  phone: "Телефон",
+  email: "Эл. почта",
+  address: "Адрес",
+  external_id: "Внешний ID",
   vin: "VIN",
-  year: "Year",
-  make: "Make",
-  model: "Model",
-  mileage: "Mileage",
-  license_plate: "License plate",
+  year: "Год",
+  make: "Марка",
+  model: "Модель",
+  mileage: "Пробег",
+  license_plate: "Госномер",
 };
 
 const CUSTOMER_FIELD_ORDER = ["name", "phone", "email", "address", "external_id"];
@@ -116,11 +120,11 @@ function wizardStepForJob(job: ImportJob): WizardStep {
 function jobStatusLabel(status: string): string {
   const s = (status || "").toLowerCase();
   if (s === "completed") return "Complete";
-  if (s === "awaiting_resolution") return "Needs resolution";
-  if (s === "failed") return "Failed";
-  if (s === "cancelled") return "Cancelled";
+  if (s === "awaiting_resolution") return "Требует решения";
+  if (s === "failed") return "Ошибка";
+  if (s === "cancelled") return "Отменено";
   if (!s) return "—";
-  return s.replace(/_/g, " ");
+  return ruLabel(s);
 }
 
 function entityImported(job: ImportJob, kind: string): number {
@@ -136,7 +140,7 @@ function formatJobCreated(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString(undefined, {
+  return d.toLocaleString("ru-RU", {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -149,7 +153,7 @@ function jobCountsSummary(job: ImportJob): string {
   const vehicles = entityImported(job, "vehicle");
   const repairs = entityImported(job, "repair_history");
   const duplicates = duplicatesResolved(job);
-  return `${customers} cust · ${vehicles} veh · ${repairs} repair · ${duplicates} dup`;
+  return `${customers} клиентов · ${vehicles} автомобилей · ${repairs} ремонтов · ${duplicates} дубликатов`;
 }
 
 type ManualCustomerForm = {
@@ -186,8 +190,8 @@ function buildManualSections(
   const phone = customer.phone.trim();
   const email = customer.email.trim();
   if (name || phone || email) {
-    if (!name) throw new Error("Customer name is required");
-    if (!phone) throw new Error("Customer phone is required");
+    if (!name) throw new Error("Укажите имя клиента");
+    if (!phone) throw new Error("Укажите телефон клиента");
     const row: Record<string, unknown> = { name, phone };
     if (email) row.email = email;
     sections.customers = [row];
@@ -199,14 +203,14 @@ function buildManualSections(
   const mileage = vehicle.mileage.trim();
   const vin = vehicle.vin.replace(/[\s-]/g, "").toUpperCase();
   if (year || make || model || mileage || vin) {
-    if (!year) throw new Error("Vehicle year is required");
-    if (!make) throw new Error("Vehicle make is required");
-    if (!model) throw new Error("Vehicle model is required");
-    if (!mileage) throw new Error("Vehicle mileage is required");
+    if (!year) throw new Error("Укажите год автомобиля");
+    if (!make) throw new Error("Укажите марку автомобиля");
+    if (!model) throw new Error("Укажите модель автомобиля");
+    if (!mileage) throw new Error("Укажите пробег автомобиля");
     const yearNum = Number(year);
     const mileageNum = Number(mileage);
-    if (!Number.isFinite(yearNum)) throw new Error("Vehicle year must be a number");
-    if (!Number.isFinite(mileageNum)) throw new Error("Vehicle mileage must be a number");
+    if (!Number.isFinite(yearNum)) throw new Error("Год автомобиля должен быть числом");
+    if (!Number.isFinite(mileageNum)) throw new Error("Пробег автомобиля должен быть числом");
     const row: Record<string, unknown> = {
       year: yearNum,
       make,
@@ -218,7 +222,7 @@ function buildManualSections(
   }
 
   if (!sections.customers && !sections.vehicles) {
-    throw new Error("Enter a customer and/or vehicle to import");
+    throw new Error("Введите данные клиента и/или автомобиля для импорта");
   }
 
   return sections;
@@ -249,7 +253,7 @@ function ManualField({
     <label className={`block space-y-1 ${className}`}>
       <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
         {icon ? <span className="text-[var(--muted)]">{icon}</span> : null}
-        {label}
+        {ruLabel(label)}
       </span>
       <input
         type={type}
@@ -291,7 +295,7 @@ function StepRail({ active }: { active: DisplayStep }) {
         const done = idx < activeIdx;
         const current = idx === activeIdx;
         return (
-          <li key={label} className="flex min-w-0 flex-1 items-center">
+          <li key={ruLabel(label)} className="flex min-w-0 flex-1 items-center">
             <div
               className={`flex w-full flex-col items-center gap-1 rounded-xl px-1 py-2 text-center transition-colors sm:flex-row sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-left ${
                 current ? "bg-[var(--accent-soft)]" : done ? "bg-transparent" : ""
@@ -322,7 +326,7 @@ function StepRail({ active }: { active: DisplayStep }) {
                   current ? "text-[var(--accent)]" : done ? "text-[var(--foreground)]" : "text-[var(--muted)]"
                 }`}
               >
-                {label}
+                {ruLabel(label)}
               </span>
             </div>
             {idx < DISPLAY_STEPS.length - 1 && (
@@ -688,9 +692,9 @@ function JobSourceIcon({ source, className = "h-4 w-4" }: { source: string; clas
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
 }
 
 export default function ImportPage() {
@@ -815,7 +819,7 @@ export default function ImportPage() {
           setVinStatus(assist.message);
         } catch (err) {
           if (seq !== vinAssistSeq.current) return;
-          setVinStatus(err instanceof Error ? err.message : "VIN lookup failed");
+          setVinStatus(err instanceof Error ? err.message : "Не удалось найти VIN");
         } finally {
           if (seq === vinAssistSeq.current) setVinLooking(false);
         }
@@ -832,7 +836,7 @@ export default function ImportPage() {
         setSources(await listImportSources());
         await refreshJobs();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load import sources");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить источники импорта");
       }
     })();
   }, [authLoading, session, refreshJobs]);
@@ -876,14 +880,14 @@ export default function ImportPage() {
     const customers = entityImported(ran, "customer");
     const vehicles = entityImported(ran, "vehicle");
     const parts: string[] = [];
-    if (customers > 0) parts.push(`${customers} customer${customers === 1 ? "" : "s"}`);
-    if (vehicles > 0) parts.push(`${vehicles} vehicle${vehicles === 1 ? "" : "s"}`);
+    if (customers > 0) parts.push(`${customers} клиент${customers === 1 ? "" : ""}`);
+    if (vehicles > 0) parts.push(`${vehicles} автомобиль${vehicles === 1 ? "" : ""}`);
     if (parts.length === 0) {
       return ran.status === "failed"
-        ? ran.error || "Save failed"
-        : "Saved — no new records imported";
+        ? ran.error || "Не удалось сохранить"
+        : "Сохранено — новых записей нет";
     }
-    return `Saved ${parts.join(" and ")}`;
+    return `Сохранено ${parts.join(" и ")}`;
   }
 
   /** Manual Entry: save, show result, clear form, stay ready for next entry. */
@@ -922,7 +926,7 @@ export default function ImportPage() {
       clearManualForms();
       setStep("configure");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      setError(err instanceof Error ? err.message : "Не удалось сохранить");
       setStep("configure");
     } finally {
       setBusy(false);
@@ -938,16 +942,16 @@ export default function ImportPage() {
       let activeSource = source;
       // Spreadsheet uploads: selected CSV/Excel connector must match the file type.
       if (FILE_SOURCES.has(source) || primaryGroup === "file") {
-        if (!file) throw new Error("Upload a CSV or Excel file to continue");
+        if (!file) throw new Error("Загрузите файл CSV или Excel для продолжения");
         const inferred = inferFileImportSource(file.name);
         if (!inferred) {
-          throw new Error("Unsupported file type. Use .csv or .xlsx");
+          throw new Error("Неподдерживаемый тип файла. Используйте .csv или .xlsx");
         }
         if (FILE_SOURCES.has(source) && inferred !== source) {
           throw new Error(
             source === "excel"
-              ? "Upload an Excel file (.xlsx) for this import"
-              : "Upload a CSV file for this import",
+              ? "Для этого импорта загрузите файл Excel (.xlsx)"
+              : "Для этого импорта загрузите файл CSV",
           );
         }
         activeSource = inferred;
@@ -971,9 +975,9 @@ export default function ImportPage() {
         } else if (activeSource === "ocr" && ocrText) {
           // ocr_text already in job options from create
         } else if (activeSource !== "ocr") {
-          throw new Error("Upload a file to continue");
+          throw new Error("Загрузите файл для продолжения");
         } else {
-          throw new Error("Provide OCR text or upload a text dump");
+          throw new Error("Укажите текст OCR или загрузите текстовый файл");
         }
       }
 
@@ -992,7 +996,7 @@ export default function ImportPage() {
         await refreshJobs();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Import failed");
+      setError(err instanceof Error ? err.message : "Не удалось импортировать");
       setStep("configure");
     } finally {
       setBusy(false);
@@ -1033,7 +1037,7 @@ export default function ImportPage() {
         setStep("report");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to resolve duplicates");
+      setError(err instanceof Error ? err.message : "Не удалось обработать дубликаты");
     } finally {
       setBusy(false);
     }
@@ -1048,15 +1052,15 @@ export default function ImportPage() {
   function applySpreadsheetFile(next: File) {
     const inferred = inferFileImportSource(next.name);
     if (!inferred) {
-      setError("Unsupported file type. Use .csv or .xlsx");
+      setError("Неподдерживаемый тип файла. Используйте .csv или .xlsx");
       clearSelectedFile();
       return;
     }
     if (FILE_SOURCES.has(source) && inferred !== source) {
       setError(
         source === "excel"
-          ? "This step expects an Excel file (.xlsx). Choose CSV for .csv uploads."
-          : "This step expects a CSV file. Choose Excel for .xlsx uploads.",
+          ? "На этом шаге требуется файл Excel (.xlsx). Для файлов .csv выберите CSV."
+          : "На этом шаге требуется файл CSV. Для файлов .xlsx выберите Excel.",
       );
       clearSelectedFile();
       return;
@@ -1108,10 +1112,10 @@ export default function ImportPage() {
       <div className="flex h-full min-h-0 flex-1 flex-col gap-5 overflow-hidden">
         <div className="flex items-center gap-2">
           <IconImport className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-          <h1 className="page-title">Import</h1>
+          <h1 className="page-title">Импорт</h1>
         </div>
         <p className="surface-panel max-w-lg border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Only shop owners can import data.
+          Только владельцы могут импортировать данные.
         </p>
       </div>
     );
@@ -1123,17 +1127,17 @@ export default function ImportPage() {
         <div className="hero-motion min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <IconImport className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-            <h1 className="page-title">Import</h1>
+            <h1 className="page-title">Импорт</h1>
           </div>
           <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-[var(--muted)]">
-            Bring in shop history so AI can advise with real customer and vehicle context.
+            Загрузите историю автосервиса, чтобы ИИ учитывал реальные данные клиентов и автомобилей.
           </p>
         </div>
         {step !== "source" && (
           <button
             type="button"
             onClick={resetWizard}
-            aria-label="New import"
+            aria-label="Новый импорт"
             className={`btn-primary h-10 w-10 shrink-0 items-center justify-center p-0 shadow-[0_14px_32px_-16px_rgba(240,90,36,0.85)] ${
               step === "report" ? "hidden md:inline-flex" : "inline-flex"
             }`}
@@ -1149,7 +1153,7 @@ export default function ImportPage() {
 
       {error && (
         <p className="shrink-0 rounded-xl border border-red-200/80 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -1177,16 +1181,16 @@ export default function ImportPage() {
             />
             <div className="relative">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent-hover)]">
-                AI Import Assistant
+                ИИ-помощник импорта
               </p>
               <h2 className="font-display mt-2 text-xl font-semibold tracking-tight text-[var(--ink)] sm:text-2xl">
-                History becomes context
+                История становится контекстом
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--ink)]/60">
-                While importing, AI detects customers, matches vehicles, builds repair history, and creates lasting memory for better advice.
+                При импорте ИИ определяет клиентов, сопоставляет автомобили, формирует историю ремонта и сохраняет контекст для точных рекомендаций.
               </p>
               <ul className="mt-4 flex flex-wrap gap-2">
-                {["Detect customers", "Match vehicles", "Build history", "Create memory"].map(
+                {["Определить клиентов", "Сопоставить автомобили", "Создать историю", "Создать память"].map(
                   (item) => (
                     <li
                       key={item}
@@ -1203,7 +1207,7 @@ export default function ImportPage() {
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             <SourceOptionCard
               title="CSV / Excel"
-              description="Upload spreadsheet exports from your shop system"
+              description="Загрузите таблицы, экспортированные из системы автосервиса"
               selected={primaryGroup === "file"}
               icon="file"
               onClick={() => {
@@ -1214,8 +1218,8 @@ export default function ImportPage() {
 
             {manualSource && (
               <SourceOptionCard
-                title="Manual Entry"
-                description="Enter a customer and vehicle with guided forms"
+                title="Ввод вручную"
+                description="Введите клиента и автомобиль с помощью форм"
                 icon="manual"
                 onClick={() => {
                   setSuccess(null);
@@ -1258,10 +1262,10 @@ export default function ImportPage() {
                     id="file-import-dialog-title"
                     className="text-base font-semibold tracking-tight text-[var(--ink)]"
                   >
-                    Select file type
+                    Выберите тип файла
                   </p>
                   <p className="mt-0.5 text-xs text-[var(--muted)]">
-                    Choose CSV or Excel, then continue to upload.
+                    Выберите CSV или Excel, затем перейдите к загрузке.
                   </p>
                 </div>
               </div>
@@ -1309,7 +1313,7 @@ export default function ImportPage() {
                     className="btn-ghost inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-sm"
                   >
                     <IconCancel />
-                    Cancel
+                    Отмена
                   </button>
                   <button
                     type="button"
@@ -1317,7 +1321,7 @@ export default function ImportPage() {
                     onClick={() => setStep("configure")}
                     className="btn-primary inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-sm disabled:opacity-60"
                   >
-                    Continue
+                    Продолжить
                     <IconContinue />
                   </button>
                 </div>
@@ -1391,10 +1395,10 @@ export default function ImportPage() {
                           id="import-review-dialog-title"
                           className="font-display text-base font-semibold tracking-tight text-[var(--ink)]"
                         >
-                          Manual Entry
+                          Ввод вручную
                         </h2>
                         <p className="mt-0.5 text-xs leading-relaxed text-[var(--muted)]">
-                          Enter a customer and/or vehicle, then save.
+                          Введите данные клиента и/или автомобиля и сохраните.
                         </p>
                       </div>
                     ) : (
@@ -1404,7 +1408,7 @@ export default function ImportPage() {
                           FILE_SOURCES.has(source) ? "text-base" : "text-xl"
                         }`}
                       >
-                        {FILE_SOURCES.has(source) ? "Review" : selectedSource.label}
+                        {FILE_SOURCES.has(source) ? "Проверка" : selectedSource.label}
                       </h2>
                     )}
                   </div>
@@ -1488,10 +1492,10 @@ export default function ImportPage() {
                         </span>
                         <p className="relative mt-2.5 font-display text-sm font-semibold tracking-tight text-[var(--ink)]">
                           {fileDragOver
-                            ? "Drop to upload"
+                            ? "Отпустите для загрузки"
                             : source === "excel"
-                              ? "Import the Excel file"
-                              : "Import the CSV file"}
+                              ? "Импортировать файл Excel"
+                              : "Импортировать файл CSV"}
                         </p>
                       </button>
                     ) : (
@@ -1513,7 +1517,7 @@ export default function ImportPage() {
                               {file.name}
                             </p>
                             <p className="mt-1 text-xs leading-none text-white/55">
-                              {formatFileSize(file.size)} · {source.toUpperCase()} connector
+                              {formatFileSize(file.size)} · {source.toUpperCase()} коннектор
                             </p>
                           </div>
                           <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-400/20 text-emerald-300 ring-1 ring-emerald-400/30">
@@ -1531,7 +1535,7 @@ export default function ImportPage() {
                             onClick={() => fileInputRef.current?.click()}
                             className="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-white/15 transition-colors hover:bg-white/15"
                           >
-                            Replace file
+                            Заменить файл
                           </button>
                           <button
                             type="button"
@@ -1540,7 +1544,7 @@ export default function ImportPage() {
                             }}
                             className="rounded-lg px-2.5 py-1 text-xs font-semibold text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                           >
-                            Remove
+                            Удалить
                           </button>
                         </div>
                       </div>
@@ -1563,7 +1567,7 @@ export default function ImportPage() {
                     {(source === "ocr" || source === "pdf") && (
                       <textarea
                         className="min-h-28 w-full rounded-xl border border-[var(--line)] bg-transparent px-3.5 py-2.5 text-sm"
-                        placeholder="OCR / document text (optional for PDF; required for OCR without file)"
+                        placeholder="OCR / текст документа (необязательно для PDF; обязательно для OCR без файла)"
                         value={ocrText}
                         onChange={(e) => setOcrText(e.target.value)}
                       />
@@ -1578,11 +1582,11 @@ export default function ImportPage() {
                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]">
                           <IconUser className="h-3.5 w-3.5" />
                         </span>
-                        Customer
+                        Клиент
                       </h3>
                       <div className="grid grid-cols-2 gap-2.5">
                         <ManualField
-                          label="Name"
+                          label="Имя"
                           icon={<IconUser className="h-3.5 w-3.5" />}
                           value={manualCustomer.name}
                           onChange={(name) => setManualCustomer((c) => ({ ...c, name }))}
@@ -1590,7 +1594,7 @@ export default function ImportPage() {
                           placeholder="Sam Chen"
                         />
                         <ManualField
-                          label="Phone"
+                          label="Телефон"
                           icon={<IconPhone className="h-3.5 w-3.5" />}
                           value={manualCustomer.phone}
                           onChange={(phone) =>
@@ -1601,7 +1605,7 @@ export default function ImportPage() {
                           placeholder={PHONE_PLACEHOLDER}
                         />
                         <ManualField
-                          label="Email (optional)"
+                          label="Эл. почта (необязательно)"
                           icon={<IconMail className="h-3.5 w-3.5" />}
                           value={manualCustomer.email}
                           onChange={(email) => setManualCustomer((c) => ({ ...c, email }))}
@@ -1618,10 +1622,10 @@ export default function ImportPage() {
                         <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]">
                           <IconCar className="h-3.5 w-3.5" />
                         </span>
-                        Vehicle
+                        Автомобиль
                       </h3>
                       <p className="text-xs text-[var(--muted)]">
-                        Scan or type a 17-character VIN to auto-fill year, make, and model.
+                        Отсканируйте или введите VIN из 17 символов для заполнения года, марки и модели.
                       </p>
                       <div className="grid grid-cols-2 gap-2.5">
                         <div className="col-span-2">
@@ -1634,26 +1638,26 @@ export default function ImportPage() {
                           />
                         </div>
                         <ManualField
-                          label="Year"
+                          label="Год"
                           value={manualVehicle.year}
                           onChange={(year) => setManualVehicle((v) => ({ ...v, year }))}
                           type="number"
                           placeholder="2018"
                         />
                         <ManualField
-                          label="Make"
+                          label="Марка"
                           value={manualVehicle.make}
                           onChange={(make) => setManualVehicle((v) => ({ ...v, make }))}
                           placeholder="Honda"
                         />
                         <ManualField
-                          label="Model"
+                          label="Модель"
                           value={manualVehicle.model}
                           onChange={(model) => setManualVehicle((v) => ({ ...v, model }))}
                           placeholder="Accord"
                         />
                         <ManualField
-                          label="Mileage"
+                          label="Пробег"
                           value={manualVehicle.mileage}
                           onChange={(mileage) => setManualVehicle((v) => ({ ...v, mileage }))}
                           type="number"
@@ -1684,7 +1688,7 @@ export default function ImportPage() {
                       className="btn-ghost inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-sm"
                     >
                       <IconCancel />
-                      Cancel
+                      Отмена
                     </button>
                     <button
                       type="submit"
@@ -1702,11 +1706,11 @@ export default function ImportPage() {
                       className="btn-primary inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-sm disabled:opacity-60"
                     >
                       {busy ? (
-                        "Saving…"
+                        "Сохранение…"
                       ) : (
                         <>
                           <IconSave />
-                          Save
+                          Сохранить
                         </>
                       )}
                     </button>
@@ -1724,7 +1728,7 @@ export default function ImportPage() {
                         FILE_SOURCES.has(source) ? "px-3.5 py-1.5 text-sm" : "px-4 py-2 text-sm"
                       }`}
                     >
-                      Back
+                      Назад
                     </button>
                     <button
                       type="submit"
@@ -1738,7 +1742,7 @@ export default function ImportPage() {
                         FILE_SOURCES.has(source) ? "px-3.5 py-1.5" : "px-5 py-2.5"
                       }`}
                     >
-                      {busy ? "Starting…" : "Start import"}
+                      {busy ? "Запуск…" : "Начать импорт"}
                       {!busy ? <IconContinue /> : null}
                     </button>
                   </>
@@ -1755,12 +1759,12 @@ export default function ImportPage() {
             className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(240,90,36,0.18),transparent_70%)]"
             aria-hidden
           />
-          <p className="section-label">Import</p>
+          <p className="section-label">Импорт</p>
           <h2 className="font-display mt-1.5 text-lg font-semibold tracking-tight">
-            Import in progress
+            Выполняется импорт
           </h2>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            {job?.progress.message || (busy ? "Starting import…" : "Working…")}
+            {job?.progress.message || (busy ? "Запуск импорта…" : "Обработка…")}
           </p>
           <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-[var(--background)] ring-1 ring-[var(--line)]">
             <div
@@ -1769,7 +1773,7 @@ export default function ImportPage() {
             />
           </div>
           <p className="mt-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
-            {job ? `${job.progress.stage} · ${job.progress.percent}%` : "uploading · …"}
+            {job ? `${ruLabel(job.progress.stage)} · ${job.progress.percent}%` : "загрузка · …"}
           </p>
         </section>
       )}
@@ -1778,11 +1782,10 @@ export default function ImportPage() {
         <section className="min-w-0 shrink-0 space-y-4">
           <div className="min-w-0">
             <h2 className="font-display text-lg font-semibold tracking-tight">
-              Resolve duplicates
+              Обработка дубликатов
             </h2>
             <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
-              These records look similar to ones you already have. Compare both sides, then choose
-              how to handle each before applying.
+              Эти записи похожи на существующие. Сравните обе стороны и выберите действие для каждой записи перед применением.
             </p>
           </div>
           <div className="min-w-0 space-y-3">
@@ -1804,7 +1807,7 @@ export default function ImportPage() {
             className="btn-primary inline-flex items-center justify-center gap-1.5 px-5 py-2.5 text-sm disabled:opacity-60"
           >
             {!busy ? <IconApply /> : null}
-            {busy ? "Applying…" : "Apply"}
+            {busy ? "Применение…" : "Применить"}
           </button>
         </section>
       )}
@@ -1814,7 +1817,7 @@ export default function ImportPage() {
           <div className="surface-panel space-y-5 p-5 sm:p-6">
             <div className="flex items-center gap-3">
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
-                <StatusBadge status={job.status} />
+                <StatusBadge status={ruLabel(job.status)} />
                 {job.source ? (
                   <span className="text-sm capitalize text-[var(--muted)]">{job.source}</span>
                 ) : null}
@@ -1822,7 +1825,7 @@ export default function ImportPage() {
               <button
                 type="button"
                 onClick={resetWizard}
-                aria-label="New import"
+                aria-label="Новый импорт"
                 className="btn-primary inline-flex h-10 w-10 shrink-0 items-center justify-center p-0 shadow-[0_14px_32px_-16px_rgba(240,90,36,0.85)] md:hidden"
               >
                 <IconImportPlus className="h-5 w-5" />
@@ -1830,19 +1833,19 @@ export default function ImportPage() {
             </div>
             {job.error && (
               <p className="rounded-xl border border-red-200/80 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {job.error}
+                {ruError(job.error)}
               </p>
             )}
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard label="Customers imported" value={entityImported(job, "customer")} />
-              <StatCard label="Vehicles imported" value={entityImported(job, "vehicle")} />
-              <StatCard label="Repair records" value={entityImported(job, "repair_history")} />
-              <StatCard label="Duplicates resolved" value={duplicatesResolved(job)} />
+              <StatCard label="Импортировано клиентов" value={entityImported(job, "customer")} />
+              <StatCard label="Импортировано автомобилей" value={entityImported(job, "vehicle")} />
+              <StatCard label="Записи о ремонте" value={entityImported(job, "repair_history")} />
+              <StatCard label="Дубликаты обработаны" value={duplicatesResolved(job)} />
             </div>
             {job.report && (
               <>
                 <p className="text-sm text-[var(--muted)]">
-                  Duration {job.report.duration_ms}ms · Pending duplicates{" "}
+                  Длительность {job.report.duration_ms}мс · Ожидающие дубликаты{" "}
                   {job.report.duplicates_pending}
                 </p>
                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -1856,10 +1859,10 @@ export default function ImportPage() {
                       </p>
                       <p className="font-display mt-1 text-lg font-semibold tracking-tight">
                         {c.imported}{" "}
-                        <span className="text-sm font-medium text-[var(--muted)]">imported</span>
+                        <span className="text-sm font-medium text-[var(--muted)]">импортировано</span>
                       </p>
                       <p className="mt-1 text-xs text-[var(--muted)]">
-                        merged {c.merged} · skipped {c.skipped} · failed {c.failed}
+                        объединено {c.merged} · пропущено {c.skipped} · с ошибкой {c.failed}
                       </p>
                     </div>
                   ))}
@@ -1875,10 +1878,10 @@ export default function ImportPage() {
             )}
             {job.validation_issues.length > 0 && (
               <div className="space-y-2 rounded-xl border border-[var(--line)] bg-[var(--background)]/40 p-4">
-                <p className="text-sm font-semibold">Validation issues</p>
+                <p className="text-sm font-semibold">Ошибки проверки</p>
                 {job.validation_issues.map((issue) => (
                   <p key={issue.id} className="text-xs text-[var(--muted)]">
-                    [{issue.severity}] {issue.code}: {issue.message}
+                    [{ruLabel(issue.severity)}] {issue.code}: {ruError(issue.message)}
                   </p>
                 ))}
               </div>
@@ -1890,7 +1893,7 @@ export default function ImportPage() {
       <section className="flex min-h-0 flex-col gap-3 md:min-h-0 md:flex-1 md:overflow-hidden">
         <h2 className="font-display flex shrink-0 items-center gap-2 text-lg font-semibold tracking-tight">
           <IconHistory className="h-5 w-5 text-[var(--muted)]" />
-          History
+          История
         </h2>
         <ul className="rounded-[var(--radius)] border border-[var(--line)] bg-[var(--panel)] shadow-[var(--shadow-soft)] md:asa-scroll md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-contain md:[-webkit-overflow-scrolling:touch]">
           {jobs.map((j) => {
@@ -1925,7 +1928,7 @@ export default function ImportPage() {
                       >
                         {j.source}
                       </span>
-                      <StatusBadge status={j.status} />
+                      <StatusBadge status={ruLabel(j.status)} />
                     </div>
                     <div className="flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-xs text-[var(--muted)]">
                       <span className="min-w-0 break-words tabular-nums">{jobCountsSummary(j)}</span>
@@ -1938,7 +1941,7 @@ export default function ImportPage() {
           })}
           {jobs.length === 0 && (
             <li className="px-3.5 py-10 text-center text-sm text-[var(--muted)]">
-              No imports yet — start with a spreadsheet or manual entry above.
+              Импорта пока нет — начните с таблицы или ручного ввода выше.
             </li>
           )}
         </ul>
@@ -1952,7 +1955,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-xl border border-[var(--line)] bg-[var(--background)]/40 px-3.5 py-3">
       <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-        {label}
+        {ruLabel(label)}
       </p>
       <p className="font-display mt-1 text-2xl font-semibold tracking-tight tabular-nums">
         {value}
@@ -1967,7 +1970,7 @@ function humanizeKey(key: string): string {
 
 function formatSnapshotValue(value: unknown): string {
   if (value == null || value === "") return "—";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "boolean") return value ? "Да" : "Нет";
   if (typeof value === "number") return Number.isFinite(value) ? String(value) : "—";
   if (typeof value === "string") {
     const t = value.trim();
@@ -2011,7 +2014,7 @@ function SnapshotPanel({
       </p>
       {subtitle ? <p className="mt-0.5 text-xs text-[var(--muted)]">{subtitle}</p> : null}
       {fields.length === 0 ? (
-        <p className="mt-2 text-sm text-[var(--muted)]">No details available</p>
+        <p className="mt-2 text-sm text-[var(--muted)]">Сведения отсутствуют</p>
       ) : (
         <dl className="mt-2.5 min-w-0 space-y-1.5">
           {fields.map((key) => {
@@ -2062,18 +2065,18 @@ function DuplicateCard({
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <p className="font-display break-words text-sm font-semibold tracking-tight [overflow-wrap:anywhere]">
-            Possible duplicate {entityLabel.toLowerCase()}
+            Возможный дубликат {entityLabel.toLowerCase()}
             {headline !== "—" ? `: ${headline}` : ""}
           </p>
           <p className="mt-1 break-words text-xs text-[var(--muted)]">
-            Matched by {matchLabel} · {confidence}% confidence
+            Совпадение по {matchLabel} · {confidence}% уверенности
           </p>
         </div>
         <select
           className="w-full max-w-full shrink-0 rounded-xl border border-[var(--line)] bg-[var(--background)]/40 px-3 py-2 text-sm sm:w-auto"
           value={action}
           onChange={(e) => onChange(e.target.value)}
-          aria-label={`How to resolve duplicate for ${headline}`}
+          aria-label={`Обработка дубликата для ${headline}`}
         >
           {MERGE_ACTIONS.map((a) => (
             <option key={a.value} value={a.value}>
@@ -2084,15 +2087,15 @@ function DuplicateCard({
       </div>
       <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
         <SnapshotPanel
-          title="Importing"
-          subtitle="From this import"
+          title="Импорт"
+          subtitle="Из этого импорта"
           entityKind={dup.entity_kind}
           snap={dup.incoming_snapshot}
           highlightKey={dup.match_type}
         />
         <SnapshotPanel
-          title="Already saved"
-          subtitle={dup.existing_ref ? "In your shop records" : "Also in this import"}
+          title="Уже сохранено"
+          subtitle={dup.existing_ref ? "В записях автосервиса" : "Также в этом импорте"}
           entityKind={dup.entity_kind}
           snap={dup.existing_snapshot}
           highlightKey={dup.match_type}

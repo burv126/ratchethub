@@ -111,7 +111,7 @@ class ShopSetupService:
     async def _get_shop(self, shop_id: UUID) -> ShopModel:
         shop = await self._session.get(ShopModel, shop_id)
         if shop is None:
-            raise NotFoundError("Shop not found")
+            raise NotFoundError('Автосервис не найден')
         return shop
 
     async def _get_profile(self, shop_id: UUID) -> ShopSetupProfileModel | None:
@@ -275,17 +275,17 @@ class ShopSetupService:
 
     def _validate_hours(self, hours: list[BusinessHoursIn]) -> None:
         if len(hours) != 7:
-            raise ValidationError("Business hours must include all 7 weekdays")
+            raise ValidationError('Укажите часы работы для всех 7 дней недели')
         weekdays = sorted(h.weekday for h in hours)
         if weekdays != list(range(7)):
-            raise ValidationError("Business hours must cover weekdays 0–6 exactly once")
+            raise ValidationError('Дни недели 0–6 должны быть указаны ровно по одному разу')
         # All-closed is allowed (temporary closure / holiday). Only validate open days.
         for h in hours:
             if h.closed:
                 continue
             if h.open_time >= h.close_time:
                 raise ValidationError(
-                    f"Open time must be before close time for weekday {h.weekday}"
+                    f'Время открытия должно быть раньше закрытия для дня {h.weekday}'
                 )
 
     def _has_shop_info(self, shop: ShopModel, profile: ShopSetupProfileModel) -> bool:
@@ -354,7 +354,7 @@ class ShopSetupService:
         if "name" in patch and patch["name"] is not None:
             name = patch["name"].strip()
             if len(name) < 2:
-                raise ValidationError("Shop name too short")
+                raise ValidationError('Название автосервиса слишком короткое')
             shop.name = name
             # Keep internal slug aligned with display name so login-by-name works.
             from app.domain.slug import next_slug_candidate, slugify_shop_name
@@ -374,7 +374,7 @@ class ShopSetupService:
         if "timezone" in patch and patch["timezone"] is not None:
             tz = patch["timezone"].strip()
             if not tz:
-                raise ValidationError("Invalid timezone")
+                raise ValidationError('Некорректный часовой пояс')
             shop.timezone = tz
         for field in (
             "phone",
@@ -415,7 +415,7 @@ class ShopSetupService:
 
     async def _replace_services(self, shop_id: UUID, services: list[ServiceIn]) -> list[ShopServiceModel]:
         if not services:
-            raise ValidationError("At least one service is required")
+            raise ValidationError('Нужна хотя бы одна услуга')
         await self._session.execute(
             delete(ShopServiceModel).where(ShopServiceModel.shop_id == shop_id)
         )
@@ -437,11 +437,11 @@ class ShopSetupService:
                 updated_at=now,
             )
             if not row.name:
-                raise ValidationError("Service name is required")
+                raise ValidationError('Укажите название услуги')
             self._session.add(row)
             rows.append(row)
         if not any(r.active for r in rows):
-            raise ValidationError("At least one active service is required")
+            raise ValidationError('Нужна хотя бы одна активная услуга')
         await self._session.flush()
         return rows
 
@@ -454,7 +454,7 @@ class ShopSetupService:
         await self._replace_services(shop_id, body.services)
         if not self._has_shop_info(shop, profile):
             raise ValidationError(
-                "Shop info requires a name plus phone/email or street address and city"
+                'Укажите название и телефон/почту либо адрес и город автосервиса'
             )
         profile.setup_completed_at = datetime.now(timezone.utc)
         profile.updated_at = profile.setup_completed_at
@@ -464,7 +464,7 @@ class ShopSetupService:
 
     async def update_settings(self, shop_id: UUID, body: UpdateShopSettingsRequest) -> SetupStateOut:
         if body.profile is None and body.business_hours is None:
-            raise ValidationError("No changes provided")
+            raise ValidationError('Изменения не указаны')
         shop = await self._get_shop(shop_id)
         profile = await self._get_or_create_profile(shop_id)
         if body.profile is not None:
@@ -484,7 +484,7 @@ class ShopSetupService:
     async def get_service(self, shop_id: UUID, service_id: UUID) -> ServiceOut:
         row = await self._session.get(ShopServiceModel, service_id)
         if row is None or row.shop_id != shop_id:
-            raise NotFoundError("Service not found")
+            raise NotFoundError('Услуга не найдена')
         return _service_out(row)
 
     async def _assert_unique_service_name(
@@ -511,7 +511,7 @@ class ShopSetupService:
         sort_order = body.sort_order if body.sort_order is not None else len(existing)
         name = body.name.strip()
         if not name:
-            raise ValidationError("Service name is required")
+            raise ValidationError('Укажите название услуги')
         await self._assert_unique_service_name(shop_id, name)
         row = ShopServiceModel(
             id=uuid4(),
@@ -536,10 +536,10 @@ class ShopSetupService:
     async def update_service(self, shop_id: UUID, service_id: UUID, body: ServiceUpdate) -> ServiceOut:
         row = await self._session.get(ShopServiceModel, service_id)
         if row is None or row.shop_id != shop_id:
-            raise NotFoundError("Service not found")
+            raise NotFoundError('Услуга не найдена')
         patch = body.model_dump(exclude_unset=True)
         if not patch:
-            raise ValidationError("No changes provided")
+            raise ValidationError('Изменения не указаны')
         for key, value in patch.items():
             if key in {"name", "category", "skill", "bay"} and isinstance(value, str):
                 value = value.strip()
@@ -559,13 +559,13 @@ class ShopSetupService:
     async def delete_service(self, shop_id: UUID, service_id: UUID) -> None:
         row = await self._session.get(ShopServiceModel, service_id)
         if row is None or row.shop_id != shop_id:
-            raise NotFoundError("Service not found")
+            raise NotFoundError('Услуга не найдена')
         remaining = await self._list_services(shop_id)
         profile = await self._get_profile(shop_id)
         if profile is not None and profile.setup_completed_at is not None:
             active_others = [s for s in remaining if s.id != service_id and s.active]
             if not active_others:
-                raise ValidationError("At least one active service is required after setup")
+                raise ValidationError('После настройки нужна хотя бы одна активная услуга')
         await self._session.delete(row)
         await self._session.commit()
 

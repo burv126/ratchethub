@@ -1,5 +1,5 @@
-/** Example shown in phone inputs (US E.164 display). */
-export const PHONE_PLACEHOLDER = "+1 309 844 9753";
+/** Default example for Russian domestic phone input. */
+export const PHONE_PLACEHOLDER = "8 912 345 67 89";
 
 /** Digits only — for storage-agnostic comparisons. */
 export function phoneDigits(phone: string | null | undefined): string {
@@ -26,19 +26,25 @@ export function phonesMatch(
 }
 
 /**
- * Format phone input as `+1 NXX NXX XXXX` while typing.
- * Empty stays empty; national digits are always prefixed with +1.
+ * Default national input to `8 NXX XXX XX XX` while typing.
+ * Preserve explicit international prefixes and existing eleven-digit US numbers.
  */
 export function formatPhoneInput(raw: string): string {
   const digitsAll = raw.replace(/\D/g, "");
   if (!digitsAll) return "";
 
-  let national = digitsAll.startsWith("1") ? digitsAll.slice(1) : digitsAll;
-  national = national.slice(0, 10);
-  if (!national) return "+1";
-
-  const parts = [national.slice(0, 3), national.slice(3, 6), national.slice(6, 10)].filter(
-    Boolean,
-  );
-  return `+1 ${parts.join(" ")}`;
+  if (raw.trimStart().startsWith("+") || (digitsAll.length === 11 && digitsAll.startsWith("1"))) {
+    const country = digitsAll[0];
+    if ((country !== "1" && country !== "7") || digitsAll.length > 11) return `+${digitsAll}`;
+    const national = digitsAll.slice(1);
+    const parts = country === "1"
+      ? [national.slice(0, 3), national.slice(3, 6), national.slice(6, 10)]
+      : [national.slice(0, 3), national.slice(3, 6), national.slice(6, 8), national.slice(8, 10)];
+    return [`+${country}`, ...parts.filter(Boolean)].join(" ");
+  }
+  // Leave overlong input visible for validation rather than silently losing digits.
+  if (digitsAll.length > 11) return digitsAll;
+  const national = digitsAll.startsWith("8") ? digitsAll.slice(1) : digitsAll;
+  const parts = [national.slice(0, 3), national.slice(3, 6), national.slice(6, 8), national.slice(8)].filter(Boolean);
+  return ["8", ...parts].join(" ");
 }

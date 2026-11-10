@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import Link from "next/link";
 import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
@@ -164,7 +166,7 @@ export function LoginForm({
         return;
       }
       if (name.length < 2) {
-        setError("Enter your shop name.");
+        setError("Введите название автосервиса.");
         return;
       }
       await login({
@@ -180,7 +182,7 @@ export function LoginForm({
         setMfaToken(err.mfaToken);
         setError(null);
       } else {
-        setError(err instanceof Error ? err.message : "Login failed");
+        setError(err instanceof Error ? err.message : "Не удалось войти");
       }
     } finally {
       setSubmitting(false);
@@ -202,14 +204,14 @@ export function LoginForm({
             className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
           >
             <span aria-hidden="true">←</span>
-            Back to home
+            На главную
           </Link>
         ) : (
           <button
             type="button"
             onClick={onClose}
             className="absolute right-0 top-0 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:bg-black/5 hover:text-[var(--ink)]"
-            aria-label="Close sign in"
+            aria-label="Закрыть вход"
           >
             <span aria-hidden className="text-xl leading-none">
               ×
@@ -218,33 +220,33 @@ export function LoginForm({
         )}
 
         <div className={variant === "modal" ? "pr-10" : undefined}>
-          <p className={`section-label ${variant === "page" ? "mt-4" : ""}`}>Welcome back</p>
+          <p className={`section-label ${variant === "page" ? "mt-4" : ""}`}>С возвращением</p>
           <h1
             id={variant === "modal" ? "home-login-title" : undefined}
             className="mt-1.5 inline-flex items-center gap-2.5 font-display text-[1.5rem] font-extrabold tracking-tight sm:text-[1.75rem]"
           >
             {mfaToken ? (
-              "Two-factor authentication"
+              "Двухфакторная аутентификация"
             ) : (
               <>
                 <IconUser className="h-6 w-6 shrink-0 text-[var(--accent)] sm:h-7 sm:w-7" />
-                Sign in
+                Войти
               </>
             )}
           </h1>
           {mfaToken ? (
             <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-              Enter the 6-digit authenticator code or a one-time backup code.
+              Введите 6-значный код из аутентификатора или одноразовый резервный код.
             </p>
           ) : null}
         </div>
 
         {!mfaToken && (
-          <div className="auth-segment mt-5" role="tablist" aria-label="Sign-in method">
+          <div className="auth-segment mt-5" role="tablist" aria-label="Способ входа">
             {(
               [
-                ["phone", "Phone", IconPhone],
-                ["email", "Email", IconMail],
+                ["phone", "Телефон", IconPhone],
+                ["email", "Эл. почта", IconMail],
               ] as const
             ).map(([id, label, Icon]) => (
               <button
@@ -280,7 +282,7 @@ export function LoginForm({
             <>
               <Field
                 key={`shop-name-${fieldEpoch}`}
-                label="Shop name"
+                label="Название автосервиса"
                 icon={<IconBuilding />}
                 name={`asa-login-shop-name-${fieldEpoch}`}
                 autoComplete="off"
@@ -289,7 +291,7 @@ export function LoginForm({
                   userEditedShopName.current = true;
                   setShopName(v);
                 }}
-                placeholder="Your shop name"
+                placeholder="Название вашего автосервиса"
                 required
                 guardAutofill
               />
@@ -297,7 +299,7 @@ export function LoginForm({
                 <div key={`contact-${mode}-${fieldEpoch}`}>
                   {mode === "phone" ? (
                     <Field
-                      label="Phone"
+                      label="Телефон"
                       icon={<IconPhone />}
                       name={`asa-login-phone-${fieldEpoch}`}
                       type="tel"
@@ -313,7 +315,7 @@ export function LoginForm({
                     />
                   ) : (
                     <Field
-                      label="Email"
+                      label="Эл. почта"
                       icon={<IconMail />}
                       name={`asa-login-email-${fieldEpoch}`}
                       type="email"
@@ -331,7 +333,7 @@ export function LoginForm({
               ) : null}
               <PasswordField
                 key={`password-${fieldEpoch}`}
-                label="Password"
+                label="Пароль"
                 icon={<IconLock />}
                 name={`asa-login-password-${fieldEpoch}`}
                 value={password}
@@ -358,7 +360,7 @@ export function LoginForm({
                     }}
                     className="h-4 w-4 rounded border-[var(--line)] accent-[var(--accent)]"
                   />
-                  <span>Remember info</span>
+                  <span>Запомнить данные</span>
                 </label>
                 <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
                   <input
@@ -376,12 +378,12 @@ export function LoginForm({
                     }}
                     className="h-4 w-4 rounded border-[var(--line)] accent-[var(--accent)]"
                   />
-                  <span>Remember password</span>
+                  <span>Запомнить пароль</span>
                 </label>
               </div>
             </>
           ) : (
-            <Field label="Authenticator code" value={mfaCode} onChange={setMfaCode} required />
+            <Field label="Код аутентификатора" value={mfaCode} onChange={setMfaCode} required />
           )}
         </div>
 
@@ -391,7 +393,7 @@ export function LoginForm({
               className="rounded-xl border border-red-200/80 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
               role="alert"
             >
-              {error}
+              {ruError(error)}
             </p>
           )}
 
@@ -401,13 +403,13 @@ export function LoginForm({
             className="btn-primary mt-1 w-full gap-2 py-3 text-base disabled:opacity-60"
           >
             {submitting ? (
-              "Please wait…"
+              "Подождите…"
             ) : mfaToken ? (
-              "Verify"
+              "Подтвердить"
             ) : (
               <>
                 <IconUser className="h-4 w-4" />
-                Sign in
+                Войти
               </>
             )}
           </button>
@@ -420,26 +422,26 @@ export function LoginForm({
               }}
               className="w-full text-sm text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
             >
-              Back
+              Назад
             </button>
           )}
 
           <p className="text-center text-sm text-[var(--muted)]">
-            New shop?{" "}
+            Новый автосервис?{" "}
             {variant === "modal" && onSwitchToRegister ? (
               <button
                 type="button"
                 onClick={onSwitchToRegister}
                 className="font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
               >
-                Create an account
+                Создать учётную запись
               </button>
             ) : (
               <Link
                 href="/register"
                 className="font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
               >
-                Create an account
+                Создать учётную запись
               </Link>
             )}
           </p>

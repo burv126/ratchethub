@@ -425,7 +425,7 @@ class SqlAlchemyImportStore:
         job.progress = ImportProgress(
             stage=job.status,
             percent=0,
-            message="Created",
+            message='Создано',
             updated_at=now,
         )
         self._cache_ephemeral(job)
@@ -439,7 +439,7 @@ class SqlAlchemyImportStore:
                     source=job.source.value,
                     status=job.status.value,
                     progress_percent=0,
-                    progress_message="Created",
+                    progress_message='Создано',
                     filename=job.filename,
                     content_type=job.content_type,
                     options_json=_pack_options(job),

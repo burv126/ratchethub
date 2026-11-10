@@ -76,7 +76,7 @@ def extract_from_ocr_text(text: str) -> dict[str, list[dict[str, Any]]]:
             {
                 "vin": vin,
                 "service_type": "general",
-                "description": (repair_m.group(1).strip() if repair_m else "Imported repair"),
+                "description": (repair_m.group(1).strip() if repair_m else 'Импортированный ремонт'),
                 "cost": amount_m.group(1) if amount_m else "0",
                 "mileage": mileage,
                 "recommendation": rec_m.group(1).strip() if rec_m else None,
@@ -120,7 +120,7 @@ class OcrConnector:
             # Image OCR engines (Tesseract/cloud) plug in here; default decodes UTF-8 text dumps.
             text = ctx.payload.decode("utf-8", errors="replace")
         else:
-            raise ValueError("OCR import requires ocr_text or a text/image payload")
+            raise ValueError('Для OCR нужен ocr_text или текстовые данные / изображение')
 
         sections = extract_from_ocr_text(text)
         if not sections:

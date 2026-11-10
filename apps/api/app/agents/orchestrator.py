@@ -1046,7 +1046,7 @@ class AgentOrchestrator:
                         message=(
                             "preferred_time_unavailable"
                             if is_slot
-                            else (applied.errors[0] if applied.errors else "Scheduling failed")
+                            else (applied.errors[0] if applied.errors else 'Ошибка планирования')
                         ),
                         metadata={
                             "preferred_time_unavailable": is_slot,
@@ -1309,7 +1309,7 @@ class AgentOrchestrator:
             if decision.escalate:
                 esc = EscalationDecision(
                     escalate=True,
-                    reason=decision.escalation_reason or "Escalation required",
+                    reason=decision.escalation_reason or 'Требуется передача сотруднику',
                     priority="urgent" if is_emergency else "high" if is_complaint else "normal",
                     details={"status": decision.status},
                 )
@@ -1344,7 +1344,7 @@ class AgentOrchestrator:
                     await self._publish(
                         AgentEventType.ESCALATION_REQUESTED.value,
                         EscalationRequestedEvent(
-                            reason=decision.escalation_reason or "Escalation required",
+                            reason=decision.escalation_reason or 'Требуется передача сотруднику',
                             priority="urgent"
                             if is_emergency
                             else "high"

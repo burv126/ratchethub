@@ -120,12 +120,11 @@ class TwilioNumberProvisioner:
         numbers = payload.get("available_phone_numbers") or []
         if not numbers:
             raise RuntimeError(
-                f"No Twilio local numbers available country={self._country} "
-                f"area_code={self._area_code or 'any'}"
+                f"Нет доступных местных номеров Twilio: страна={self._country}, код города={self._area_code or 'any'}"
             )
         phone = str(numbers[0].get("phone_number") or "")
         if not phone:
-            raise RuntimeError("Twilio available-number response missing phone_number")
+            raise RuntimeError('В ответе Twilio отсутствует phone_number')
         return phone
 
     async def _list_owned_incoming(
@@ -497,19 +496,15 @@ def _twilio_api_error_hint(exc: Exception) -> str:
     lower = text.lower()
     if "401" in text or "authenticate" in lower or "unauthorized" in lower:
         return (
-            "Twilio authentication failed (401). "
-            "Update TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in .env "
-            "(Console → Account → API keys & tokens → Auth Token), then restart the API."
+            'Ошибка авторизации Twilio (401). Обновите TWILIO_ACCOUNT_SID и TWILIO_AUTH_TOKEN в .env (Console → Account → API keys & tokens → Auth Token), затем перезапустите API.'
         )
     if "403" in text or "forbidden" in lower:
         return (
-            "Twilio forbidden (403). This Account SID may lack permission "
-            "for Incoming Phone Numbers — check the Auth Token matches this account."
+            'Twilio запретил доступ (403). У Account SID может не быть разрешения на входящие номера — проверьте соответствие Auth Token аккаунту.'
         )
     if "missing_webhook_base_url" in lower:
         return (
-            "TWILIO_WEBHOOK_PUBLIC_URL is empty. "
-            "Set it to your public API origin (e.g. https://xxxx.ngrok-free.dev)."
+            'TWILIO_WEBHOOK_PUBLIC_URL пуст. Укажите публичный адрес API (например, https://xxxx.ngrok-free.dev).'
         )
     return text
 

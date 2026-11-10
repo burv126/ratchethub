@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+
+from app.agents.intent.ru_input import normalize_command_input, normalize_service_input
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Sequence
@@ -175,6 +177,7 @@ def extract_service_switch_target(text: str | None) -> str | None:
     """
     if not text:
         return None
+    text = normalize_command_input(text)
     _svc = (
         r"service(?:\s+type|\s+kind)?|type\s+of\s+service|kind\s+of\s+service|"
         r"job|work(?:\s*order)?|repair(?:\s+type)?|package|appointment|visit|booking"
@@ -246,8 +249,16 @@ def extract_service_switch_target(text: str | None) -> str | None:
     return None
 
 
-def _score_service_against_query(s: Any, q: str) -> float:
+def _score_service_against_query(s: Any, q: str, *, aliases: bool = True) -> float:
     """Score one catalog row against a normalized query string."""
+    # Translate only the query, never a catalog row. A real Russian catalog name
+    # must beat its English alias if the shop has both services.
+    translated = _norm(normalize_service_input(q)) if aliases else q
+    if translated != q:
+        return max(
+            _score_service_against_query(s, q, aliases=False),
+            min(0.9, _score_service_against_query(s, translated, aliases=False)),
+        )
     name = _norm(str(s.name))
     skill = _norm(str(getattr(s, "skill", "") or ""))
     category = _norm(str(getattr(s, "category", "") or ""))

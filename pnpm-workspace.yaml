@@ -1,2 +1,9 @@
 packages:
-  - "apps/*"
+  - 'apps/*'
+
+nodeLinker: hoisted
+
+publicHoistPattern:
+  - "*next*"
+  - "*react*"
+  - "*react-dom*"

@@ -29,7 +29,7 @@ class PdfConnector:
 
     async def extract(self, ctx: ConnectorContext) -> NormalizedBatch:
         if not ctx.payload:
-            raise ValueError("PDF import requires an uploaded file")
+            raise ValueError('Для импорта PDF загрузите файл')
         text = extract_pdf_text(ctx.payload)
         if not text.strip():
             batch = NormalizedBatch()

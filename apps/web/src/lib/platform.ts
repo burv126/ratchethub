@@ -1,3 +1,5 @@
+
+import { readApiError } from "@/lib/ru-errors";
 import { getApiUrl } from "@/lib/api";
 
 export type ShopRow = {
@@ -41,12 +43,7 @@ export type PlatformOverview = {
 };
 
 async function parseError(res: Response) {
-  try {
-    const data = await res.json();
-    return typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail ?? data);
-  } catch {
-    return res.statusText;
-  }
+  return readApiError(res);
 }
 
 function adminHeaders(accessToken: string, init?: HeadersInit, method = "GET"): HeadersInit {

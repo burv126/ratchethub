@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { FormEvent, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -32,6 +36,8 @@ const DEFAULT_FORM: ServiceFormState = {
 const DURATION_PRESETS = [30, 60, 90, 120] as const;
 
 function titleCase(value: string): string {
+  const localized = ruLabel(value);
+  if (localized !== value) return localized;
   return value
     .replace(/[_-]+/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
@@ -257,7 +263,7 @@ export function ServicesPanel({
     setLoading(true);
     reload()
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load services");
+        if (!cancelled) setError(err instanceof Error ? err.message : "Не удалось загрузить услуги");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -383,7 +389,7 @@ export function ServicesPanel({
     setError(null);
     setSuccess(null);
     if (isDuplicateName(name, editingId)) {
-      setError("A service with this name already exists.");
+      setError("Услуга с таким названием уже существует.");
       return;
     }
     setSaving(true);
@@ -396,15 +402,15 @@ export function ServicesPanel({
     try {
       if (editingId) {
         await updateShopService(editingId, payload);
-        setSuccess("Service updated.");
+        setSuccess("Услуга обновлена.");
       } else {
         await createShopService(payload);
-        setSuccess("Service created.");
+        setSuccess("Услуга создана.");
       }
       resetForm();
       await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save service");
+      setError(err instanceof Error ? err.message : "Не удалось сохранить услугу");
     } finally {
       setSaving(false);
     }
@@ -431,10 +437,10 @@ export function ServicesPanel({
       await deleteShopService(deleteTarget.id);
       if (editingId === deleteTarget.id) resetForm();
       setDeleteTarget(null);
-      setSuccess("Service deleted.");
+      setSuccess("Услуга удалена.");
       await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete service");
+      setError(err instanceof Error ? err.message : "Не удалось удалить услугу");
     } finally {
       setDeleting(false);
     }
@@ -447,12 +453,12 @@ export function ServicesPanel({
       await updateShopService(svc.id, { active: !svc.active });
       await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update service");
+      setError(err instanceof Error ? err.message : "Не удалось обновить услугу");
     }
   }
 
   if (authLoading || !session) {
-    return <p className="text-sm text-[var(--muted)]">Loading…</p>;
+    return <p className="text-sm text-[var(--muted)]">Загрузка…</p>;
   }
 
   const catalogBody = (
@@ -460,7 +466,7 @@ export function ServicesPanel({
       {loading ? (
         <div className="flex items-center gap-3 py-8 text-sm text-[var(--muted)]">
           <span className="h-4 w-4 animate-pulse rounded-full bg-[var(--accent)]/40" />
-          Loading catalog…
+          Загрузка каталога…
         </div>
       ) : services.length === 0 ? (
         <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
@@ -468,10 +474,10 @@ export function ServicesPanel({
             <IconWrench className="h-6 w-6" />
           </span>
           <p className="font-display mt-4 text-base font-semibold tracking-tight text-[var(--ink)]">
-            No services yet
+            Услуг пока нет
           </p>
           <p className="mt-1.5 max-w-sm text-sm text-[var(--muted)]">
-            Build your catalog so the AI and staff can quote, schedule, and book the right work.
+            Создайте каталог, чтобы ИИ и сотрудники могли оценивать, планировать и записывать нужные работы.
           </p>
           {canEdit && (
             <button
@@ -480,7 +486,7 @@ export function ServicesPanel({
               className="btn-primary mt-5 inline-flex items-center gap-1.5 px-4 py-2 text-xs"
             >
               <IconPlus className="h-3.5 w-3.5" />
-              Add your first service
+              Добавить первую услугу
             </button>
           )}
         </div>
@@ -492,7 +498,7 @@ export function ServicesPanel({
                 type="button"
                 role="switch"
                 aria-checked={svc.active}
-                aria-label={`${svc.name} ${svc.active ? "active" : "inactive"}`}
+                aria-label={`${svc.name} ${svc.active ? "активна" : "неактивна"}`}
                 onClick={() => void toggleActive(svc)}
                 className="inline-flex shrink-0 items-center gap-2 rounded-full px-1 py-1 transition hover:opacity-90"
               >
@@ -518,7 +524,7 @@ export function ServicesPanel({
                     : "bg-black/[0.04] text-[var(--muted)] ring-1 ring-inset ring-black/5"
                 }`}
               >
-                {svc.active ? "Active" : "Inactive"}
+                {svc.active ? "Активно" : "Неактивно"}
               </span>
             );
 
@@ -550,7 +556,7 @@ export function ServicesPanel({
                         </span>
                         {!svc.active && (
                           <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                            Inactive
+                            Неактивно
                           </span>
                         )}
                       </div>
@@ -559,14 +565,14 @@ export function ServicesPanel({
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--muted)]">
                       <span className="inline-flex items-center gap-1">
                         <IconClock className="h-3 w-3" />
-                        {svc.duration_minutes} min
+                        {svc.duration_minutes} мин
                       </span>
                       <span className="font-medium tabular-nums text-[var(--ink)]">
                         ${formatPrice(svc.price)}
                       </span>
                       <span>{titleCase(svc.skill)}</span>
                       <span className="text-[var(--line)]">·</span>
-                      <span>{titleCase(svc.bay)} bay</span>
+                      <span>{titleCase(svc.bay)} пост</span>
                     </div>
                   </div>
                 </div>
@@ -581,7 +587,7 @@ export function ServicesPanel({
                         className="btn-ghost inline-flex items-center gap-1 px-2.5 py-1.5 text-xs"
                       >
                         <IconPencil className="h-3.5 w-3.5" />
-                        Edit
+                        Изменить
                       </button>
                       <button
                         type="button"
@@ -589,7 +595,7 @@ export function ServicesPanel({
                         className="inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
                       >
                         <IconTrash className="h-3.5 w-3.5" />
-                        Delete
+                        Удалить
                       </button>
                     </>
                   ) : (
@@ -600,7 +606,7 @@ export function ServicesPanel({
                           : "bg-black/[0.04] text-[var(--muted)] ring-1 ring-inset ring-black/5"
                       }`}
                     >
-                      {svc.active ? "Active" : "Inactive"}
+                      {svc.active ? "Активно" : "Неактивно"}
                     </span>
                   )}
                 </div>
@@ -629,7 +635,7 @@ export function ServicesPanel({
           <button
             type="button"
             tabIndex={-1}
-            aria-label="Close delete dialog"
+            aria-label="Закрыть окно удаления"
             className="absolute inset-0 cursor-default bg-slate-950/55 backdrop-blur-[2px]"
             disabled={deleting}
             onPointerDown={(e) => {
@@ -655,17 +661,17 @@ export function ServicesPanel({
                     id="delete-service-title"
                     className="text-base font-semibold tracking-tight text-slate-900"
                   >
-                    Delete {deleteTarget.name}?
+                    Удалить {deleteTarget.name}?
                   </h2>
                 </div>
               </div>
             </div>
             <p className="px-4 pt-3.5 text-sm text-[var(--muted)]">
-              This service will be removed from the catalog. This cannot be undone.
+              Услуга будет удалена из каталога. Это действие нельзя отменить.
             </p>
             {error && (
               <p className="mx-4 mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-                {error}
+                {ruError(error)}
               </p>
             )}
             <div className="flex flex-wrap justify-end gap-2 px-4 py-3.5">
@@ -675,7 +681,7 @@ export function ServicesPanel({
                 disabled={deleting}
                 className="btn-ghost px-3.5 py-2 text-sm disabled:opacity-60"
               >
-                No
+                Нет
               </button>
               <button
                 type="button"
@@ -683,7 +689,7 @@ export function ServicesPanel({
                 disabled={deleting}
                 className="inline-flex items-center justify-center rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-red-600/20 hover:bg-red-700 disabled:opacity-60"
               >
-                {deleting ? "Deleting…" : "Yes"}
+                {deleting ? "Удаление…" : "Да"}
               </button>
             </div>
             </div>
@@ -704,7 +710,7 @@ export function ServicesPanel({
           <button
             type="button"
             tabIndex={-1}
-            aria-label="Close service dialog"
+            aria-label="Закрыть окно услуги"
             className="absolute inset-0 cursor-default bg-slate-950/55 backdrop-blur-[2px]"
             disabled={saving}
             onPointerDown={(e) => {
@@ -731,19 +737,19 @@ export function ServicesPanel({
                   id="service-form-title"
                   className="text-lg font-semibold tracking-tight text-[var(--ink)]"
                 >
-                  {editingId ? "Edit service" : "Add service"}
+                  {editingId ? "Изменить услугу" : "Добавить услугу"}
                 </h2>
               </div>
 
               <div className="relative mt-3 flex flex-wrap items-center gap-1.5 rounded-lg border border-[var(--line)] bg-white/80 px-2.5 py-1.5 shadow-sm backdrop-blur-sm">
                 <IconTag className="h-3 w-3 shrink-0 text-[var(--accent)]" />
                 <span className="min-w-0 truncate text-xs font-semibold text-[var(--ink)]">
-                  {form.name.trim() || "Untitled service"}
+                  {form.name.trim() || "Услуга без названия"}
                 </span>
                 <span className="ml-auto flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--muted)]">
                   <span className="inline-flex items-center gap-1 rounded-full bg-black/[0.04] px-1.5 py-0.5 font-medium ring-1 ring-inset ring-black/5">
                     <IconClock className="h-2.5 w-2.5" />
-                    {form.duration_minutes || "—"}m
+                    {form.duration_minutes || "—"}мин
                   </span>
                   <span className="rounded-full bg-[var(--accent-soft)] px-1.5 py-0.5 font-semibold tabular-nums text-[var(--accent)] ring-1 ring-inset ring-[var(--accent)]/20">
                     {previewPriceLabel}
@@ -757,7 +763,7 @@ export function ServicesPanel({
                 className="mx-4 mt-3 shrink-0 rounded-lg border border-red-200/80 bg-red-50 px-3 py-2 text-xs text-red-700"
                 role="alert"
               >
-                {error}
+                {ruError(error)}
               </p>
             )}
 
@@ -768,18 +774,18 @@ export function ServicesPanel({
               <div className="space-y-4 px-4 py-4">
                 <div className="space-y-2.5">
                   <label className="block space-y-1">
-                    <span className="text-[11px] font-medium text-[var(--muted)]">Service name</span>
+                    <span className="text-[11px] font-medium text-[var(--muted)]">Название услуги</span>
                     <input
                       required
                       autoFocus
                       value={form.name}
-                      placeholder="e.g. Oil change"
+                      placeholder="Например, замена масла"
                       onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                       className={fieldClass}
                     />
                   </label>
                   <label className="block space-y-1">
-                    <span className="text-[11px] font-medium text-[var(--muted)]">Category</span>
+                    <span className="text-[11px] font-medium text-[var(--muted)]">Категория</span>
                     <select
                       value={form.category}
                       onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
@@ -798,7 +804,7 @@ export function ServicesPanel({
                   <div className="space-y-1.5">
                     <label className="block space-y-1">
                       <span className="text-[11px] font-medium text-[var(--muted)]">
-                        Duration (min)
+                        Длительность (мин)
                       </span>
                       <input
                         type="number"
@@ -831,14 +837,14 @@ export function ServicesPanel({
                                 : "bg-black/[0.04] text-[var(--muted)] ring-1 ring-inset ring-black/5 hover:text-[var(--ink)]"
                             }`}
                           >
-                            {mins}m
+                            {mins}мин
                           </button>
                         );
                       })}
                     </div>
                   </div>
                   <label className="block space-y-1">
-                    <span className="text-[11px] font-medium text-[var(--muted)]">Price</span>
+                    <span className="text-[11px] font-medium text-[var(--muted)]">Цена</span>
                     <div className="relative">
                       <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs font-medium text-[var(--muted)]">
                         $
@@ -858,7 +864,7 @@ export function ServicesPanel({
 
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block space-y-1">
-                    <span className="text-[11px] font-medium text-[var(--muted)]">Skill</span>
+                    <span className="text-[11px] font-medium text-[var(--muted)]">Квалификация</span>
                     <select
                       value={form.skill}
                       onChange={(e) => setForm((f) => ({ ...f, skill: e.target.value }))}
@@ -872,7 +878,7 @@ export function ServicesPanel({
                     </select>
                   </label>
                   <label className="block space-y-1">
-                    <span className="text-[11px] font-medium text-[var(--muted)]">Bay</span>
+                    <span className="text-[11px] font-medium text-[var(--muted)]">Пост</span>
                     <select
                       value={form.bay}
                       onChange={(e) => setForm((f) => ({ ...f, bay: e.target.value }))}
@@ -889,16 +895,16 @@ export function ServicesPanel({
 
                 <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--line)] bg-gradient-to-br from-white to-[var(--background)]/80 px-3 py-2.5">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-[var(--ink)]">Active in catalog</p>
+                    <p className="text-xs font-semibold text-[var(--ink)]">Активна в каталоге</p>
                     <p className="mt-0.5 text-[11px] text-[var(--muted)]">
-                      Hidden from booking when off.
+                      При отключении недоступна для записи.
                     </p>
                   </div>
                   <button
                     type="button"
                     role="switch"
                     aria-checked={form.active}
-                    aria-label="Active in catalog"
+                    aria-label="Активна в каталоге"
                     onClick={() => setForm((f) => ({ ...f, active: !f.active }))}
                     className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-1 py-1"
                   >
@@ -920,7 +926,7 @@ export function ServicesPanel({
                         form.active ? "text-[var(--ink)]" : "text-[var(--muted)]"
                       }`}
                     >
-                      {form.active ? "On" : "Off"}
+                      {form.active ? "Включено" : "Выключено"}
                     </span>
                   </button>
                 </div>
@@ -933,7 +939,7 @@ export function ServicesPanel({
                   className="btn-ghost inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs"
                 >
                   <IconX className="h-3.5 w-3.5" />
-                  Cancel
+                  Отмена
                 </button>
                 <button
                   type="submit"
@@ -941,7 +947,7 @@ export function ServicesPanel({
                   className="btn-primary inline-flex items-center gap-1.5 px-4 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <IconSave className="h-3.5 w-3.5" />
-                  {saving ? "Saving…" : "Save"}
+                  {saving ? "Сохранение…" : "Сохранить"}
                 </button>
               </div>
             </form>
@@ -958,8 +964,8 @@ export function ServicesPanel({
       <button
         type="button"
         onClick={openAddForm}
-        aria-label="Add service"
-        title="Add service"
+        aria-label="Добавить услугу"
+        title="Добавить услугу"
         className="btn-primary inline-flex h-10 w-10 shrink-0 items-center justify-center p-0"
       >
         <IconWrenchPlus className="h-5 w-5" />
@@ -975,7 +981,7 @@ export function ServicesPanel({
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] ring-1 ring-[var(--accent)]/15">
                 <IconWrench className="h-3.5 w-3.5" />
               </span>
-              Services
+              Услуги
               {services.length > 0 && (
                 <span className="rounded-full bg-black/[0.04] px-2 py-0.5 text-[10px] font-semibold tabular-nums text-[var(--muted)] ring-1 ring-inset ring-black/5">
                   {services.length}
@@ -983,8 +989,8 @@ export function ServicesPanel({
               )}
             </h3>
             <p className="mt-1 text-xs text-[var(--muted)]">
-              {!isOwner && "Only the shop owner can change the service catalog. "}
-              Add every service your shop provides.
+              {!isOwner && "Только владелец может менять каталог услуг. "}
+              Добавьте все услуги вашего автосервиса.
             </p>
           </div>
           {addServiceButton}
@@ -994,7 +1000,7 @@ export function ServicesPanel({
             className="rounded-xl border border-red-200/80 bg-red-50 px-4 py-3 text-sm text-red-700"
             role="alert"
           >
-            {error}
+            {ruError(error)}
           </p>
         )}
         {success && (
@@ -1020,7 +1026,7 @@ export function ServicesPanel({
           className="shrink-0 rounded-xl border border-red-200/80 bg-red-50 px-4 py-3 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       )}
       {success && (
@@ -1035,13 +1041,13 @@ export function ServicesPanel({
       <section className="surface-panel relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
         <div className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-[var(--line)] bg-gradient-to-br from-white via-white to-[var(--accent-soft)]/35 px-5 py-5 sm:px-6">
           <div>
-            <p className="section-label">Catalog</p>
+            <p className="section-label">Каталог</p>
             <h2 className="font-display mt-1.5 text-lg font-semibold tracking-tight text-[var(--ink)]">
-              Services
+              Услуги
             </h2>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              {!isOwner && "Only the shop owner can change the service catalog. "}
-              Add every service your shop provides.
+              {!isOwner && "Только владелец может менять каталог услуг. "}
+              Добавьте все услуги вашего автосервиса.
             </p>
           </div>
           {addServiceButton}

@@ -270,7 +270,7 @@ def build_batch_from_sections(
         builder = _ENTITY_BUILDERS.get(key.lower())
         attr = _BATCH_ATTR.get(key.lower())
         if not builder or not attr:
-            batch.warnings.append(f"Unknown section skipped: {key}")
+            batch.warnings.append(f'Неизвестный раздел пропущен: {key}')
             continue
         bucket = getattr(batch, attr)
         for i, row in enumerate(rows):

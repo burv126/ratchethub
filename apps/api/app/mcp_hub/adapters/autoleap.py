@@ -9,7 +9,7 @@ from app.mcp_hub.enums import AuthMethod, IntegrationCategory, IntegrationProvid
 class AutoLeapAdapter(BaseAdapter):
     provider = IntegrationProvider.AUTOLEAP
     display_name = "AutoLeap"
-    description = "Auto repair CRM and workflow platform."
+    description = 'CRM и платформа рабочих процессов автосервиса.'
     category = IntegrationCategory.PMS
     auth_method = AuthMethod.BEARER
     api_version = "v1"
@@ -20,13 +20,13 @@ class AutoLeapAdapter(BaseAdapter):
     tool_defs = [
         (
             "autoleap.list_appointments",
-            "List appointments",
+            'Список записей',
             {"type": "object", "properties": {"day": {"type": "string"}}},
             ["pms", "read"],
         ),
         (
             "autoleap.get_estimate",
-            "Fetch an estimate",
+            'Получить смету',
             {"type": "object", "properties": {"estimate_id": {"type": "string"}}, "required": ["estimate_id"]},
             ["pms", "read"],
         ),

@@ -24,14 +24,14 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
     widgets.append(
         DashboardWidget(
             id="ai_employee_summary",
-            title="AI Employee Summary",
+            title='Сводка работы ИИ',
             kind="summary",
-            summary="AI activity across voice, conversations, and workflows",
+            summary='Активность ИИ: звонки, диалоги и рабочие процессы',
             metrics=[
-                MetricPoint("ai_conversations", "AI conversations", safe_int(live.get("ai_conversations") or conversation.get("open_conversations"))),
-                MetricPoint("call_volume", "Calls", safe_int(voice.get("call_volume") or voice.get("calls_started"))),
-                MetricPoint("ai_resolution", "AI resolution", f"{perf['ai_resolution_rate']*100:.0f}%", tone="good"),
-                MetricPoint("escalations", "Human escalations", safe_int(live.get("human_escalations") or int(perf["human_transfer_rate"] * max(1, perf["call_volume"])))),
+                MetricPoint("ai_conversations", 'Диалоги ИИ', safe_int(live.get("ai_conversations") or conversation.get("open_conversations"))),
+                MetricPoint("call_volume", 'Звонки', safe_int(voice.get("call_volume") or voice.get("calls_started"))),
+                MetricPoint("ai_resolution", 'Решено ИИ', f"{perf['ai_resolution_rate']*100:.0f}%", tone="good"),
+                MetricPoint("escalations", 'Передачи сотруднику', safe_int(live.get("human_escalations") or int(perf["human_transfer_rate"] * max(1, perf["call_volume"])))),
             ],
         )
     )
@@ -42,7 +42,7 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
             appt_items.append(
                 QueueItem(
                     id=str(raw.get("id") or i),
-                    title=str(raw.get("title") or raw.get("customer") or "Appointment"),
+                    title=str(raw.get("title") or raw.get("customer") or 'Запись'),
                     subtitle=str(raw.get("start") or raw.get("time") or ""),
                     status=str(raw.get("status") or "scheduled"),
                     href="/dashboard/appointments",
@@ -53,8 +53,8 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
         appt_items.append(
             QueueItem(
                 id="appt-today",
-                title=f"{count} appointment(s) today",
-                subtitle="From scheduling snapshot",
+                title=f'Записей на сегодня: {count}',
+                subtitle='Из снимка расписания',
                 status="scheduled",
                 href="/dashboard/appointments",
             )
@@ -62,13 +62,13 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
     widgets.append(
         DashboardWidget(
             id="todays_appointments",
-            title="Today's Appointments",
+            title='Записи на сегодня',
             kind="queue",
             items=appt_items,
             metrics=[
                 MetricPoint(
                     "appointments_today",
-                    "Today",
+                    'Сегодня',
                     safe_int(scheduling.get("appointments_today") or live.get("appointments_today")),
                 )
             ],
@@ -81,7 +81,7 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
             rev_items.append(
                 QueueItem(
                     id=str(opp.get("id") or i),
-                    title=str(opp.get("title") or opp.get("reason") or opp.get("kind") or "Opportunity"),
+                    title=str(opp.get("title") or opp.get("reason") or opp.get("kind") or 'Возможность'),
                     subtitle=str(opp.get("expected_revenue") or opp.get("amount") or ""),
                     status=str(opp.get("status") or "open"),
                     priority="high",
@@ -94,7 +94,7 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
         rev_items.append(
             QueueItem(
                 id="rev-open",
-                title=f"{n} open revenue opportunity(ies)",
+                title=f'Открытых возможностей выручки: {n}',
                 status="open",
                 href="/dashboard",
             )
@@ -102,7 +102,7 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
     widgets.append(
         DashboardWidget(
             id="revenue_opportunities",
-            title="Revenue Opportunities",
+            title='Возможности увеличения выручки',
             kind="queue",
             items=rev_items,
         )
@@ -113,7 +113,7 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
         followups.append(
             QueueItem(
                 id=str(c.get("id") or i),
-                title=f"Conversation {str(c.get('id') or '')[:8]}",
+                title=f"Диалог {str(c.get('id') or '')[:8]}",
                 subtitle=str(c.get("channel") or "channel"),
                 status=str(c.get("status") or "open"),
                 href="/dashboard/ai-inbox",
@@ -123,7 +123,7 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
         followups.append(
             QueueItem(
                 id="follow-empty",
-                title="No open follow-ups in snapshot",
+                title='Нет открытых повторных обращений',
                 status="idle",
                 href="/dashboard/ai-inbox",
             )
@@ -131,7 +131,7 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
     widgets.append(
         DashboardWidget(
             id="customer_followup_queue",
-            title="Customer Follow-up Queue",
+            title='Очередь повторных обращений',
             kind="queue",
             items=followups,
         )
@@ -142,8 +142,8 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
         approvals.append(
             QueueItem(
                 id=str(a.get("id")),
-                title="Inspection approval",
-                subtitle=f"{a.get('finding_count', 0)} finding(s)",
+                title='Согласование осмотра',
+                subtitle=f"Замечаний: {a.get('finding_count', 0)}",
                 status=str(a.get("status") or "pending"),
                 priority="high",
                 href="/dashboard/workflows",
@@ -151,12 +151,12 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
         )
     if not approvals:
         approvals.append(
-            QueueItem(id="appr-empty", title="No pending approvals", status="clear", priority="low")
+            QueueItem(id="appr-empty", title='Нет ожидающих согласований', status="clear", priority="low")
         )
     widgets.append(
         DashboardWidget(
             id="approval_queue",
-            title="Approval Queue",
+            title='Очередь согласований',
             kind="queue",
             items=approvals,
         )
@@ -166,8 +166,8 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
     esc_items = [
         QueueItem(
             id="esc-voice",
-            title="Voice human transfers",
-            subtitle=f"Rate {esc_rate*100:.0f}%",
+            title='Передачи звонков сотрудникам',
+            subtitle=f'Доля {esc_rate * 100:.0f}%',
             status="watch" if esc_rate > 0.2 else "ok",
             priority="high" if esc_rate > 0.35 else "normal",
             href="/dashboard/calls",
@@ -177,7 +177,7 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
         esc_items.append(
             QueueItem(
                 id="esc-live",
-                title=f"{live.get('human_escalations')} live escalation(s)",
+                title=f"Текущих передач сотруднику: {live.get('human_escalations')}",
                 status="open",
                 priority="urgent",
                 href="/dashboard/calls",
@@ -186,7 +186,7 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
     widgets.append(
         DashboardWidget(
             id="ai_escalation_queue",
-            title="AI Escalation Queue",
+            title='Очередь передачи от ИИ',
             kind="queue",
             items=esc_items,
         )
@@ -197,23 +197,23 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
         wf_items.append(
             QueueItem(
                 id=str(r.get("id")),
-                title=str(r.get("name") or "Workflow"),
+                title=str(r.get("name") or 'Рабочий процесс'),
                 status=str(r.get("status") or "unknown"),
                 href="/dashboard/workflows",
             )
         )
     if not wf_items:
-        wf_items.append(QueueItem(id="wf-empty", title="No recent workflow runs", status="idle"))
+        wf_items.append(QueueItem(id="wf-empty", title='Нет недавних запусков процессов', status="idle"))
     widgets.append(
         DashboardWidget(
             id="workflow_monitor",
-            title="Workflow Monitor",
+            title='Мониторинг процессов',
             kind="monitor",
             items=wf_items,
             metrics=[
-                MetricPoint("runs", "Runs", safe_int(workflow.get("run_count"))),
-                MetricPoint("pending", "Pending", safe_int(workflow.get("pending")), tone="warn"),
-                MetricPoint("failed", "Failed", safe_int(workflow.get("failed")), tone="bad"),
+                MetricPoint("runs", 'Запуски', safe_int(workflow.get("run_count"))),
+                MetricPoint("pending", 'Ожидает', safe_int(workflow.get("pending")), tone="warn"),
+                MetricPoint("failed", 'Ошибка', safe_int(workflow.get("failed")), tone="bad"),
             ],
         )
     )
@@ -221,25 +221,25 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
     widgets.append(
         DashboardWidget(
             id="performance_metrics",
-            title="Performance Metrics",
+            title='Показатели эффективности',
             kind="metrics",
             metrics=[
-                MetricPoint("workflow_success", "Workflow success", f"{perf['workflow_success_rate']*100:.0f}%", tone="good"),
-                MetricPoint("ai_resolution", "AI resolution", f"{perf['ai_resolution_rate']*100:.0f}%"),
-                MetricPoint("transfer_rate", "Human transfer", f"{perf['human_transfer_rate']*100:.0f}%"),
-                MetricPoint("response_ms", "Avg response", perf["average_response_time_ms"], unit="ms"),
-                MetricPoint("rev_opps", "Revenue opps", perf["open_revenue_opportunities"]),
-                MetricPoint("appts", "Appointments today", perf["appointments_today"]),
+                MetricPoint("workflow_success", 'Успешность процессов', f"{perf['workflow_success_rate']*100:.0f}%", tone="good"),
+                MetricPoint("ai_resolution", 'Решено ИИ', f"{perf['ai_resolution_rate']*100:.0f}%"),
+                MetricPoint("transfer_rate", 'Передача сотруднику', f"{perf['human_transfer_rate']*100:.0f}%"),
+                MetricPoint("response_ms", 'Среднее время ответа', perf["average_response_time_ms"], unit="ms"),
+                MetricPoint("rev_opps", 'Возможности выручки', perf["open_revenue_opportunities"]),
+                MetricPoint("appts", 'Записи на сегодня', perf["appointments_today"]),
                 MetricPoint(
                     "retention",
-                    "Retention rate",
+                    'Удержание клиентов',
                     f"{perf.get('customer_retention_rate', 0)*100:.0f}%",
                     tone="good",
                 ),
-                MetricPoint("lost_risk", "Lost customer risk", perf.get("lost_customer_risk", 0)),
+                MetricPoint("lost_risk", 'Риск ухода клиента', perf.get("lost_customer_risk", 0)),
                 MetricPoint(
                     "svc_recs",
-                    "Service recommendations",
+                    'Рекомендации услуг',
                     perf.get("service_recommendations", 0),
                 ),
             ],
@@ -250,37 +250,37 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
     widgets.append(
         DashboardWidget(
             id="retention_intelligence",
-            title="Customer Retention & Revenue Intelligence",
+            title='Удержание клиентов и аналитика выручки',
             kind="metrics",
             metrics=[
                 MetricPoint(
                     "retention_rate",
-                    "Customer Retention Rate",
+                    'Удержание клиентов',
                     f"{perf.get('customer_retention_rate', 0)*100:.0f}%",
                 ),
                 MetricPoint(
                     "lost_risk",
-                    "Lost Customer Risk",
+                    'Риск ухода клиента',
                     perf.get("lost_customer_risk", 0),
                 ),
                 MetricPoint(
                     "rev_opps20",
-                    "Revenue Opportunities",
+                    'Возможности увеличения выручки',
                     perf.get("revenue_opportunities", perf.get("open_revenue_opportunities", 0)),
                 ),
                 MetricPoint(
                     "recovered",
-                    "Recovered Revenue events",
+                    'События возвращённой выручки',
                     perf.get("recovered_revenue", 0),
                 ),
                 MetricPoint(
                     "svc_recs20",
-                    "Service Recommendations",
+                    'Рекомендации услуг',
                     perf.get("service_recommendations", 0),
                 ),
                 MetricPoint(
                     "campaigns",
-                    "Campaign suggestions",
+                    'Рекомендации кампаний',
                     (campaign.get("suggestions") if isinstance(campaign, dict) else 0) or 0,
                 ),
             ],
@@ -291,33 +291,33 @@ def build_widgets(sources: dict[str, Any]) -> list[DashboardWidget]:
     widgets.append(
         DashboardWidget(
             id="learning_loop",
-            title="AI Learning Loop",
+            title='Цикл обучения ИИ',
             kind="metrics",
             metrics=[
                 MetricPoint(
                     "decision_accuracy",
-                    "Decision Accuracy",
+                    'Точность решений',
                     f"{perf.get('decision_accuracy', 0)*100:.0f}%",
                     tone="good",
                 ),
                 MetricPoint(
                     "appt_conversion",
-                    "Appointment Conversion Improvement",
+                    'Рост конверсии в запись',
                     f"{perf.get('appointment_conversion_improvement', 0)*100:.0f}%",
                 ),
                 MetricPoint(
                     "repair_approval",
-                    "Repair Approval Rate",
+                    'Доля согласованных ремонтов',
                     f"{perf.get('repair_approval_rate', 0)*100:.0f}%",
                 ),
                 MetricPoint(
                     "retention_improve",
-                    "Customer Retention Improvement",
+                    'Рост удержания клиентов',
                     f"{perf.get('customer_retention_improvement', 0)*100:.0f}%",
                 ),
                 MetricPoint(
                     "revenue_impact",
-                    "Revenue Impact success",
+                    'Успешное влияние на выручку',
                     f"{(impact.get('success_rate') if isinstance(impact, dict) else 0) or 0:.0%}",
                 ),
             ],
@@ -339,5 +339,5 @@ def build_daily_summary(sources: dict[str, Any], performance: dict[str, Any]) ->
         "missed_calls": live.get("missed_calls"),
         "human_escalations": live.get("human_escalations"),
         "workflow_success_rate": performance.get("workflow_success_rate"),
-        "system_note": "Owner Dashboard is read-only",
+        "system_note": 'Панель владельца доступна только для чтения',
     }

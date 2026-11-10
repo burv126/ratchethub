@@ -62,7 +62,7 @@ class ConversationSessionService:
     ) -> Conversation:
         conv = await self._store.get(shop_id, conversation_id)
         if conv is None:
-            raise LookupError(f"Conversation not found: {conversation_id}")
+            raise LookupError(f'Диалог не найден: {conversation_id}')
 
         if customer_id is not None:
             conv.customer_id = customer_id

@@ -51,7 +51,7 @@ def vin_check_digit(vin: str) -> str:
     for i, ch in enumerate(vin):
         value = _TRANSLITERATION.get(ch)
         if value is None:
-            raise ValueError(f"Invalid VIN character: {ch}")
+            raise ValueError(f'Недопустимый символ VIN: {ch}')
         total += value * _WEIGHTS[i]
     remainder = total % 11
     return "X" if remainder == 10 else str(remainder)

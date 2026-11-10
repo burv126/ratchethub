@@ -320,7 +320,7 @@ async def emit_event(
     try:
         DomainEventType(body.event_type)
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=f"Unknown event type: {body.event_type}") from exc
+        raise HTTPException(status_code=400, detail=f'Неизвестный тип события: {body.event_type}') from exc
     event, runs = await rt.service.emit_and_run(
         shop_id=user.shop_id,
         event_type=body.event_type,

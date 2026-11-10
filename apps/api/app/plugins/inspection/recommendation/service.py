@@ -75,8 +75,7 @@ class RecommendationService:
     ) -> RepairRecommendationDecision:
         urgency = _SEVERITY_URGENCY[f.severity]
         plain = (
-            f"{f.title}: {f.description or 'Needs service'} "
-            f"(priority: {_SEVERITY_PRIORITY[f.severity].value})."
+            f"{f.title}: {f.description or 'Needs service'} (приоритет: {_SEVERITY_PRIORITY[f.severity].value})."
         )
         return RepairRecommendationDecision(
             customer_id=ctx.customer_id,
@@ -87,7 +86,7 @@ class RecommendationService:
             estimated_cost=f.estimated_cost,
             urgency=urgency,
             plain_language=plain,
-            advisor_notes=f.technician_notes or f"Inspection finding {f.code}",
+            advisor_notes=f.technician_notes or f'Замечание осмотра {f.code}',
             confidence=0.86,
-            rationale=f"Inspection recommendation severity={f.severity.value}",
+            rationale=f'Серьёзность рекомендации осмотра={f.severity.value}',
         )

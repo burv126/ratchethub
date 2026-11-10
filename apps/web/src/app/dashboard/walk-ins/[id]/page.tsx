@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
@@ -37,7 +41,7 @@ function localDateTimeToIso(value: string): string {
 
 function formatSlot(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleString([], {
+  return d.toLocaleString("ru-RU", {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -178,7 +182,7 @@ export default function WalkInDetailPage() {
         setScheduleHref("/dashboard/appointments");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load walk-in");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить визит");
       setLoading(false);
     }
   }, [visitId]);
@@ -240,7 +244,7 @@ export default function WalkInDetailPage() {
       setEmail("");
       setAddress("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Convert failed");
+      setError(err instanceof Error ? err.message : "Не удалось преобразовать");
     }
   }
 
@@ -259,7 +263,7 @@ export default function WalkInDetailPage() {
     altStart?: string;
   }> {
     if (!detail) {
-      return { ok: false, message: "Walk-in not loaded" };
+      return { ok: false, message: "Визит не загружен" };
     }
 
     const attempt = (start: string) =>
@@ -296,7 +300,7 @@ export default function WalkInDetailPage() {
         message:
           typeof booked.message === "string" && booked.message
             ? booked.message
-            : "Requested time is unavailable",
+            : "Запрошенное время недоступно",
         altStart: alts[0]?.start,
       };
     }
@@ -331,7 +335,7 @@ export default function WalkInDetailPage() {
     auto?: boolean;
   }) {
     if (!detail || selectedServices.length === 0) {
-      throw new Error("No services to book");
+      throw new Error("Нет услуг для записи");
     }
 
     let cursor = opts.startIso;
@@ -349,12 +353,12 @@ export default function WalkInDetailPage() {
       });
 
       if (!result.ok) {
-        const hint = result.altStart ? ` Next available: ${formatSlot(result.altStart)}.` : "";
+        const hint = result.altStart ? ` Ближайшее доступное: ${formatSlot(result.altStart)}.` : "";
         if (bookedLabels.length === 0) {
-          throw new Error(`${result.message}${hint}`);
+          throw new Error(`${ruError(result.message)}${hint}`);
         }
         throw new Error(
-          `Booked ${bookedLabels.join(", ")} on the schedule, but failed on ${svc.name}: ${result.message}${hint}`,
+          `Записано ${bookedLabels.join(", ")} в расписание, но возникла ошибка на ${svc.name}: ${ruError(result.message)}${hint}`,
         );
       }
 
@@ -378,16 +382,16 @@ export default function WalkInDetailPage() {
     setApptMessage(null);
     try {
       for (const appt of active) {
-        await completeAppointment(appt.id, "Completed from walk-in visit");
+        await completeAppointment(appt.id, "Завершено из визита без записи");
       }
       await load();
       setApptMessage(
         active.length > 1
-          ? "All scheduled work marked complete — visit closed."
-          : "Work marked complete — visit closed.",
+          ? "Все запланированные работы завершены — визит закрыт."
+          : "Работа завершена — визит закрыт.",
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to complete work");
+      setError(err instanceof Error ? err.message : "Не удалось завершить работу");
     } finally {
       setCompleting(false);
     }
@@ -400,9 +404,9 @@ export default function WalkInDetailPage() {
     try {
       await closeWalkIn(visitId);
       await load();
-      setApptMessage("Visit closed.");
+      setApptMessage("Визит закрыт.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to close visit");
+      setError(err instanceof Error ? err.message : "Не удалось закрыть визит");
     } finally {
       setCompleting(false);
     }
@@ -421,9 +425,9 @@ export default function WalkInDetailPage() {
       await cancelWalkIn(visitId);
       setCancelConfirmOpen(false);
       await load();
-      setApptMessage("Visit cancelled.");
+      setApptMessage("Визит отменён.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel visit");
+      setError(err instanceof Error ? err.message : "Не удалось отменить визит");
     } finally {
       setCancelling(false);
     }
@@ -443,12 +447,12 @@ export default function WalkInDetailPage() {
       setApptOpen(false);
       setApptMessage(
         bookedLabels.length > 1
-          ? `Started now — ${bookedLabels.length} services on today’s schedule.`
-          : "Started now — on today’s schedule.",
+          ? `Начато сейчас — ${bookedLabels.length} услуг в расписании на сегодня.`
+          : "Начато сейчас — в расписании на сегодня.",
       );
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start now");
+      setError(err instanceof Error ? err.message : "Не удалось начать сейчас");
     } finally {
       setStarting(false);
     }
@@ -469,12 +473,12 @@ export default function WalkInDetailPage() {
       });
       setSlots(next);
       if (next.length === 0) {
-        setApptMessage("No available slots found. Try another preferred time.");
+        setApptMessage("Свободное время не найдено. Попробуйте другое желаемое время.");
       } else {
-        setApptMessage(`${next.length} available time${next.length === 1 ? "" : "s"} found.`);
+        setApptMessage(`${next.length} доступных вариантов времени${next.length === 1 ? "" : ""} найдено.`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to find available times");
+      setError(err instanceof Error ? err.message : "Не удалось найти свободное время");
       setSlots([]);
     } finally {
       setSlotsLoading(false);
@@ -502,12 +506,12 @@ export default function WalkInDetailPage() {
       const when = formatSlot(firstAppt?.start || startIso);
       setApptMessage(
         opts?.auto
-          ? `Auto-booked ${bookedLabels.length} service${bookedLabels.length === 1 ? "" : "s"} for ${when}.`
-          : `Booked ${bookedLabels.length} service${bookedLabels.length === 1 ? "" : "s"} for ${when}.`,
+          ? `Автоматически записано ${bookedLabels.length} услуг${bookedLabels.length === 1 ? "" : ""} на ${when}.`
+          : `Записано ${bookedLabels.length} услуг${bookedLabels.length === 1 ? "" : ""} на ${when}.`,
       );
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to book appointment");
+      setError(err instanceof Error ? err.message : "Не удалось записать");
     } finally {
       setBookingAppt(false);
     }
@@ -516,7 +520,7 @@ export default function WalkInDetailPage() {
   async function onBookPreferred(e: FormEvent) {
     e.preventDefault();
     if (!preferredStart) {
-      setError("Pick a preferred start time");
+      setError("Выберите желаемое время начала");
       return;
     }
     await bookAt(localDateTimeToIso(preferredStart));
@@ -546,11 +550,11 @@ export default function WalkInDetailPage() {
         }
       }
       if (candidates.length === 0) {
-        throw new Error("No available times to auto-book");
+        throw new Error("Нет свободного времени для автоматической записи");
       }
       await bookAt(candidates[0].start, { auto: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Auto-book failed");
+      setError(err instanceof Error ? err.message : "Не удалось записать автоматически");
     }
   }
 
@@ -568,10 +572,10 @@ export default function WalkInDetailPage() {
     return (
       <div className="surface-panel flex flex-col items-center px-6 py-16 text-center">
         <p className="font-display text-lg font-semibold tracking-tight text-red-700">
-          {error ?? "Walk-in not found"}
+          {ruError(error ?? "Визит не найден")}
         </p>
         <Link href="/dashboard/walk-ins?view=todays" className="btn-ghost mt-5 px-4 py-2 text-xs">
-          ← Back to walk-ins
+          ← К живой очереди
         </Link>
       </div>
     );
@@ -581,7 +585,7 @@ export default function WalkInDetailPage() {
   const busy = starting || bookingAppt || slotsLoading || completing || cancelling;
   const vehicleTitle = `${vehicle.year} ${vehicle.make} ${vehicle.model}`.trim();
   const arrivedLabel = visit.arrived_at
-    ? new Date(visit.arrived_at).toLocaleString([], {
+    ? new Date(visit.arrived_at).toLocaleString("ru-RU", {
         weekday: "short",
         month: "short",
         day: "numeric",
@@ -593,37 +597,37 @@ export default function WalkInDetailPage() {
   const scheduleBadge =
     visitCancelled ? (
       <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-700 ring-1 ring-red-200">
-        Cancelled
+        Отменено
       </span>
     ) : schedulePhase === "done" ? (
       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700 ring-1 ring-slate-200">
-        Work finished
+        Работа завершена
       </span>
     ) : schedulePhase === "ready" ? (
       <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 ring-1 ring-amber-200">
-        Slot ended
+        Время истекло
       </span>
     ) : schedulePhase === "scheduled" ? (
       <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
-        On schedule
+        По расписанию
       </span>
     ) : (
       <span className="rounded-full bg-[var(--background)] px-2 py-0.5 text-[10px] font-semibold text-[var(--muted)] ring-1 ring-[var(--line)]">
-        Awaiting bay
+        Ожидает поста
       </span>
     );
 
   const scheduleDescription = visitCancelled
-    ? "This visit was cancelled. Linked appointments were released from the schedule."
+    ? "Визит отменён. Связанные записи удалены из расписания."
     : schedulePhase === "done"
       ? visitClosed
-        ? "Reserved work is complete and this visit is closed."
-        : "Reserved work is complete."
+        ? "Запланированные работы завершены, визит закрыт."
+        : "Запланированные работы завершены."
       : schedulePhase === "ready"
-        ? "The reserved time window ended — mark work complete to close this visit."
+        ? "Зарезервированное время истекло — завершите работы, чтобы закрыть визит."
         : schedulePhase === "scheduled"
-          ? "This visit is already on the shop schedule."
-          : "Start service now during business hours, or book a later appointment.";
+          ? "Этот визит уже в расписании автосервиса."
+          : "Начните обслуживание сейчас в рабочие часы или запишитесь на более позднее время.";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden md:h-full">
@@ -633,7 +637,7 @@ export default function WalkInDetailPage() {
             href="/dashboard/walk-ins?view=todays"
             className="text-xs font-medium text-[var(--muted)] transition hover:text-[var(--accent)]"
           >
-            ← Walk-ins
+            ← Живая очередь
           </Link>
           <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
             <div className="flex min-w-0 items-start gap-3">
@@ -644,13 +648,13 @@ export default function WalkInDetailPage() {
                 {vehicleInitials(vehicle.make, vehicle.model)}
               </span>
               <div className="min-w-0">
-                <p className="section-label">Walk-in visit</p>
-                <h1 className="page-title mt-1 truncate">{vehicleTitle || "Walk-in visit"}</h1>
+                <p className="section-label">Визит без записи</p>
+                <h1 className="page-title mt-1 truncate">{vehicleTitle || "Визит без записи"}</h1>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <StatusPill status={visit.status} />
+                  <StatusPill status={ruLabel(visit.status)} />
                   {scheduleBadge}
                   {arrivedLabel ? (
-                    <span className="text-xs text-[var(--muted)]">Arrived {arrivedLabel}</span>
+                    <span className="text-xs text-[var(--muted)]">Прибытие {arrivedLabel}</span>
                   ) : null}
                 </div>
               </div>
@@ -664,7 +668,7 @@ export default function WalkInDetailPage() {
           className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       ) : null}
       {apptMessage && !error ? (
@@ -702,7 +706,7 @@ export default function WalkInDetailPage() {
                     id="walkin-cancel-title"
                     className="text-lg font-semibold tracking-tight text-slate-900"
                   >
-                    Cancel this visit?
+                    Отменить этот визит?
                   </h3>
                 </div>
               </div>
@@ -710,15 +714,14 @@ export default function WalkInDetailPage() {
 
             <div className="space-y-4 px-5 py-5">
               <p className="text-sm leading-relaxed text-[var(--muted)]">
-                Linked appointments will be released from the schedule. This
-                action cannot be undone.
+                Связанные записи будут удалены из расписания. Это действие нельзя отменить.
               </p>
               {error ? (
                 <p
                   className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                   role="alert"
                 >
-                  {error}
+                  {ruError(error)}
                 </p>
               ) : null}
               <div className="grid grid-cols-2 gap-2.5">
@@ -728,7 +731,7 @@ export default function WalkInDetailPage() {
                   disabled={cancelling}
                   className="btn-ghost px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
                 >
-                  No
+                  Нет
                 </button>
                 <button
                   type="button"
@@ -736,7 +739,7 @@ export default function WalkInDetailPage() {
                   disabled={cancelling}
                   className="inline-flex items-center justify-center rounded-full bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-rose-600/20 transition hover:bg-rose-700 disabled:opacity-60"
                 >
-                  {cancelling ? "Cancelling…" : "Yes"}
+                  {cancelling ? "Отмена…" : "Да"}
                 </button>
               </div>
             </div>
@@ -767,16 +770,16 @@ export default function WalkInDetailPage() {
                 </span>
                 <div className="min-w-0 flex-1 pt-0.5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
-                    Scheduling
+                    Планирование
                   </p>
                   <h3
                     id="walkin-appointment-title"
                     className="mt-1 text-lg font-semibold tracking-tight text-slate-900"
                   >
-                    Book appointment
+                    Записать на приём
                   </h3>
                   <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">
-                    Set a preferred time, or auto-book the next available slot.
+                    Задайте желаемое время или запишитесь на ближайшее доступное.
                   </p>
                 </div>
                 <button
@@ -784,7 +787,7 @@ export default function WalkInDetailPage() {
                   onClick={() => setApptOpen(false)}
                   disabled={busy}
                   className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] transition hover:bg-[rgba(15,23,42,0.06)] hover:text-slate-900 disabled:opacity-60"
-                  aria-label="Close appointment"
+                  aria-label="Закрыть запись"
                 >
                   <IconX className="h-4 w-4" />
                 </button>
@@ -800,13 +803,13 @@ export default function WalkInDetailPage() {
                   className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                   role="alert"
                 >
-                  {error}
+                  {ruError(error)}
                 </p>
               ) : null}
 
               <label className="block space-y-1.5">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Preferred start
+                  Желаемое время начала
                 </span>
                 <input
                   type="datetime-local"
@@ -826,7 +829,7 @@ export default function WalkInDetailPage() {
                     className="btn-ghost inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs disabled:opacity-60"
                   >
                     <IconSearch className="h-3.5 w-3.5 shrink-0" />
-                    {slotsLoading ? "Finding…" : "Find times"}
+                    {slotsLoading ? "Поиск…" : "Найти время"}
                   </button>
                   <button
                     type="button"
@@ -835,7 +838,7 @@ export default function WalkInDetailPage() {
                     className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[var(--accent)] px-3 py-2.5 text-xs font-semibold text-[var(--accent)] disabled:opacity-60"
                   >
                     <IconBolt className="h-3.5 w-3.5 shrink-0" />
-                    {bookingAppt ? "Booking…" : "Auto-book"}
+                    {bookingAppt ? "Запись…" : "Записать автоматически"}
                   </button>
                 </div>
                 <button
@@ -844,7 +847,7 @@ export default function WalkInDetailPage() {
                   className="btn-primary inline-flex w-full items-center justify-center gap-1.5 px-3 py-2.5 text-sm disabled:opacity-60"
                 >
                   <IconCalendar className="h-4 w-4" />
-                  {bookingAppt ? "Booking…" : "Book preferred time"}
+                  {bookingAppt ? "Запись…" : "Записать на выбранное время"}
                 </button>
               </div>
 
@@ -860,9 +863,9 @@ export default function WalkInDetailPage() {
                           {formatSlot(slot.start)}
                         </p>
                         <p className="text-xs text-[var(--muted)]">
-                          {slot.reasons.slice(0, 2).join(" · ") || "Available"}
+                          {slot.reasons.slice(0, 2).join(" · ") || "Доступно"}
                           {slot.estimated_wait_min != null
-                            ? ` · wait ~${slot.estimated_wait_min} min`
+                            ? ` · ожидание ~${slot.estimated_wait_min} мин`
                             : ""}
                         </p>
                       </div>
@@ -876,7 +879,7 @@ export default function WalkInDetailPage() {
                         className="btn-primary inline-flex items-center gap-1 px-3 py-1.5 text-xs disabled:opacity-60"
                       >
                         <IconCheck className="h-3.5 w-3.5" />
-                        Book
+                        Записать
                       </button>
                     </li>
                   ))}
@@ -890,7 +893,7 @@ export default function WalkInDetailPage() {
       <div className="asa-scroll min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pb-2">
         <section className="surface-panel p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <SectionHeader title="Schedule" description={scheduleDescription} />
+            <SectionHeader title="Расписание" description={scheduleDescription} />
             {visitCancelled ? null : schedulePhase === "awaiting" ? (
               <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:min-w-[18rem] sm:grid-cols-[1fr_1fr_auto]">
                 <button
@@ -900,7 +903,7 @@ export default function WalkInDetailPage() {
                   className="btn-primary inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs disabled:opacity-60"
                 >
                   <IconPlay className="h-3.5 w-3.5" />
-                  {starting ? "Starting…" : "Start now"}
+                  {starting ? "Запуск…" : "Начать сейчас"}
                 </button>
                 <button
                   type="button"
@@ -909,7 +912,7 @@ export default function WalkInDetailPage() {
                   className="btn-ghost inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs disabled:opacity-60"
                 >
                   <IconCalendar className="h-3.5 w-3.5" />
-                  Book
+                  Записать
                 </button>
                 <button
                   type="button"
@@ -917,7 +920,7 @@ export default function WalkInDetailPage() {
                   disabled={busy}
                   className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-60 sm:col-span-1"
                 >
-                  Cancel visit
+                  Отменить визит
                 </button>
               </div>
             ) : (
@@ -930,7 +933,7 @@ export default function WalkInDetailPage() {
                     className="btn-primary inline-flex flex-1 items-center justify-center gap-1.5 px-4 py-2 text-xs disabled:opacity-60 sm:flex-none"
                   >
                     <IconCheck className="h-3.5 w-3.5" />
-                    {completing ? "Completing…" : "Mark complete"}
+                    {completing ? "Завершение…" : "Завершить работу"}
                   </button>
                 )}
                 {workFinished && !visitTerminal ? (
@@ -940,7 +943,7 @@ export default function WalkInDetailPage() {
                     disabled={busy}
                     className="btn-primary inline-flex flex-1 items-center justify-center gap-1.5 px-4 py-2 text-xs disabled:opacity-60 sm:flex-none"
                   >
-                    {completing ? "Closing…" : "Close visit"}
+                    {completing ? "Закрытие…" : "Закрыть визит"}
                   </button>
                 ) : null}
                 {!visitTerminal && (schedulePhase === "scheduled" || schedulePhase === "ready") ? (
@@ -950,7 +953,7 @@ export default function WalkInDetailPage() {
                     disabled={busy}
                     className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-60 sm:flex-none"
                   >
-                    Cancel visit
+                    Отменить визит
                   </button>
                 ) : null}
                 {(onSchedule || workFinished) && (
@@ -959,7 +962,7 @@ export default function WalkInDetailPage() {
                     className="btn-ghost inline-flex flex-1 items-center justify-center gap-1.5 px-4 py-2 text-xs sm:flex-none"
                   >
                     <IconCalendar className="h-3.5 w-3.5" />
-                    Open schedule →
+                    Открыть расписание →
                   </Link>
                 )}
               </div>
@@ -969,15 +972,15 @@ export default function WalkInDetailPage() {
 
         <section className="surface-panel p-4 sm:p-5">
           <SectionHeader
-            title={selectedServices.length > 1 ? "Service requests" : "Service request"}
+            title={selectedServices.length > 1 ? "Запрошенные услуги" : "Запрос услуги"}
             compact
           />
           {selectedServices.length === 0 ? (
-            <p className="mt-4 text-sm text-[var(--muted)]">No catalog services matched yet.</p>
+            <p className="mt-4 text-sm text-[var(--muted)]">Совпадений в каталоге услуг пока нет.</p>
           ) : selectedServices.length === 1 ? (
             <div className="mt-4 rounded-xl bg-[var(--background)]/70 px-3.5 py-3">
               <p className="text-sm font-semibold tracking-tight">{bookingServiceLabel}</p>
-              <p className="mt-0.5 text-xs text-[var(--muted)]">{totalDurationMin} min</p>
+              <p className="mt-0.5 text-xs text-[var(--muted)]">{totalDurationMin} мин</p>
             </div>
           ) : (
             <ul className="mt-4 space-y-2">
@@ -996,12 +999,12 @@ export default function WalkInDetailPage() {
                     <span className="truncate font-medium tracking-tight">{svc.name}</span>
                   </span>
                   <span className="shrink-0 text-xs text-[var(--muted)]">
-                    {svc.duration_minutes} min
+                    {svc.duration_minutes} мин
                   </span>
                 </li>
               ))}
               <li className="px-1 pt-1 text-right text-xs font-medium text-[var(--muted)]">
-                Total {totalDurationMin} min
+                Итого {totalDurationMin} мин
               </li>
             </ul>
           )}
@@ -1009,11 +1012,11 @@ export default function WalkInDetailPage() {
 
         <section className="surface-panel space-y-4 p-4 sm:p-5">
           <SectionHeader
-            title="Customer match"
+            title="Совпадение клиента"
             description={
               customer
                 ? undefined
-                : "Guest visit — add details when you have them. Name is required to save."
+                : "Гостевой визит — добавьте сведения, когда они появятся. Для сохранения нужно имя."
             }
           />
           {customer ? (
@@ -1030,13 +1033,13 @@ export default function WalkInDetailPage() {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-700">
-                  Matched customer
+                  Найденный клиент
                 </p>
                 <p className="truncate text-sm font-semibold tracking-tight group-hover:text-[var(--accent)]">
                   {customer.name}
                 </p>
                 <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
-                  {customer.phone ?? "No phone"} · {customer.email ?? "No email"}
+                  {customer.phone ?? "Нет телефона"} · {customer.email ?? "Нет почты"}
                 </p>
               </div>
               <span className="text-[var(--muted)] opacity-0 transition group-hover:opacity-100">
@@ -1046,31 +1049,31 @@ export default function WalkInDetailPage() {
           ) : visitTerminal ? (
             <p className="mt-1 text-sm text-[var(--muted)]">
               {visitCancelled
-                ? "This visit was cancelled — customer conversion is unavailable."
-                : "This visit is closed — customer conversion is unavailable."}
+                ? "Визит отменён — преобразование клиента недоступно."
+                : "Визит закрыт — преобразование клиента недоступно."}
             </p>
           ) : (
             <form onSubmit={onConvert} className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2 rounded-xl border border-dashed border-[var(--line)] bg-[var(--background)]/40 px-3.5 py-2.5 text-xs text-[var(--muted)]">
-                Unknown walk-in — saving creates or updates the guest customer on this visit.
+                Посетитель неизвестен — при сохранении будет создан или обновлён гостевой клиент визита.
               </div>
-              <Field label="Name" value={name} onChange={setName} />
+              <Field label="Имя" value={name} onChange={setName} />
               <Field
-                label="Phone (optional)"
+                label="Телефон (необязательно)"
                 type="tel"
                 value={phone}
                 onChange={(v) => setPhone(formatPhoneInput(v))}
                 placeholder={PHONE_PLACEHOLDER}
               />
-              <Field label="Email (optional)" type="email" value={email} onChange={setEmail} />
-              <Field label="Address (optional)" value={address} onChange={setAddress} />
+              <Field label="Эл. почта (необязательно)" type="email" value={email} onChange={setEmail} />
+              <Field label="Адрес (необязательно)" value={address} onChange={setAddress} />
               <div className="sm:col-span-2">
                 <button
                   type="submit"
                   disabled={!name.trim()}
                   className="btn-primary px-4 py-2 text-xs disabled:opacity-60"
                 >
-                  Save customer
+                  Сохранить клиента
                 </button>
               </div>
             </form>
@@ -1132,7 +1135,7 @@ function StatusPill({ status }: { status: string }) {
     <span
       className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ${tone}`}
     >
-      {status.replace(/_/g, " ")}
+      {ruLabel(status)}
     </span>
   );
 }

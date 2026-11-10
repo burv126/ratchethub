@@ -15,7 +15,7 @@ class TekmetricAdapter(BaseAdapter):
     provider = IntegrationProvider.TEKMETRIC
     category = IntegrationCategory.DMS
     display_name = "Tekmetric"
-    description = "Shop management — repair orders, customers, and vehicles."
+    description = 'Управление автосервисом — заказ-наряды, клиенты и автомобили.'
     auth_method = AuthMethod.OAUTH2
     docs_url = "https://www.tekmetric.com"
     credential_fields = ["client_id", "client_secret", "shop_id"]

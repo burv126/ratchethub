@@ -50,7 +50,7 @@ class CustomerPreferenceService:
                 shop_id=shop_id,
                 customer_id=customer_id,
                 content=str(content),
-                summary=str(patch.get("rationale") or "Customer profile update"),
+                summary=str(patch.get("rationale") or 'Обновление профиля клиента'),
                 memory_type=MemoryType.CUSTOMER,
                 category=MemoryCategory.CUSTOMER_PREFERENCES
                 if "preference" in patch or "preferences" in patch

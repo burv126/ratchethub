@@ -53,7 +53,7 @@ class QuotaService:
         current = await self._seat_count(shop_id)
         if current >= limit:
             raise ValidationError(
-                f"seats quota exceeded ({current}/{limit}). Upgrade your plan."
+                f'Превышена квота мест ({current}/{limit}). Повысьте тариф.'
             )
 
     async def get_usage(self, shop_id: UUID) -> dict:
@@ -120,7 +120,7 @@ class QuotaService:
             if current + amount > limit:
                 await session.rollback()
                 raise ValidationError(
-                    f"{metric} monthly quota exceeded ({current}/{limit}). Upgrade your plan."
+                    f'Превышена месячная квота {metric} ({current}/{limit}). Повысьте тариф.'
                 )
             previous = current
             row.count = current + amount

@@ -1,3 +1,5 @@
+
+import { readApiError } from "@/lib/ru-errors";
 import {
   AuthSession,
   CAPABILITY_LABELS,
@@ -30,8 +32,8 @@ export type ShopMember = {
 export type ShopTeamRole = "owner" | "staff";
 
 export const SHOP_TEAM_ROLE_LABELS: Record<ShopTeamRole, string> = {
-  owner: "Owner",
-  staff: "Staff",
+  owner: "Владелец",
+  staff: "Сотрудник",
 };
 
 /** Capabilities still supported by the API but not shown in Team permission UI. */
@@ -79,20 +81,20 @@ export function deriveActiveWork(capabilities: StaffCapability[]): string {
     caps.has("customer_management");
   const money = caps.has("estimate_creation") || caps.has("payment_handling");
 
-  if (bay && desk && money) return "Full shop ops";
-  if (bay && desk) return "Bay + front desk";
-  if (bay && money) return "Repairs & estimates";
-  if (desk && money) return "Front desk & checkout";
-  if (bay) return "Bay / repairs";
-  if (desk) return "Front desk";
-  if (money) return "Estimates & payments";
-  if (capabilities.length === 0) return "No active work assigned";
-  return "Custom assignment";
+  if (bay && desk && money) return "Все операции автосервиса";
+  if (bay && desk) return "Пост и приём клиентов";
+  if (bay && money) return "Ремонт и сметы";
+  if (desk && money) return "Приём клиентов и оплата";
+  if (bay) return "Пост / ремонт";
+  if (desk) return "Приём клиентов";
+  if (money) return "Сметы и платежи";
+  if (capabilities.length === 0) return "Активные работы не назначены";
+  return "Индивидуальное назначение";
 }
 
 /** MVP display: AI help areas aligned to permissions. */
 export function deriveAiAssistance(capabilities: StaffCapability[]): string {
-  if (capabilities.length === 0) return "Off";
+  if (capabilities.length === 0) return "Выключено";
   const aiRelevant: StaffCapability[] = [
     "inspection_input",
     "estimate_creation",
@@ -101,26 +103,17 @@ export function deriveAiAssistance(capabilities: StaffCapability[]): string {
     "repair_status_update",
   ];
   const enabled = aiRelevant.filter((c) => capabilities.includes(c));
-  if (enabled.length === 0) return "Available · records only";
-  return `On · ${enabled.map(capabilityLabel).join(", ")}`;
+  if (enabled.length === 0) return "Доступно · только записи";
+  return `Включено · ${enabled.map(capabilityLabel).join(", ")}`;
 }
 
 async function parseError(res: Response): Promise<string> {
-  try {
-    const body = await res.json();
-    if (typeof body.detail === "string") return body.detail;
-    if (Array.isArray(body.detail)) {
-      return body.detail.map((d: { msg?: string }) => d.msg ?? "Invalid").join(", ");
-    }
-    return res.statusText || "Request failed";
-  } catch {
-    return res.statusText || "Request failed";
-  }
+  return readApiError(res);
 }
 
 async function authFetch(path: string, init: RequestInit = {}, session?: AuthSession | null) {
   let current = session ?? loadSession();
-  if (!current) throw new Error("Not authenticated");
+  if (!current) throw new Error("Вход не выполнен");
 
   const doFetch = async (accessToken: string) => {
     try {
@@ -134,7 +127,7 @@ async function authFetch(path: string, init: RequestInit = {}, session?: AuthSes
       });
     } catch {
       throw new Error(
-        `Cannot reach API at ${getApiUrl()}. Start the API (port 8000), then try again.`,
+        `Нет связи с API по адресу ${getApiUrl()}. Запустите API (порт 8000) и повторите попытку.`,
       );
     }
   };
@@ -147,9 +140,9 @@ async function authFetch(path: string, init: RequestInit = {}, session?: AuthSes
       current = next;
       res = await doFetch(next.accessToken);
     } catch (err) {
-      if (err instanceof Error && err.message.startsWith("Cannot reach API")) throw err;
+      if (err instanceof Error && err.message.startsWith("Нет связи с API")) throw err;
       clearSession();
-      throw new Error("Session expired. Please sign in again.");
+      throw new Error("Сессия истекла. Войдите снова.");
     }
   }
   return res;

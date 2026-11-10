@@ -62,7 +62,7 @@ class EnterpriseService:
         owner_email: str,
     ) -> Organization:
         if self._store.get_org_by_slug(slug):
-            raise ValueError(f"Slug already exists: {slug}")
+            raise ValueError(f'Идентификатор уже существует: {slug}')
         org = Organization(id=new_id(), name=name, slug=slug, franchise=franchise)
         self._store.save_org(org)
         self._store.save_membership(
@@ -78,7 +78,7 @@ class EnterpriseService:
             WhiteLabelBrand(
                 organization_id=org.id,
                 product_name=name,
-                login_tagline=f"Welcome to {name}",
+                login_tagline=f'Добро пожаловать в {name}',
             )
         )
         self.audit.log(
@@ -252,7 +252,7 @@ class EnterpriseService:
     def sso_begin_by_slug(self, org_slug: str, email: str | None = None) -> dict[str, Any]:
         org = self._store.get_org_by_slug(org_slug.strip().lower())
         if org is None:
-            raise ValueError("Organization not found")
+            raise ValueError('Организация не найдена')
         result = self.sso.begin_login(org.id, email=email)
         result["organization_id"] = str(org.id)
         result["organization_slug"] = org.slug
@@ -261,7 +261,7 @@ class EnterpriseService:
     def sso_status_by_slug(self, org_slug: str) -> dict[str, Any]:
         org = self._store.get_org_by_slug(org_slug.strip().lower())
         if org is None:
-            raise ValueError("Organization not found")
+            raise ValueError('Организация не найдена')
         cfg = self._store.get_sso(org.id)
         enabled = bool(cfg and cfg.enabled)
         return {
@@ -338,14 +338,14 @@ class EnterpriseService:
         )
         self.save_policy(
             org.id,
-            name="Escalate emergencies",
+            name='Передавать экстренные обращения сотруднику',
             effect=PolicyEffect.REQUIRE_HUMAN,
             rules={"intents": ["emergency", "complaint"]},
             priority=200,
         )
         self.save_policy(
             org.id,
-            name="Block auto-discount",
+            name='Запретить автоматические скидки',
             effect=PolicyEffect.DENY,
             rules={"intents": ["price_question"], "auto_discount": True},
             priority=150,
@@ -363,10 +363,10 @@ class EnterpriseService:
             product_name="ASA Franchise OS",
             primary_color="#0F766E",
             accent_color="#115E59",
-            login_tagline="One network. Every location.",
+            login_tagline='Одна сеть. Все филиалы.',
             hide_powered_by=True,
         )
-        self.create_api_key(org.id, name="Franchise automation", scopes=["enterprise:read", "agents:invoke"])
+        self.create_api_key(org.id, name='Автоматизация сети', scopes=["enterprise:read", "agents:invoke"])
         return org
 
     def metrics(self) -> dict[str, object]:
@@ -381,5 +381,5 @@ class EnterpriseService:
     def _require_org(self, org_id: UUID) -> Organization:
         org = self._store.get_org(org_id)
         if org is None:
-            raise KeyError(f"Organization not found: {org_id}")
+            raise KeyError(f'Организация не найдена: {org_id}')
         return org

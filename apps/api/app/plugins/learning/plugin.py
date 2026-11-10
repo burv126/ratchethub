@@ -28,16 +28,14 @@ class LearningPlugin:
         return "learning"
 
     def plugin_name(self) -> str:
-        return "AI Learning Loop"
+        return 'Цикл обучения ИИ'
 
     def plugin_version(self) -> str:
         return "1.0.0"
 
     def plugin_description(self) -> str:
         return (
-            "Collect shop interaction outcomes, evaluate decisions, discover patterns, "
-            "and propose optimizations via Decision Objects. Never mutates workflows, "
-            "prices, or permissions."
+            'Собирает результаты работы, оценивает решения, выявляет закономерности и предлагает оптимизации через объекты решений. Не изменяет процессы, цены и разрешения.'
         )
 
     def supported_capabilities(self) -> list[str]:
@@ -85,7 +83,7 @@ class LearningPlugin:
 
         shop_id: UUID | None = kwargs.get("shop_id") or (context.shop_id if context else None)
         if shop_id is None:
-            raise ValueError("shop_id is required for learning capabilities")
+            raise ValueError('Для обучения требуется shop_id')
 
         eng = self._eng()
         source = str(kwargs.get("source") or "").lower()
@@ -158,4 +156,4 @@ class LearningPlugin:
         if capability == Capability.GENERATE_LEARNING_INSIGHT:
             return await eng.generate_learning_insight(shop_id)
 
-        raise ValueError(f"Unknown learning capability: {capability}")
+        raise ValueError(f'Неизвестная возможность обучения: {capability}')

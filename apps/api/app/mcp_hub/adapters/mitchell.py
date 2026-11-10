@@ -9,7 +9,7 @@ from app.mcp_hub.enums import AuthMethod, IntegrationCategory, IntegrationProvid
 class MitchellAdapter(BaseAdapter):
     provider = IntegrationProvider.MITCHELL
     display_name = "Mitchell"
-    description = "Mitchell shop management — estimates, repair orders, and customers."
+    description = 'Управление автосервисом Mitchell — сметы, заказ-наряды и клиенты.'
     category = IntegrationCategory.PMS
     auth_method = AuthMethod.API_KEY
     api_version = "v1"
@@ -20,19 +20,19 @@ class MitchellAdapter(BaseAdapter):
     tool_defs = [
         (
             "mitchell.list_customers",
-            "List customers from Mitchell",
+            'Список клиентов Mitchell',
             {"type": "object", "properties": {"query": {"type": "string"}, "limit": {"type": "integer"}}},
             ["pms", "read"],
         ),
         (
             "mitchell.get_repair_order",
-            "Fetch a repair order by id",
+            'Получить заказ-наряд по ID',
             {"type": "object", "properties": {"repair_order_id": {"type": "string"}}, "required": ["repair_order_id"]},
             ["pms", "read"],
         ),
         (
             "mitchell.get_estimate",
-            "Fetch an estimate by id",
+            'Получить смету по ID',
             {"type": "object", "properties": {"estimate_id": {"type": "string"}}, "required": ["estimate_id"]},
             ["pms", "read"],
         ),

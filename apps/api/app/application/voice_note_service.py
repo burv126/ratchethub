@@ -48,13 +48,13 @@ class VoiceNoteService:
 
         max_bytes = settings.max_audio_upload_mb * 1024 * 1024
         if not audio_bytes:
-            raise ValidationError("Audio file is empty")
+            raise ValidationError('Аудиофайл пуст')
         if len(audio_bytes) > max_bytes:
-            raise ValidationError(f"Audio file exceeds {settings.max_audio_upload_mb}MB limit")
+            raise ValidationError(f'Аудиофайл превышает лимит {settings.max_audio_upload_mb} МБ')
 
         vehicle = await self._uow.vehicles.get_by_id(shop_id, vehicle_id)
         if vehicle is None:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
 
         audio_url = self._storage.save(
             shop_id=shop_id,
@@ -130,7 +130,7 @@ class VoiceNoteService:
         refreshed_note = await self._uow.voice_notes.get_by_id(shop_id, note.id)
         refreshed_vehicle = await self._uow.vehicles.get_by_id(shop_id, vehicle.id)
         if refreshed_note is None or refreshed_vehicle is None:
-            raise NotFoundError("Voice note or vehicle not found after processing")
+            raise NotFoundError('После обработки не найдены голосовая заметка или автомобиль')
 
         return VoiceNoteProcessResult(
             voice_note=refreshed_note,
@@ -147,7 +147,7 @@ class VoiceNoteService:
         await self._uow.bind_shop(shop_id)
         note = await self._uow.voice_notes.get_by_id(shop_id, note_id)
         if note is None:
-            raise NotFoundError("Voice note not found")
+            raise NotFoundError('Голосовая заметка не найдена')
         return note
 
     def read_audio(self, *, audio_url: str) -> bytes:

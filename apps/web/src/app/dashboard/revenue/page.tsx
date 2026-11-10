@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -47,7 +51,7 @@ export default function RevenuePage() {
 
   useEffect(() => {
     if (authLoading || !session) return;
-    void refresh().catch((err) => setError(err instanceof Error ? err.message : "Load failed"));
+    void refresh().catch((err) => setError(err instanceof Error ? err.message : "Не удалось загрузить"));
   }, [authLoading, session, refresh]);
 
   const filtered = useMemo(() => {
@@ -67,7 +71,7 @@ export default function RevenuePage() {
       await runRevenueAnalysis();
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Analysis failed");
+      setError(err instanceof Error ? err.message : "Не удалось выполнить анализ");
     } finally {
       setBusy(false);
     }
@@ -77,9 +81,9 @@ export default function RevenuePage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="page-title">Revenue</h1>
+          <h1 className="page-title">Выручка</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Nightly intelligence — opportunities, forecast, health & ROI
+            Ежедневная аналитика — возможности, прогноз, состояние и окупаемость
           </p>
         </div>
         <button
@@ -88,13 +92,13 @@ export default function RevenuePage() {
           onClick={() => void onAnalyze()}
           className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
         >
-          {busy ? "Analyzing…" : "Run nightly analysis"}
+          {busy ? "Анализ…" : "Запустить ежедневный анализ"}
         </button>
       </div>
 
       {error && (
         <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -102,30 +106,30 @@ export default function RevenuePage() {
         <>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Metric
-              label="Expected today"
-              value={`$${Number(dash.expected_revenue_daily).toLocaleString()}`}
+              label="Ожидается сегодня"
+              value={`$${Number(dash.expected_revenue_daily).toLocaleString("ru-RU")}`}
             />
             <Metric
-              label="Expected this week"
-              value={`$${Number(dash.expected_revenue_weekly).toLocaleString()}`}
+              label="Ожидается на этой неделе"
+              value={`$${Number(dash.expected_revenue_weekly).toLocaleString("ru-RU")}`}
             />
             <Metric
-              label="Monthly forecast"
-              value={`$${Number(dash.expected_revenue_monthly).toLocaleString()}`}
+              label="Прогноз на месяц"
+              value={`$${Number(dash.expected_revenue_monthly).toLocaleString("ru-RU")}`}
             />
-            <Metric label="Open opportunities" value={String(dash.open_opportunities)} />
+            <Metric label="Открытые возможности" value={String(dash.open_opportunities)} />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Metric label="Customer health" value={dash.avg_customer_health.toFixed(1)} />
-            <Metric label="Vehicle health" value={dash.avg_vehicle_health.toFixed(1)} />
-            <Metric label="Avg win probability" value={`${(dash.avg_probability * 100).toFixed(0)}%`} />
-            <Metric label="Avg ROI" value={`${dash.avg_roi.toFixed(1)}x`} />
+            <Metric label="Состояние клиента" value={dash.avg_customer_health.toFixed(1)} />
+            <Metric label="Состояние автомобиля" value={dash.avg_vehicle_health.toFixed(1)} />
+            <Metric label="Средняя вероятность успеха" value={`${(dash.avg_probability * 100).toFixed(0)}%`} />
+            <Metric label="Средняя окупаемость" value={`${dash.avg_roi.toFixed(1)}x`} />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-5">
-              <h2 className="text-sm font-medium">Monthly revenue forecast</h2>
+              <h2 className="text-sm font-medium">Прогноз месячной выручки</h2>
               <div className="mt-4 space-y-3">
                 {(forecast?.months ?? dash.forecast?.months ?? []).map((m) => {
                   const months = forecast?.months ?? dash.forecast?.months ?? [];
@@ -136,7 +140,7 @@ export default function RevenuePage() {
                       <div className="flex justify-between text-xs text-[var(--muted)]">
                         <span>{m.label}</span>
                         <span>
-                          ${Number(m.expected_revenue).toLocaleString()} · {m.opportunity_count} opps
+                          ${Number(m.expected_revenue).toLocaleString("ru-RU")} · {m.opportunity_count} возможностей
                         </span>
                       </div>
                       <div className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--line)]">
@@ -148,23 +152,23 @@ export default function RevenuePage() {
               </div>
               {forecast && (
                 <p className="mt-3 text-xs text-[var(--muted)]">
-                  Forecast total: ${Number(forecast.total_expected).toLocaleString()} · as of{" "}
+                  Общий прогноз: ${Number(forecast.total_expected).toLocaleString("ru-RU")} · по состоянию на{" "}
                   {forecast.as_of}
                 </p>
               )}
             </section>
 
             <section className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-5">
-              <h2 className="text-sm font-medium">ROI by opportunity kind</h2>
+              <h2 className="text-sm font-medium">Окупаемость по типам возможностей</h2>
               <div className="mt-4 space-y-3">
                 {dash.roi_series.map((p) => {
                   const pct = (Number(p.expected_return) / maxRoiReturn) * 100;
                   return (
                     <div key={p.label}>
                       <div className="flex justify-between text-xs text-[var(--muted)]">
-                        <span>{p.label.replaceAll("_", " ")}</span>
+                        <span>{ruLabel(p.label)}</span>
                         <span>
-                          ROI {p.roi.toFixed(1)}x · ${Number(p.expected_return).toLocaleString()}
+                          ROI {p.roi.toFixed(1)}x · ${Number(p.expected_return).toLocaleString("ru-RU")}
                         </span>
                       </div>
                       <div className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--line)]">
@@ -177,7 +181,7 @@ export default function RevenuePage() {
                   );
                 })}
                 {dash.roi_series.length === 0 && (
-                  <p className="text-sm text-[var(--muted)]">Run analysis to populate ROI</p>
+                  <p className="text-sm text-[var(--muted)]">Запустите анализ для расчёта окупаемости</p>
                 )}
               </div>
             </section>
@@ -189,23 +193,23 @@ export default function RevenuePage() {
         <section className="grid gap-4 lg:grid-cols-2">
           {revMetrics && (
             <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-4 text-xs text-[var(--muted)]">
-              <h2 className="text-sm font-medium text-[var(--foreground)]">Metrics summary</h2>
+              <h2 className="text-sm font-medium text-[var(--foreground)]">Сводка показателей</h2>
               <pre className="mt-2 overflow-auto">{JSON.stringify(revMetrics, null, 2)}</pre>
             </div>
           )}
           <div className="rounded-md border border-[var(--line)] bg-[var(--panel)] p-4">
-            <h2 className="text-sm font-medium">Analysis jobs</h2>
+            <h2 className="text-sm font-medium">Задания анализа</h2>
             <ul className="mt-2 space-y-2 text-sm">
               {jobs.map((j) => (
                 <li key={j.id} className="rounded border border-[var(--line)] px-3 py-2">
-                  <span className="font-medium">{j.status}</span>
+                  <span className="font-medium">{ruLabel(j.status)}</span>
                   <span className="text-xs text-[var(--muted)]">
                     {" "}
-                    · {j.customers_analyzed} customers · {j.opportunities_created} opps
+                    · {j.customers_analyzed} клиентов · {j.opportunities_created} возможностей
                   </span>
                 </li>
               ))}
-              {jobs.length === 0 && <li className="text-[var(--muted)]">No jobs yet</li>}
+              {jobs.length === 0 && <li className="text-[var(--muted)]">Заданий пока нет</li>}
             </ul>
           </div>
         </section>
@@ -213,7 +217,7 @@ export default function RevenuePage() {
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-medium">Opportunity list</h2>
+          <h2 className="text-sm font-medium">Список возможностей</h2>
           <div className="flex gap-1">
             {(["all", "daily", "weekly", "monthly"] as HorizonFilter[]).map((h) => (
               <button
@@ -236,12 +240,12 @@ export default function RevenuePage() {
           <table className="min-w-full text-left text-sm">
             <thead className="bg-[var(--panel)] text-xs uppercase tracking-wide text-[var(--muted)]">
               <tr>
-                <th className="px-3 py-2">Customer</th>
-                <th className="px-3 py-2">Opportunity</th>
-                <th className="px-3 py-2">Revenue</th>
-                <th className="px-3 py-2">Prob</th>
+                <th className="px-3 py-2">Клиент</th>
+                <th className="px-3 py-2">Возможность</th>
+                <th className="px-3 py-2">Выручка</th>
+                <th className="px-3 py-2">Вероятность</th>
                 <th className="px-3 py-2">ROI</th>
-                <th className="px-3 py-2">Contact</th>
+                <th className="px-3 py-2">Контакт</th>
                 <th className="px-3 py-2" />
               </tr>
             </thead>
@@ -258,9 +262,9 @@ export default function RevenuePage() {
                   </td>
                   <td className="px-3 py-2">
                     <p>{o.title}</p>
-                    <p className="text-xs text-[var(--muted)]">{o.kind.replaceAll("_", " ")}</p>
+                    <p className="text-xs text-[var(--muted)]">{ruLabel(o.kind)}</p>
                   </td>
-                  <td className="px-3 py-2">${Number(o.expected_revenue).toLocaleString()}</td>
+                  <td className="px-3 py-2">${Number(o.expected_revenue).toLocaleString("ru-RU")}</td>
                   <td className="px-3 py-2">{(o.probability * 100).toFixed(0)}%</td>
                   <td className="px-3 py-2">{o.expected_roi.toFixed(1)}x</td>
                   <td className="px-3 py-2 text-xs">
@@ -279,7 +283,7 @@ export default function RevenuePage() {
                           .catch((err) => setError(String(err)));
                       }}
                     >
-                      Mark contacted
+                      Отметить связь
                     </button>
                   </td>
                 </tr>
@@ -287,7 +291,7 @@ export default function RevenuePage() {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-3 py-6 text-[var(--muted)]">
-                    No opportunities — run nightly analysis
+                    Нет возможностей — запустите ежедневный анализ
                   </td>
                 </tr>
               )}
@@ -308,25 +312,25 @@ export default function RevenuePage() {
               className="text-xs text-[var(--muted)]"
               onClick={() => setSelected(null)}
             >
-              Close
+              Закрыть
             </button>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3 text-sm">
             <div>
-              <p className="text-xs text-[var(--muted)]">Expected revenue</p>
-              <p className="font-medium">${Number(selected.expected_revenue).toLocaleString()}</p>
+              <p className="text-xs text-[var(--muted)]">Ожидаемая выручка</p>
+              <p className="font-medium">${Number(selected.expected_revenue).toLocaleString("ru-RU")}</p>
             </div>
             <div>
-              <p className="text-xs text-[var(--muted)]">Customer health</p>
+              <p className="text-xs text-[var(--muted)]">Состояние клиента</p>
               <p className="font-medium">{selected.customer_health ?? "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-[var(--muted)]">Vehicle health</p>
+              <p className="text-xs text-[var(--muted)]">Состояние автомобиля</p>
               <p className="font-medium">{selected.vehicle_health ?? "—"}</p>
             </div>
           </div>
           <div className="mt-4 rounded-md border border-[var(--line)] p-3 text-sm">
-            <p className="text-xs uppercase tracking-wide text-[var(--muted)]">Recommended message</p>
+            <p className="text-xs uppercase tracking-wide text-[var(--muted)]">Рекомендуемое сообщение</p>
             <p className="mt-2">{selected.recommended_message}</p>
           </div>
         </section>

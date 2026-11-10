@@ -26,5 +26,5 @@ def opportunities_to_agent_insights(opps: list[Opportunity]) -> RevenueInsights:
         upsell_opportunities=upsells,
         predicted_revenue=predicted,
         lost_customer_risk=lost_risk,
-        notes=[f"{len(opps)} opportunities from Revenue Intelligence"],
+        notes=[f'Возможностей по аналитике выручки: {len(opps)}'],
     )

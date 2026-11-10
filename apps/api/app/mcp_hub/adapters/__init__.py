@@ -73,7 +73,7 @@ def get_adapter(provider: IntegrationProvider) -> IntegrationAdapter:
     try:
         return _REGISTRY[provider]
     except KeyError as exc:
-        raise KeyError(f"Unknown integration provider: {provider}") from exc
+        raise KeyError(f'Неизвестный провайдер интеграции: {provider}') from exc
 
 
 def list_adapters() -> list[IntegrationAdapter]:

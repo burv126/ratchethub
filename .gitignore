@@ -15,6 +15,7 @@ dist/
 build/
 
 # Env & secrets
+.local/
 .env
 .env.local
 .env.*.local

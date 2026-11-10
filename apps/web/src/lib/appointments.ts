@@ -1,3 +1,5 @@
+
+import { readApiError } from "@/lib/ru-errors";
 import { getApiUrl, loadSession, refresh, saveSession, clearSession } from "@/lib/api";
 
 export type Appointment = {
@@ -78,18 +80,12 @@ export type ForecastPayload = {
 };
 
 async function parseError(res: Response): Promise<string> {
-  try {
-    const body = await res.json();
-    if (typeof body.detail === "string") return body.detail;
-    return res.statusText || "Request failed";
-  } catch {
-    return res.statusText || "Request failed";
-  }
+  return readApiError(res);
 }
 
 async function authFetch(path: string, init: RequestInit = {}) {
   let current = loadSession();
-  if (!current) throw new Error("Not authenticated");
+  if (!current) throw new Error("Вход не выполнен");
   const doFetch = (accessToken: string) =>
     fetch(`${getApiUrl()}${path}`, {
       ...init,
@@ -107,7 +103,7 @@ async function authFetch(path: string, init: RequestInit = {}) {
       res = await doFetch(current.accessToken);
     } catch {
       clearSession();
-      throw new Error("Session expired");
+      throw new Error("Сессия истекла");
     }
   }
   return res;

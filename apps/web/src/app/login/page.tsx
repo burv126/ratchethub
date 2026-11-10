@@ -80,13 +80,12 @@ function LoginPageInner() {
               <BrandWordmark className="text-[1em] leading-none text-white" />
             </p>
             <p className="mt-5 max-w-md text-base font-medium leading-relaxed text-white/78 sm:text-lg">
-              Sign in to the shop floor OS — voice, SMS, scheduling, and vehicle knowledge in one
-              elevated workspace.
+              Войдите в рабочее пространство автосервиса: звонки, SMS, расписание и знания об автомобилях в одном месте.
             </p>
             <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm text-white/55">
-              <span>Always-on front desk</span>
+              <span>Приём клиентов круглосуточно</span>
               <span className="hidden h-1 w-1 self-center rounded-full bg-white/30 sm:inline-block" />
-              <span>Shop-isolated by design</span>
+              <span>Изоляция данных автосервиса</span>
             </div>
           </div>
         </div>
@@ -102,7 +101,7 @@ function LoginPageInner() {
                 wordmarkClassName="text-2xl font-extrabold tracking-tight text-[var(--ink)]"
               />
               <p className="mt-1.5 text-sm text-[var(--muted)]">
-                Elevated shop software for every bay and every call.
+                Современное ПО для каждого поста и каждого звонка.
               </p>
             </div>
 
@@ -121,7 +120,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <main className="flex min-h-dvh items-center justify-center text-sm text-[var(--muted)]">
-          Loading…
+          Загрузка…
         </main>
       }
     >

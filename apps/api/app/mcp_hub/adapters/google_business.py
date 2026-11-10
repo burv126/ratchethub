@@ -9,7 +9,7 @@ from app.mcp_hub.enums import AuthMethod, IntegrationCategory, IntegrationProvid
 class GoogleBusinessAdapter(BaseAdapter):
     provider = IntegrationProvider.GOOGLE_BUSINESS
     display_name = "Google Business"
-    description = "Manage Google Business Profile reviews and posts."
+    description = 'Управляйте отзывами и публикациями Google Business Profile.'
     category = IntegrationCategory.BUSINESS
     auth_method = AuthMethod.OAUTH2
     api_version = "v1"
@@ -20,13 +20,13 @@ class GoogleBusinessAdapter(BaseAdapter):
     tool_defs = [
         (
             "google_business.list_reviews",
-            "List business reviews",
+            'Получить отзывы о компании',
             {"type": "object", "properties": {"location_id": {"type": "string"}}},
             ["business", "read"],
         ),
         (
             "google_business.reply_review",
-            "Reply to a review",
+            'Ответить на отзыв',
             {
                 "type": "object",
                 "properties": {"review_id": {"type": "string"}, "comment": {"type": "string"}},

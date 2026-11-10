@@ -149,7 +149,7 @@ async def test_register_rejects_duplicate_shop_slug(client: AsyncClient):
         },
     )
     assert res.status_code == 409, res.text
-    assert "slug" in res.json()["detail"].lower()
+    assert "идентификатор" in res.json()["detail"].lower()
 
 
 async def test_register_auto_suffixes_colliding_name_slug(client: AsyncClient):
@@ -201,7 +201,7 @@ async def test_register_rejects_duplicate_shop_name(client: AsyncClient):
         },
     )
     assert res.status_code == 409, res.text
-    assert "name" in res.json()["detail"].lower()
+    assert "название" in res.json()["detail"].lower()
 
 
 async def test_shop_isolation(client: AsyncClient):

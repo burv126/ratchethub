@@ -29,7 +29,7 @@ async def twilio_inbound_sms(
     runtime: SmsRuntime = Depends(_runtime),
 ) -> Response:
     if not settings.sms_enabled:
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="SMS disabled")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail='SMS отключены')
 
     form = await request.form()
     params = parse_twilio_form(form)
@@ -54,7 +54,7 @@ async def twilio_inbound_sms(
     ):
         runtime.monitor.record_webhook_rejected()
         logger.warning("sms.webhook.rejected signature url=%s has_sig=%s", url, bool(signature))
-        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Invalid Twilio signature")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail='Недействительная подпись Twilio')
 
     inbound = InboundSms(
         from_number=params.get("From", ""),
@@ -65,7 +65,7 @@ async def twilio_inbound_sms(
         raw=params,
     )
     if not inbound.from_number or not inbound.body.strip():
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Missing From/Body")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail='Отсутствует From/Body')
 
     shop_id = await runtime.service.resolve_shop_id(inbound.to_number)
     job = await runtime.service.enqueue_inbound(inbound, shop_id=shop_id)

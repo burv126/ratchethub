@@ -50,7 +50,7 @@ class WorkflowRunner:
             if not matched:
                 continue
             run = await self._start_run(wf, event)
-            run.logs.append(f"Conditions matched" if not failures else f"Conditions: {failures}")
+            run.logs.append(f'Условия выполнены' if not failures else f"Conditions: {failures}")
             await self._execute_run(run, wf, event)
             runs.append(run)
         return runs
@@ -69,7 +69,7 @@ class WorkflowRunner:
             status=RunStatus.RUNNING,
             context={"payload": dict(event.payload)},
             started_at=now,
-            logs=[f"Triggered by {event.event_type.value} ({event.event_id})"],
+            logs=[f'Запущено событием {event.event_type.value} ({event.event_id})'],
         )
         actions = sorted(wf.actions, key=lambda a: a.order)
         for action in actions:
@@ -95,7 +95,7 @@ class WorkflowRunner:
         actions = sorted(wf.actions, key=lambda a: a.order)
         for idx in range(from_step, len(actions)):
             if run.status == RunStatus.PAUSED:
-                run.logs.append(f"Paused before step {idx}")
+                run.logs.append(f'Приостановлено перед шагом {idx}')
                 await self._store.save_run(run)
                 return run
             action = actions[idx]
@@ -105,7 +105,7 @@ class WorkflowRunner:
             step.status = StepStatus.RUNNING
             step.attempt += 1
             step.started_at = datetime.now(timezone.utc)
-            run.logs.append(f"Step {idx + 1}: {step.action_name} started (attempt {step.attempt})")
+            run.logs.append(f'Шаг {idx + 1}: {step.action_name} начат (попытка {step.attempt})')
             await self._store.save_run(run)
 
             try:
@@ -120,12 +120,12 @@ class WorkflowRunner:
                 step.status = StepStatus.SUCCEEDED
                 step.finished_at = datetime.now(timezone.utc)
                 step.compensation = dict(action.compensate)
-                run.logs.append(f"Step {idx + 1}: {step.action_name} succeeded")
+                run.logs.append(f'Шаг {idx + 1}: {step.action_name} выполнен')
             except Exception as exc:  # noqa: BLE001
                 step.error = str(exc)
                 step.status = StepStatus.FAILED
                 step.finished_at = datetime.now(timezone.utc)
-                run.logs.append(f"Step {idx + 1}: {step.action_name} failed: {exc}")
+                run.logs.append(f'Шаг {idx + 1}: {step.action_name} завершился ошибкой: {exc}')
                 if action.continue_on_error:
                     step.status = StepStatus.SKIPPED
                     continue
@@ -141,8 +141,7 @@ class WorkflowRunner:
                     step.status = StepStatus.RETRYING
                     run.status = RunStatus.WAITING_RETRY
                     run.logs.append(
-                        f"Scheduled retry {retry_item.attempt}/{retry_item.max_attempts} "
-                        f"at {retry_item.next_attempt_at.isoformat()}"
+                        f'Повтор {retry_item.attempt}/{retry_item.max_attempts} назначен на {retry_item.next_attempt_at.isoformat()}'
                     )
                     await self._store.save_run(run)
                     return run
@@ -167,7 +166,7 @@ class WorkflowRunner:
 
         run.status = RunStatus.COMPLETED
         run.finished_at = datetime.now(timezone.utc)
-        run.logs.append("Workflow completed")
+        run.logs.append('Процесс завершён')
         await self._store.save_run(run)
         await self._bus.publish(
             DomainEvent(
@@ -184,11 +183,11 @@ class WorkflowRunner:
     async def pause(self, shop_id: UUID, run_id: UUID) -> WorkflowRun:
         run = await self._store.get_run(shop_id, run_id)
         if run is None:
-            raise LookupError("Workflow run not found")
+            raise LookupError('Запуск процесса не найден')
         if run.status not in {RunStatus.RUNNING, RunStatus.WAITING_RETRY, RunStatus.PENDING}:
-            raise ValueError(f"Cannot pause run in status {run.status.value}")
+            raise ValueError(f'Нельзя приостановить запуск со статусом {run.status.value}')
         run.status = RunStatus.PAUSED
-        run.logs.append("Run paused by coordinator")
+        run.logs.append('Запуск приостановлен координатором')
         await self._store.save_run(run)
         await self._bus.publish(
             DomainEvent(
@@ -205,12 +204,12 @@ class WorkflowRunner:
     async def resume(self, shop_id: UUID, run_id: UUID) -> WorkflowRun:
         run = await self._store.get_run(shop_id, run_id)
         if run is None:
-            raise LookupError("Workflow run not found")
+            raise LookupError('Запуск процесса не найден')
         if run.status != RunStatus.PAUSED:
-            raise ValueError(f"Cannot resume run in status {run.status.value}")
+            raise ValueError(f'Нельзя продолжить запуск со статусом {run.status.value}')
         wf = await self._store.get_workflow(shop_id, run.workflow_id)
         if wf is None:
-            raise LookupError("Workflow definition not found")
+            raise LookupError('Определение процесса не найдено')
         from_step = next(
             (i for i, s in enumerate(run.steps) if s.status != StepStatus.SUCCEEDED),
             len(run.steps),
@@ -225,7 +224,7 @@ class WorkflowRunner:
             occurred_at=datetime.now(timezone.utc),
         )
         run.status = RunStatus.RUNNING
-        run.logs.append(f"Run resumed from step {from_step}")
+        run.logs.append(f'Запуск продолжен с шага {from_step}')
         await self._bus.publish(
             DomainEvent(
                 event_type=DomainEventType.WORKFLOW_RESUMED,
@@ -282,10 +281,10 @@ class WorkflowRunner:
     async def rollback(self, shop_id: UUID, run_id: UUID) -> WorkflowRun:
         run = await self._store.get_run(shop_id, run_id)
         if run is None:
-            raise LookupError("Workflow run not found")
+            raise LookupError('Запуск процесса не найден')
         wf = await self._store.get_workflow(shop_id, run.workflow_id)
         if wf is None:
-            raise LookupError("Workflow definition not found")
+            raise LookupError('Определение процесса не найдено')
 
         actions_by_id = {a.id: a for a in wf.actions}
         for step in reversed(run.steps):
@@ -303,9 +302,9 @@ class WorkflowRunner:
                 )
                 step.status = StepStatus.ROLLED_BACK
                 step.compensation = {**step.compensation, **result}
-                run.logs.append(f"Rolled back: {step.action_name}")
+                run.logs.append(f'Откат: {step.action_name}')
             except Exception as exc:  # noqa: BLE001
-                run.logs.append(f"Rollback failed for {step.action_name}: {exc}")
+                run.logs.append(f'Ошибка отката {step.action_name}: {exc}')
 
         run.status = RunStatus.ROLLED_BACK
         run.rolled_back_at = datetime.now(timezone.utc)

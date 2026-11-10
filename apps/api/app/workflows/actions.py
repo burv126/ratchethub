@@ -52,7 +52,7 @@ class ActionExecutor:
         }
         handler = handlers.get(action.type)
         if handler is None:
-            raise ValueError(f"Unknown action type: {action.type}")
+            raise ValueError(f'Неизвестный тип действия: {action.type}')
         return await handler(
             action,
             shop_id=shop_id,
@@ -78,7 +78,7 @@ class ActionExecutor:
             self._side_effects["reminders"] = [
                 r for r in self._side_effects["reminders"] if r.get("id") != record_id
             ]
-            result["message"] = "Reminder cancelled"
+            result["message"] = 'Напоминание отменено'
         elif action.type == ActionType.UPDATE_CRM and record_id:
             self._side_effects["crm"] = [r for r in self._side_effects["crm"] if r.get("id") != record_id]
             result["message"] = "CRM update reversed"
@@ -86,17 +86,17 @@ class ActionExecutor:
             self._side_effects["revenue"] = [
                 r for r in self._side_effects["revenue"] if r.get("id") != record_id
             ]
-            result["message"] = "Revenue update reversed"
+            result["message"] = 'Обновление выручки отменено'
         elif action.type == ActionType.UPDATE_DASHBOARD and record_id:
             self._side_effects["dashboard"] = [
                 r for r in self._side_effects["dashboard"] if r.get("id") != record_id
             ]
-            result["message"] = "Dashboard update reversed"
+            result["message"] = 'Обновление панели отменено'
         elif action.type == ActionType.NOTIFY and record_id:
             self._side_effects["notifications"] = [
                 r for r in self._side_effects["notifications"] if r.get("id") != record_id
             ]
-            result["message"] = "Notification retracted"
+            result["message"] = 'Уведомление отозвано'
         else:
             result["message"] = "No-op compensation"
 
@@ -148,7 +148,7 @@ class ActionExecutor:
             "id": str(uuid4()),
             "shop_id": str(shop_id),
             "customer_id": payload.get("customer_id"),
-            "note": action.config.get("note", "Workflow CRM update"),
+            "note": action.config.get("note", 'Обновление CRM процессом'),
             "fields": action.config.get("fields", {}),
             "trigger": payload,
         }
@@ -278,7 +278,7 @@ class ActionExecutor:
         record = {
             "id": str(uuid4()),
             "channel": action.config.get("channel", "in_app"),
-            "message": action.config.get("message", "Workflow notification"),
+            "message": action.config.get("message", 'Уведомление процесса'),
             "to": action.config.get("to") or payload.get("customer_id"),
         }
         self._side_effects["notifications"].append(record)

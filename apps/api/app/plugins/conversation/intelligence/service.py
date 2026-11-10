@@ -30,11 +30,11 @@ class ConversationIntelligenceService:
         service = self._suggested_service(body, intent=intent)
         appointment = None
         if intent in {"book_appointment", "reschedule", "schedule"} or "appointment" in body:
-            appointment = "Offer next available appointment slot"
+            appointment = 'Предложить ближайшее свободное время'
         ai = ConversationAiInsights(
             summary=owner_summary
             or conversation.ai.summary
-            or (f"Customer via {conversation.channel}: {(text or '')[:160]}"),
+            or (f"Клиент через {conversation.channel}: {(text or '')[:160]}"),
             intent=intent or conversation.ai.intent,
             sentiment=sentiment,
             urgency_score=urgency,

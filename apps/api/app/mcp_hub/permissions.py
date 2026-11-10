@@ -91,5 +91,5 @@ class PermissionService:
         if principal == "owner":
             return
         raise PermissionDenied(
-            f"Principal '{principal}' lacks {action.value} on {provider.value}"
+            f"Субъекту '{principal}' не разрешено {action.value} для {provider.value}"
         )

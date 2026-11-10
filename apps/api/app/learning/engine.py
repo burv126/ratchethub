@@ -50,18 +50,18 @@ class LearningEngine:
         metrics = await self.evaluator.metrics(shop_id)
         patterns = await self._store.list_patterns(shop_id, limit=5)
         recs = [
-            "Continue collecting outcome samples across appointments and repairs",
+            'Продолжайте собирать результаты записей и ремонтов',
         ]
         if patterns:
             recs.insert(
                 0,
-                f"Promote pattern '{patterns[0].pattern_key}' after staff review",
+                f"Применить закономерность '{patterns[0].pattern_key}' после проверки сотрудником",
             )
         if metrics["decision_accuracy"] < 0.5 and metrics["sample_count"] >= 5:
-            recs.append("Decision accuracy below 50% — request staff review of recent failures")
+            recs.append('Точность решений ниже 50% — требуется проверка последних ошибок сотрудником')
         insight = LearningInsight(
             shop_id=shop_id,
-            title="Learning Loop Insight",
+            title='Выводы цикла обучения',
             summary=(
                 f"Accuracy={metrics['decision_accuracy']:.0%} "
                 f"over {metrics['sample_count']} outcomes"

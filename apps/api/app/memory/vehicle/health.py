@@ -45,7 +45,7 @@ class VehicleHealthService:
         status = health.get("status", "updated")
         score = health.get("score")
         content = health.get("summary") or (
-            f"Vehicle health {status}" + (f" score={score}" if score is not None else "")
+            f'Состояние автомобиля: {status}' + (f" score={score}" if score is not None else "")
         )
         return self._ltm.remember(
             RememberRequest(
@@ -53,7 +53,7 @@ class VehicleHealthService:
                 vehicle_id=vehicle_id,
                 customer_id=_as_uuid(health.get("customer_id")),
                 content=str(content),
-                summary=str(health.get("rationale") or "Vehicle health update"),
+                summary=str(health.get("rationale") or 'Обновление состояния автомобиля'),
                 memory_type=MemoryType.VEHICLE,
                 category=MemoryCategory.VEHICLE_HEALTH,
                 importance=float(health.get("importance") or 0.8),

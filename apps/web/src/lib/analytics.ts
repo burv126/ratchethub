@@ -78,7 +78,7 @@ export type AnalyticsExport = {
 
 async function authFetch(path: string, init?: RequestInit): Promise<Response> {
   const session = loadSession();
-  if (!session) throw new Error("Not signed in");
+  if (!session) throw new Error("Вход не выполнен");
   const url = `${getApiUrl()}${path}`;
   const headers: Record<string, string> = {
     Authorization: `Bearer ${session.accessToken}`,
@@ -90,7 +90,7 @@ async function authFetch(path: string, init?: RequestInit): Promise<Response> {
     const next = await refresh(session.refreshToken);
     if (!next) {
       clearSession();
-      throw new Error("Session expired");
+      throw new Error("Сессия истекла");
     }
     saveSession(next);
     headers.Authorization = `Bearer ${next.accessToken}`;
@@ -102,7 +102,7 @@ async function authFetch(path: string, init?: RequestInit): Promise<Response> {
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || body.message || `Request failed (${res.status})`);
+    throw new Error(body.detail || body.message || `Ошибка запроса (${res.status})`);
   }
   return res.json() as Promise<T>;
 }
@@ -161,7 +161,7 @@ export function analyticsExportDownloadUrl(exportId: string): string {
 
 export async function downloadAnalyticsExport(exportId: string, filename: string): Promise<void> {
   const res = await authFetch(`/v1/analytics/exports/${exportId}/download`);
-  if (!res.ok) throw new Error("Download failed");
+  if (!res.ok) throw new Error("Не удалось скачать");
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -172,7 +172,7 @@ export async function downloadAnalyticsExport(exportId: string, filename: string
 }
 
 export function formatKpiValue(kpi: AnalyticsKpi): string {
-  if (kpi.unit === "usd") return `$${kpi.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  if (kpi.unit === "usd") return `$${kpi.value.toLocaleString("ru-RU", { maximumFractionDigits: 0 })}`;
   if (kpi.unit === "ratio") return `${(kpi.value * 100).toFixed(1)}%`;
   if (kpi.unit === "x") return `${kpi.value.toFixed(2)}x`;
   return String(kpi.value);

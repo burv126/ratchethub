@@ -40,7 +40,7 @@ class PluginRegistry:
         )
         errors = validate_metadata(meta)
         if errors:
-            raise ValueError(f"Invalid plugin metadata: {'; '.join(errors)}")
+            raise ValueError(f"Некорректные метаданные плагина: {'; '.join(errors)}")
 
         plugin_id = meta.plugin_id
         version = meta.version
@@ -77,11 +77,11 @@ class PluginRegistry:
     def lookup(self, plugin_id: str, version: str | None = None) -> IPlugin:
         versions = self._by_id.get(plugin_id)
         if not versions:
-            raise LookupError(f"Plugin not found: {plugin_id}")
+            raise LookupError(f'Плагин не найден: {plugin_id}')
         if version:
             life = versions.get(version)
             if life is None or life.state == LifecycleState.UNINSTALLED:
-                raise LookupError(f"Plugin version not found: {plugin_id}@{version}")
+                raise LookupError(f'Версия плагина не найдена: {plugin_id}@{version}')
             return life.plugin
         # Prefer enabled, then highest semver-ish string
         enabled = [
@@ -98,7 +98,7 @@ class PluginRegistry:
             if life.state != LifecycleState.UNINSTALLED
         ]
         if not active:
-            raise LookupError(f"Plugin not found: {plugin_id}")
+            raise LookupError(f'Плагин не найден: {plugin_id}')
         active.sort(key=lambda l: l.plugin.plugin_version(), reverse=True)
         return active[0].plugin
 
@@ -111,7 +111,7 @@ class PluginRegistry:
         for life in versions.values():
             if life.plugin is plugin:
                 return life
-        raise LookupError(f"Lifecycle not found: {plugin_id}")
+        raise LookupError(f'Жизненный цикл не найден: {plugin_id}')
 
     def list_plugins(self) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []

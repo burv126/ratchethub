@@ -279,7 +279,7 @@ async def get_report(
 ) -> ReportOut:
     report = rt.service.get_report(user.shop_id, report_id)
     if report is None:
-        raise HTTPException(status_code=404, detail="Report not found")
+        raise HTTPException(status_code=404, detail='Отчёт не найден')
     return _report_out(report)
 
 
@@ -320,7 +320,7 @@ async def download_export(
 ) -> Response:
     artifact = rt.service.get_export(user.shop_id, export_id)
     if artifact is None:
-        raise HTTPException(status_code=404, detail="Export not found")
+        raise HTTPException(status_code=404, detail='Экспорт не найден')
     return Response(
         content=artifact.body,
         media_type=artifact.content_type,

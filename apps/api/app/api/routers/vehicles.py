@@ -56,11 +56,11 @@ async def vin_assist(
 
     message = None
     if existing_out:
-        message = "Matched an existing shop vehicle — fields filled from CRM."
+        message = 'Найден автомобиль автосервиса — поля заполнены из CRM.'
     elif decoded_out:
-        message = "Vehicle details decoded from VIN — confirm mileage and complaint."
+        message = 'Данные получены из VIN — подтвердите пробег и жалобу.'
     else:
-        message = "VIN accepted. Enter year, make, model manually (decoder unavailable)."
+        message = 'VIN принят. Введите год, марку и модель вручную (расшифровка недоступна).'
 
     return VinAssistOut(
         vin=normalized,
@@ -87,7 +87,7 @@ async def match_assist(
             return VehicleMatchAssistOut(
                 existing=VehicleOut.model_validate(existing),
                 match_type="license_plate",
-                message="Matched an existing shop vehicle by license plate.",
+                message='Найден автомобиль автосервиса по госномеру.',
             )
 
     if year is not None and make and model:
@@ -98,27 +98,27 @@ async def match_assist(
             return VehicleMatchAssistOut(
                 existing=VehicleOut.model_validate(candidates[0]),
                 match_type="year_make_model",
-                message="Matched a unique shop vehicle by year / make / model.",
+                message='Найден единственный автомобиль по году, марке и модели.',
             )
         with_customer = [c for c in candidates if c.customer_id is not None]
         if len(with_customer) == 1:
             return VehicleMatchAssistOut(
                 existing=VehicleOut.model_validate(with_customer[0]),
                 match_type="year_make_model",
-                message="Matched a shop vehicle by year / make / model.",
+                message='Найден автомобиль по году, марке и модели.',
             )
         if len(candidates) > 1:
             return VehicleMatchAssistOut(
                 existing=None,
                 match_type=None,
-                message="Multiple vehicles match year / make / model — enter plate to narrow.",
+                message='Найдено несколько автомобилей — укажите госномер для уточнения.',
             )
 
     if plate:
         return VehicleMatchAssistOut(
             existing=None,
             match_type=None,
-            message="No shop vehicle matches this plate yet.",
+            message='Автомобиль с таким госномером пока не найден.',
         )
     return VehicleMatchAssistOut(
         existing=None,

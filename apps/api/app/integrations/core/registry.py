@@ -15,7 +15,7 @@ class AdapterRegistry:
 
     def register(self, adapter: IntegrationAdapter, *, replace: bool = False) -> None:
         if adapter.provider in self._by_provider and not replace:
-            raise ValueError(f"Adapter already registered: {adapter.provider.value}")
+            raise ValueError(f'Адаптер уже зарегистрирован: {adapter.provider.value}')
         # Unbind previous capability index if replacing
         if replace and adapter.provider in self._by_provider:
             old = self._by_provider[adapter.provider]
@@ -37,7 +37,7 @@ class AdapterRegistry:
         for key, registered in self._by_provider.items():
             if key.value == provider.value:
                 return registered
-        raise KeyError(f"Unknown integration provider: {provider.value}")
+        raise KeyError(f'Неизвестный провайдер интеграции: {provider.value}')
 
     def list(self) -> list[IntegrationAdapter]:
         return list(self._by_provider.values())
@@ -66,7 +66,7 @@ class AdapterRegistry:
             return adapter
         adapters = self.adapters_for(capability)
         if not adapters:
-            raise LookupError(f"No adapter registered for capability {capability.value}")
+            raise LookupError(f'Для возможности {capability.value} не зарегистрирован адаптер')
         return adapters[0]
 
 

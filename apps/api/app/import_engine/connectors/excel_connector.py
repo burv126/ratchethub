@@ -20,24 +20,24 @@ class ExcelConnector:
 
     async def extract(self, ctx: ConnectorContext) -> NormalizedBatch:
         if not ctx.payload:
-            raise ValueError("Excel import requires an uploaded file")
+            raise ValueError('Для импорта Excel загрузите файл')
         name = (ctx.filename or "").lower()
         if name.endswith((".xls", ".xlt")) and not name.endswith((".xlsx", ".xlsm", ".xltx")):
-            raise ValueError("Legacy .xls is not supported — save as .xlsx and retry")
+            raise ValueError('Формат .xls не поддерживается — сохраните как .xlsx и повторите')
         # ZIP/OOXML signature — reject CSV/text accidentally labeled as Excel
         if not ctx.payload.startswith(b"PK"):
             raise ValueError(
-                "File is not a valid .xlsx workbook. If this is a CSV, choose CSV import."
+                'Некорректная книга .xlsx. Если это CSV, выберите импорт CSV.'
             )
         try:
             from openpyxl import load_workbook
         except ImportError as exc:
-            raise RuntimeError("openpyxl is required for Excel import") from exc
+            raise RuntimeError('Для импорта Excel требуется openpyxl') from exc
 
         try:
             wb = load_workbook(io.BytesIO(ctx.payload), read_only=True, data_only=True)
         except Exception as exc:  # noqa: BLE001 — surface user-facing parse errors
-            raise ValueError(f"Could not read Excel file: {exc}") from exc
+            raise ValueError(f'Не удалось прочитать Excel: {exc}') from exc
 
         sections: dict[str, list[dict[str, Any]]] = defaultdict(list)
         try:
@@ -76,5 +76,5 @@ class ExcelConnector:
             wb.close()
 
         if not sections:
-            raise ValueError("Excel workbook contained no data rows")
+            raise ValueError('В книге Excel нет строк данных')
         return build_batch_from_sections(dict(sections), source=self.source)

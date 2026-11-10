@@ -118,7 +118,7 @@ class SmsServiceConversationMirror:
             customer_id=message.customer_id,
             twilio_sid=provider_id,
             intent="marketing",
-            owner_summary=f"Marketing campaign {message.campaign_id}",
+            owner_summary=f'Маркетинговая кампания {message.campaign_id}',
             metadata={
                 "source": "marketing",
                 "campaign_id": str(message.campaign_id),

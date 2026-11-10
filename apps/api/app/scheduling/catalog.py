@@ -30,7 +30,7 @@ from app.shop_setup.service import ShopSetupService
 def _parse_hhmm(value: str) -> time:
     parts = value.strip().split(":")
     if len(parts) < 2:
-        raise ValueError(f"Invalid time: {value}")
+        raise ValueError(f'Некорректное время: {value}')
     return time(int(parts[0]), int(parts[1]))
 
 
@@ -48,7 +48,7 @@ async def resolve_bookable_service(
     svc = ShopSetupService(session)
     service = await svc.get_service(shop_id, service_id)
     if not service.active:
-        raise ValidationError("Selected service is not active")
+        raise ValidationError('Выбранная услуга неактивна')
     return service
 
 
@@ -146,7 +146,7 @@ async def sync_catalog_bays(
         Bay(
             id=_stable_bay_id(shop_id, "lane", index),
             shop_id=shop_id,
-            name=f"Bay {index + 1}",
+            name=f'Пост {index + 1}',
             bay_type=bay_types[index % len(bay_types)],
             supports_vehicle_types=list(_ALL_VEHICLE_TYPES),
         )
@@ -209,7 +209,7 @@ async def sync_team_mechanics(
             Mechanic(
                 id=user.id,
                 shop_id=shop_id,
-                name=user.full_name or "Team member",
+                name=user.full_name or 'Сотрудник',
                 skills=list(skills),
                 work_start=mechanic_start,
                 work_end=mechanic_end,

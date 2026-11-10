@@ -7,29 +7,22 @@ from typing import Any
 
 TEMPLATES: dict[str, str] = {
     "safety_warning": (
-        "Safety alert for your {vehicle}: we found {issue}. "
-        "This should be addressed before driving extensively. "
-        "Reply YES to approve the recommended repair (~${amount})."
+        'Предупреждение о безопасности вашего {vehicle}: выявлено {issue}. Устраните проблему до длительных поездок. Ответьте YES для согласования ремонта (~${amount}).'
     ),
     "recommended_repair": (
-        "After inspecting your {vehicle}, we recommend: {issue}. "
-        "Estimated investment ~${amount}. Reply YES to approve or ASK for details."
+        'По результатам осмотра вашего {vehicle} рекомендуем: {issue}. Ориентировочная стоимость ~${amount}. Ответьте YES для согласования или ASK для уточнения.'
     ),
     "optional_repair": (
-        "Optional improvement for your {vehicle}: {issue}. "
-        "Not urgent — estimated ~${amount}. Happy to schedule when convenient."
+        'Необязательное улучшение для вашего {vehicle}: {issue}. Несрочно, стоимость ~${amount}. Запишем в удобное время.'
     ),
     "maintenance_reminder": (
-        "Maintenance note for your {vehicle}: {issue}. "
-        "Staying ahead helps avoid larger repairs. Estimated ~${amount}."
+        'Обслуживание вашего {vehicle}: {issue}. Своевременные работы помогут избежать серьёзного ремонта. Стоимость ~${amount}.'
     ),
     "approval_request": (
-        "Please approve inspection-based repairs for your {vehicle}: {services}. "
-        "Total estimate ~${amount}. Reply YES to approve, NO to decline, or CALL to speak with us."
+        'Согласуйте ремонт вашего {vehicle} по результатам осмотра: {services}. Смета ~${amount}. Ответьте YES для согласования, NO для отказа или CALL для звонка.'
     ),
     "follow_up": (
-        "Following up on your {vehicle} inspection — {issue} is still outstanding. "
-        "We can help whenever you're ready. Estimated ~${amount}."
+        'По результатам осмотра вашего {vehicle} остаётся нерешённый вопрос: {issue}. Поможем, когда вам будет удобно. Стоимость ~${amount}.'
     ),
 }
 

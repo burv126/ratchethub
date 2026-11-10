@@ -16,10 +16,10 @@ from app.enterprise.store import EnterpriseStorePort
 
 
 DEFAULT_ROUTES: list[GatewayRoute] = [
-    GatewayRoute("health", "/health", "api", GatewayAuthType.JWT, None, 600, True, "Health probes"),
-    GatewayRoute("enterprise", "/v1/enterprise", "api", GatewayAuthType.JWT, EnterpriseRole.LOCATION_STAFF, 120, True, "Enterprise APIs"),
+    GatewayRoute("health", "/health", "api", GatewayAuthType.JWT, None, 600, True, 'Проверки состояния'),
+    GatewayRoute("enterprise", "/v1/enterprise", "api", GatewayAuthType.JWT, EnterpriseRole.LOCATION_STAFF, 120, True, 'API организации'),
     GatewayRoute("analytics", "/v1/analytics", "api", GatewayAuthType.JWT, EnterpriseRole.LOCATION_MANAGER, 60, True, "Analytics"),
-    GatewayRoute("agents", "/v1/agents", "api", GatewayAuthType.API_KEY, EnterpriseRole.API_CLIENT, 90, True, "Agent automation"),
+    GatewayRoute("agents", "/v1/agents", "api", GatewayAuthType.API_KEY, EnterpriseRole.API_CLIENT, 90, True, 'Автоматизация агентов'),
     GatewayRoute("mcp", "/v1/mcp-hub", "api", GatewayAuthType.API_KEY, EnterpriseRole.API_CLIENT, 60, True, "MCP integrations"),
 ]
 
@@ -86,9 +86,9 @@ class ApiGateway:
     ) -> dict[str, Any]:
         route = self._match(path)
         if route is None:
-            raise GatewayDenied(f"No gateway route for {path}")
+            raise GatewayDenied(f'Нет маршрута шлюза для {path}')
         if not route.enabled:
-            raise GatewayDenied("Route disabled")
+            raise GatewayDenied('Маршрут отключён')
 
         limit = route.rate_limit_rpm
         auth_role = role
@@ -99,7 +99,7 @@ class ApiGateway:
             prefix = api_key[:12]
             record = self._store.get_api_key_by_prefix(prefix)
             if record is None or record.key_hash != hashlib.sha256(api_key.encode()).hexdigest():
-                raise GatewayDenied("Invalid API key")
+                raise GatewayDenied('Недействительный ключ API')
             if org_id and record.organization_id != org_id:
                 raise GatewayDenied("API key org mismatch")
             org_id = record.organization_id
@@ -109,7 +109,7 @@ class ApiGateway:
             self._store.save_api_key(record)
 
         if route.required_role and auth_role and not role_at_least(auth_role, route.required_role):
-            raise GatewayDenied(f"Requires role {route.required_role.value}")
+            raise GatewayDenied(f'Требуется роль {route.required_role.value}')
 
         self._rate_limit(f"{route.id}:{client_id}:{org_id}", limit)
 
@@ -139,5 +139,5 @@ class ApiGateway:
         window = self._buckets[key]
         self._buckets[key] = [t for t in window if now - t < 60]
         if len(self._buckets[key]) >= rpm:
-            raise RateLimited(f"Rate limit exceeded ({rpm}/min)")
+            raise RateLimited(f'Превышен лимит запросов ({rpm}/мин)')
         self._buckets[key].append(now)

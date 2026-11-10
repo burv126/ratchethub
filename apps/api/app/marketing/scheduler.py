@@ -84,7 +84,7 @@ class CampaignScheduler:
                 shop_id=campaign.shop_id,
                 campaign_id=campaign.id,
                 event="campaign.scheduled",
-                detail=f"{len(messages)} messages planned",
+                detail=f'Запланировано сообщений: {len(messages)}',
             )
         )
         return messages
@@ -123,7 +123,7 @@ class CampaignScheduler:
             to = self._recipient(message)
             if not to:
                 message.status = MessageStatus.FAILED
-                message.error = "No recipient address for channel"
+                message.error = 'Нет адреса получателя для канала'
                 await self._store.save_message(message)
                 item.state = QueueItemState.FAILED
                 item.last_error = message.error

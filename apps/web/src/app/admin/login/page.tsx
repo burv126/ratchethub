@@ -1,4 +1,5 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
 
 import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -76,7 +77,7 @@ function AdminLoginForm() {
     const endsAt = readPersistedLockoutEndsAt();
     if (endsAt == null) return;
     setLockoutEndsAt(endsAt);
-    setError("Too many failed attempts. Try again later.");
+    setError("Слишком много неудачных попыток. Повторите позже.");
   }, []);
 
   useEffect(() => {
@@ -111,20 +112,20 @@ function AdminLoginForm() {
   async function enterAdminConsole() {
     const accessToken = loadSession()?.accessToken;
     if (!accessToken) {
-      throw new Error("Admin session missing after login");
+      throw new Error("После входа отсутствует сессия администратора");
     }
     try {
       await getAdminSystem(accessToken);
     } catch (err) {
       lockAdmin();
       await logout();
-      const msg = err instanceof Error ? err.message : "Admin access denied";
+      const msg = err instanceof Error ? err.message : "Доступ администратора запрещён";
       if (/platform admin required/i.test(msg) || /403/.test(msg)) {
         throw new Error(
-          "This account is not a platform admin. Sign in with an allowlisted admin username.",
+          "Эта учётная запись не является администратором платформы. Войдите с разрешённым именем администратора.",
         );
       }
-      throw err instanceof Error ? err : new Error("Admin access denied");
+      throw err instanceof Error ? err : new Error("Доступ администратора запрещён");
     }
     unlockAdmin();
     router.replace(nextPath);
@@ -135,23 +136,23 @@ function AdminLoginForm() {
     setError(null);
 
     if (lockoutRemaining > 0) {
-      setError("Too many failed attempts. Try again later.");
+      setError("Слишком много неудачных попыток. Повторите позже.");
       return;
     }
 
     if (mfaToken) {
       if (!mfaCode.trim()) {
-        setError("Authenticator code is required");
+        setError("Введите код из приложения-аутентификатора");
         return;
       }
     } else {
       const normalizedCheck = username.trim();
       if (!normalizedCheck) {
-        setError("Admin username is required");
+        setError("Введите имя администратора");
         return;
       }
       if (!password) {
-        setError("Password is required");
+        setError("Введите пароль");
         return;
       }
     }
@@ -177,10 +178,10 @@ function AdminLoginForm() {
         const endsAt = Date.now() + err.retryAfterSeconds * 1000;
         setLockoutEndsAt(endsAt);
         persistLockoutEndsAt(endsAt);
-        setError(err.message || "Too many failed attempts. Try again later.");
+        setError(err.message || "Слишком много неудачных попыток. Повторите позже.");
       } else {
         lockAdmin();
-        setError(err instanceof Error ? err.message : "Login failed");
+        setError(err instanceof Error ? err.message : "Не удалось войти");
       }
     } finally {
       setSubmitting(false);
@@ -206,15 +207,15 @@ function AdminLoginForm() {
         />
         <div className="relative pl-1">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
-            Platform
+            Платформа
           </p>
           <h1 className="font-display mt-2 text-2xl font-semibold tracking-tight sm:text-[1.85rem]">
-            {mfaToken ? "Two-factor authentication" : "Admin sign in"}
+            {mfaToken ? "Двухфакторная аутентификация" : "Вход администратора"}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
             {mfaToken
-              ? "Enter the 6-digit authenticator code or a one-time backup code."
-              : "Sign in to the Admin Console. Username is case-insensitive."}
+              ? "Введите 6-значный код из аутентификатора или одноразовый резервный код."
+              : "Войдите в консоль администратора. Регистр имени не учитывается."}
           </p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4" autoComplete="off">
@@ -222,7 +223,7 @@ function AdminLoginForm() {
               <>
                 <label className="block space-y-1.5">
                   <span className="text-sm font-medium">
-                    Admin username <span className="text-red-600">*</span>
+                    Имя администратора <span className="text-red-600">*</span>
                   </span>
                   <input
                     type="text"
@@ -239,7 +240,7 @@ function AdminLoginForm() {
                   />
                 </label>
                 <PasswordField
-                  label="Password"
+                  label="Пароль"
                   name="asa-admin-password"
                   value={password}
                   onChange={setPassword}
@@ -251,7 +252,7 @@ function AdminLoginForm() {
               </>
             ) : (
               <label className="block space-y-1.5">
-                <span className="text-sm font-medium">Authenticator code</span>
+                <span className="text-sm font-medium">Код аутентификатора</span>
                 <input
                   type="text"
                   value={mfaCode}
@@ -268,8 +269,8 @@ function AdminLoginForm() {
                 role="alert"
               >
                 {locked
-                  ? `Too many failed attempts. Try again in ${formatCountdown(lockoutRemaining)}`
-                  : error}
+                  ? `Слишком много неудачных попыток. Повторите через ${formatCountdown(lockoutRemaining)}`
+                  : ruError(error)}
               </p>
             )}
 
@@ -279,12 +280,12 @@ function AdminLoginForm() {
               className="btn-primary w-full disabled:opacity-60"
             >
               {locked
-                ? `Try again in ${formatCountdown(lockoutRemaining)}`
+                ? `Повторите через ${formatCountdown(lockoutRemaining)}`
                 : submitting
-                  ? "Please wait…"
+                  ? "Подождите…"
                   : mfaToken
-                    ? "Verify"
-                    : "Sign in to Admin"}
+                    ? "Подтвердить"
+                    : "Войти как администратор"}
             </button>
             {mfaToken && (
               <button
@@ -295,7 +296,7 @@ function AdminLoginForm() {
                 }}
                 className="w-full text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
               >
-                Back
+                Назад
               </button>
             )}
           </form>
@@ -310,7 +311,7 @@ export default function AdminLoginPage() {
     <Suspense
       fallback={
         <main className="flex min-h-screen items-center justify-center text-sm text-[var(--muted)]">
-          Loading admin login…
+          Загрузка входа для администратора…
         </main>
       }
     >

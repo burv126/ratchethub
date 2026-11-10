@@ -1,4 +1,7 @@
 "use client";
+import { ruClock } from "@/lib/ru";
+import { ruError } from "@/lib/ru-errors";
+
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -70,13 +73,13 @@ function parseTab(value: string | null): TabId {
 }
 
 const WEEKDAY_NAMES = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
+  "Понедельник",
+  "Вторник",
+  "Среда",
+  "Четверг",
+  "Пятница",
+  "Суббота",
+  "Воскресенье",
 ];
 
 function profileInitials(name: string): string {
@@ -255,9 +258,9 @@ function IconBuilding({ className = "h-3.5 w-3.5" }: { className?: string }) {
 }
 
 const TABS = [
-  { id: "account", label: "Account", Icon: IconUser },
-  { id: "shop", label: "Shop", Icon: IconBuilding },
-  { id: "team", label: "Team", Icon: IconUsers },
+  { id: "account", label: "Учётная запись", Icon: IconUser },
+  { id: "shop", label: "Автосервис", Icon: IconBuilding },
+  { id: "team", label: "Команда", Icon: IconUsers },
 ] as const;
 
 /** Minimum horizontal drag distance (px) to change tabs. */
@@ -393,16 +396,9 @@ function hoursEqual(a: BusinessHours[], b: BusinessHours[]): boolean {
   });
 }
 
-/** Display HH:MM as 12-hour label, e.g. 09:00 → 9:00 AM. */
+/** Russian display label; no change to stored/form times. */
 function formatHourLabel(value: string): string {
-  const match = /^(\d{1,2}):(\d{2})/.exec((value || "").trim());
-  if (!match) return value || "—";
-  let hour = Number(match[1]);
-  const minute = match[2];
-  const suffix = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12;
-  if (hour === 0) hour = 12;
-  return `${hour}:${minute} ${suffix}`;
+  return ruClock(value);
 }
 
 function SettingsContent() {
@@ -576,7 +572,7 @@ function SettingsContent() {
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Failed to load settings");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить настройки");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -599,7 +595,7 @@ function SettingsContent() {
     e.preventDefault();
     if (!isOwner) return;
     if (hours.length !== 7) {
-      setError("Business hours failed to load. Refresh the page and try again.");
+      setError("Не удалось загрузить часы работы. Обновите страницу и повторите попытку.");
       return;
     }
     setSavingShop(true);
@@ -628,10 +624,10 @@ function SettingsContent() {
           shopSlug: updated.profile.slug,
         });
       }
-      setShopSuccess("Shop settings saved.");
+      setShopSuccess("Настройки автосервиса сохранены.");
       setEditingShop(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save shop settings");
+      setError(err instanceof Error ? err.message : "Не удалось сохранить настройки автосервиса");
     } finally {
       setSavingShop(false);
     }
@@ -698,9 +694,9 @@ function SettingsContent() {
         email: updated.email,
       });
       setEditingProfile(false);
-      setProfileSuccess("Account saved.");
+      setProfileSuccess("Учётная запись сохранена.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save account");
+      setError(err instanceof Error ? err.message : "Не удалось сохранить учётную запись");
     } finally {
       setSavingProfile(false);
     }
@@ -712,11 +708,11 @@ function SettingsContent() {
     setError(null);
     setPasswordSuccess(null);
     if (newPassword !== confirmPassword) {
-      setError("New password and confirmation do not match.");
+      setError("Новый пароль и подтверждение не совпадают.");
       return;
     }
     if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters.");
+      setError("Новый пароль должен содержать не менее 8 символов.");
       return;
     }
     setSavingPassword(true);
@@ -733,9 +729,9 @@ function SettingsContent() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setPasswordSuccess("Password updated.");
+      setPasswordSuccess("Пароль обновлён.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to change password");
+      setError(err instanceof Error ? err.message : "Не удалось изменить пароль");
     } finally {
       setSavingPassword(false);
     }
@@ -765,13 +761,13 @@ function SettingsContent() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <IconSetting className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-            <h1 className="page-title">Setting</h1>
+            <h1 className="page-title">Настройки</h1>
           </div>
 
           <div
             className="inline-flex max-w-full flex-wrap gap-0.5 rounded-full border border-black/8 bg-white/80 p-0.5 shadow-[var(--shadow-soft)] backdrop-blur-sm"
             role="tablist"
-            aria-label="Setting categories"
+            aria-label="Категории настроек"
           >
             {TABS.map((t) => {
               const active = tab === t.id;
@@ -809,7 +805,7 @@ function SettingsContent() {
           className="hero-motion-delay shrink-0 rounded-xl border border-red-200/80 bg-red-50 px-4 py-3 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -828,20 +824,20 @@ function SettingsContent() {
                 </span>
                 <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                   <h2 className="truncate text-sm font-semibold tracking-tight text-[var(--ink)]">
-                    {shopName.trim() || session.shopName || "Shop"}
+                    {shopName.trim() || session.shopName || "Автосервис"}
                   </h2>
                   <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-[var(--ink)] ring-1 ring-[var(--line)]">
                     <IconBuilding className="h-2.5 w-2.5 text-[var(--accent)]" />
-                    Business
+                    Компания
                   </span>
                   {!isOwner ? (
                     <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-medium text-[var(--muted)] ring-1 ring-[var(--line)]">
-                      View only
+                      Только просмотр
                     </span>
                   ) : null}
                   {editingShop && shopDirty ? (
                     <span className="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)] ring-1 ring-inset ring-[var(--accent)]/20">
-                      Unsaved
+                      Не сохранено
                     </span>
                   ) : null}
                 </div>
@@ -855,7 +851,7 @@ function SettingsContent() {
                     className="btn-ghost inline-flex shrink-0 items-center gap-1.5 px-3.5 py-1.5 text-xs disabled:opacity-50"
                   >
                     <IconEdit className="h-3.5 w-3.5" />
-                    Change
+                    Изменить
                   </button>
                 ) : (
                   <div className="flex shrink-0 items-center gap-2">
@@ -868,7 +864,7 @@ function SettingsContent() {
                       className="btn-primary inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <IconSave className="h-3.5 w-3.5" />
-                      {savingShop ? "Saving…" : "Save"}
+                      {savingShop ? "Сохранение…" : "Сохранить"}
                     </button>
                     <button
                       type="button"
@@ -877,7 +873,7 @@ function SettingsContent() {
                       className="btn-ghost inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs disabled:opacity-50"
                     >
                       <IconX className="h-3.5 w-3.5" />
-                      Cancel
+                      Отмена
                     </button>
                   </div>
                 )
@@ -910,7 +906,7 @@ function SettingsContent() {
                     className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-2 sm:gap-3 [&>*]:min-w-0"
                   >
                     <ProfileField
-                      label="Shop name"
+                      label="Название автосервиса"
                       icon={<IconBuilding />}
                       value={shopName}
                       onChange={setShopName}
@@ -924,18 +920,18 @@ function SettingsContent() {
                         <span className="text-[var(--muted)]">
                           <IconShield />
                         </span>
-                        Access
+                        Доступ
                       </span>
                       <input
                         type="text"
-                        value={isOwner ? "Owner" : "Team"}
+                        value={isOwner ? "Владелец" : "Команда"}
                         disabled
-                        title={isOwner ? "Owner — can edit" : "Team — view only"}
+                        title={isOwner ? "Владелец — может изменять" : "Команда — только просмотр"}
                         className="w-full rounded-md border border-[var(--line)] bg-[var(--background)] px-2 py-2 text-xs text-[var(--muted)] outline-none sm:hidden"
                       />
                       <input
                         type="text"
-                        value={isOwner ? "Owner — can edit" : "Team — view only"}
+                        value={isOwner ? "Владелец — может изменять" : "Команда — только просмотр"}
                         disabled
                         className="hidden w-full rounded-md border border-[var(--line)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--muted)] outline-none sm:block"
                       />
@@ -949,19 +945,18 @@ function SettingsContent() {
                       <span className="text-[var(--muted)]">
                         <IconPhone />
                       </span>
-                      AI phone number
+                      Номер телефона ИИ
                     </h3>
                     <p className="mt-0.5 text-xs text-[var(--muted)]">
-                      Forward your shop phone to this number so inbound calls can be
-                      handled by AI.
+                      Настройте переадресацию телефона автосервиса на этот номер для обработки входящих звонков ИИ.
                     </p>
                   </div>
 
                   {!twilioVoice ? (
                     <div className="rounded-xl border border-dashed border-[var(--line)] bg-[var(--background)]/50 px-4 py-3 text-center">
-                      <p className="text-sm font-medium">No number assigned yet</p>
+                      <p className="text-sm font-medium">Номер пока не назначен</p>
                       <p className="mt-0.5 text-xs text-[var(--muted)]">
-                        Contact support if you need Voice AI for this shop.
+                        Для подключения голосового ИИ обратитесь в поддержку.
                       </p>
                     </div>
                   ) : (
@@ -975,7 +970,7 @@ function SettingsContent() {
                         onClick={() => void navigator.clipboard.writeText(twilioVoice)}
                       >
                         <IconCopy className="h-3.5 w-3.5" />
-                        Copy
+                        Копировать
                       </button>
                     </div>
                   )}
@@ -987,15 +982,15 @@ function SettingsContent() {
                       <span className="text-[var(--muted)]">
                         <IconClock />
                       </span>
-                      Business hours
+                      Часы работы
                     </h3>
                   </div>
 
                   <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--panel)] shadow-[var(--shadow-soft)]">
                     <div className="hidden items-center gap-3 border-b border-[var(--line)] bg-[var(--background)]/60 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)] sm:grid sm:grid-cols-[8.5rem_1fr_auto]">
-                      <span>Day</span>
-                      <span>Hours</span>
-                      <span className="text-right">Status</span>
+                      <span>День</span>
+                      <span>Часы</span>
+                      <span className="text-right">Статус</span>
                     </div>
                     {hours.map((h, idx) => {
                       const canEdit = isOwner && editingShop && !savingShop;
@@ -1018,7 +1013,7 @@ function SettingsContent() {
                           <div className="min-w-0">
                             {h.closed ? (
                               <span className="inline-flex items-center rounded-full bg-black/[0.04] px-2 py-1 text-[11px] font-medium text-[var(--muted)] ring-1 ring-inset ring-black/5 sm:px-2.5 sm:text-xs">
-                                Closed
+                                Закрыто
                               </span>
                             ) : canEdit ? (
                               <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 sm:gap-1.5">
@@ -1026,7 +1021,7 @@ function SettingsContent() {
                                   type="time"
                                   value={h.open_time}
                                   disabled={!canEdit}
-                                  aria-label={`${dayName} open`}
+                                  aria-label={`${dayName} открытие`}
                                   onChange={(e) =>
                                     updateHour(h.weekday, { open_time: e.target.value })
                                   }
@@ -1039,7 +1034,7 @@ function SettingsContent() {
                                   type="time"
                                   value={h.close_time}
                                   disabled={!canEdit}
-                                  aria-label={`${dayName} close`}
+                                  aria-label={`${dayName} закрытие`}
                                   onChange={(e) =>
                                     updateHour(h.weekday, { close_time: e.target.value })
                                   }
@@ -1059,7 +1054,7 @@ function SettingsContent() {
                             type="button"
                             role="switch"
                             aria-checked={open}
-                            aria-label={`${dayName} ${open ? "open" : "closed"}`}
+                            aria-label={`${dayName} ${open ? "открыто" : "закрыто"}`}
                             disabled={!canEdit}
                             onClick={() => updateHour(h.weekday, { closed: open })}
                             className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-0.5 py-1 transition disabled:cursor-not-allowed sm:gap-2 sm:px-1 ${
@@ -1084,7 +1079,7 @@ function SettingsContent() {
                                 open ? "text-[var(--ink)]" : "text-[var(--muted)]"
                               }`}
                             >
-                              {open ? "Open" : "Closed"}
+                              {open ? "Открыть" : "Закрыто"}
                             </span>
                           </button>
                         </div>
@@ -1113,7 +1108,7 @@ function SettingsContent() {
                 </span>
                 <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                   <h2 className="truncate text-sm font-semibold tracking-tight text-[var(--ink)]">
-                    {fullName.trim() || session.fullName || "Your account"}
+                    {fullName.trim() || session.fullName || "Ваша учётная запись"}
                   </h2>
                   <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-[var(--ink)] ring-1 ring-[var(--line)]">
                     <IconShield className="h-2.5 w-2.5 text-[var(--accent)]" />
@@ -1126,7 +1121,7 @@ function SettingsContent() {
                   ) : null}
                   {editingProfile && profileDirty ? (
                     <span className="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)] ring-1 ring-inset ring-[var(--accent)]/20">
-                      Unsaved
+                      Не сохранено
                     </span>
                   ) : null}
                 </div>
@@ -1138,7 +1133,7 @@ function SettingsContent() {
                   className="btn-ghost inline-flex shrink-0 items-center gap-1.5 px-3.5 py-1.5 text-xs"
                 >
                   <IconEdit className="h-3.5 w-3.5" />
-                  Change
+                  Изменить
                 </button>
               ) : (
                 <div className="flex shrink-0 items-center gap-2">
@@ -1149,7 +1144,7 @@ function SettingsContent() {
                     className="btn-primary inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <IconSave className="h-3.5 w-3.5" />
-                    {savingProfile ? "Saving…" : "Save"}
+                    {savingProfile ? "Сохранение…" : "Сохранить"}
                   </button>
                   <button
                     type="button"
@@ -1158,7 +1153,7 @@ function SettingsContent() {
                     className="btn-ghost inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs disabled:opacity-50"
                   >
                     <IconX className="h-3.5 w-3.5" />
-                    Cancel
+                    Отмена
                   </button>
                 </div>
               )}
@@ -1182,7 +1177,7 @@ function SettingsContent() {
                 className="grid grid-cols-2 gap-3"
               >
                 <ProfileField
-                  label="Name"
+                  label="Имя"
                   icon={<IconUser />}
                   value={fullName}
                   onChange={setFullName}
@@ -1192,7 +1187,7 @@ function SettingsContent() {
                   maxLength={255}
                 />
                 <ProfileField
-                  label="Phone"
+                  label="Телефон"
                   icon={<IconPhone />}
                   type="tel"
                   value={profilePhone}
@@ -1202,7 +1197,7 @@ function SettingsContent() {
                   maxLength={16}
                 />
                 <ProfileField
-                  label="Email"
+                  label="Эл. почта"
                   icon={<IconMail />}
                   type="email"
                   value={profileEmail}
@@ -1216,7 +1211,7 @@ function SettingsContent() {
                     <span className="text-[var(--muted)]">
                       <IconShield />
                     </span>
-                    Role
+                    Роль
                   </span>
                   <input
                     type="text"
@@ -1235,10 +1230,10 @@ function SettingsContent() {
                     <span className="text-[var(--muted)]">
                       <IconLock />
                     </span>
-                    Password
+                    Пароль
                   </h3>
                   <p className="mt-0.5 text-xs text-[var(--muted)]">
-                    Update your password (at least 8 characters)
+                    Обновите пароль (не менее 8 символов)
                   </p>
                 </div>
               </div>
@@ -1261,7 +1256,7 @@ function SettingsContent() {
                 <div className="grid max-w-xl gap-3 sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <PasswordField
-                      label="Current password"
+                      label="Текущий пароль"
                       value={currentPassword}
                       onChange={setCurrentPassword}
                       required
@@ -1270,7 +1265,7 @@ function SettingsContent() {
                     />
                   </div>
                   <PasswordField
-                    label="New password"
+                    label="Новый пароль"
                     value={newPassword}
                     onChange={setNewPassword}
                     required
@@ -1279,7 +1274,7 @@ function SettingsContent() {
                     autoComplete="new-password"
                   />
                   <PasswordField
-                    label="Confirm new password"
+                    label="Подтвердите новый пароль"
                     value={confirmPassword}
                     onChange={setConfirmPassword}
                     required
@@ -1301,7 +1296,7 @@ function SettingsContent() {
                       className="btn-primary inline-flex items-center gap-1.5 px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <IconSave />
-                      {savingPassword ? "Saving…" : "Update password"}
+                      {savingPassword ? "Сохранение…" : "Обновить пароль"}
                     </button>
                   </div>
                 ) : null}

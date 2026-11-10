@@ -180,34 +180,34 @@ class AnalyticsEngine:
             prod = float(live_util) if live_util <= 1 else float(live_util) / 100.0
 
         defs = [
-            (KpiId.REVENUE, "Revenue", rev, rev_prev, "usd", f"${rev:,.0f} in period"),
-            (KpiId.RETENTION, "Retention", retention, retention_prev, "ratio", f"{retention:.0%} returning"),
-            (KpiId.AVERAGE_REPAIR_ORDER, "Average Repair Order", aro, aro_prev, "usd", f"${aro:,.0f} ARO"),
-            (KpiId.CUSTOMER_LIFETIME_VALUE, "Customer Lifetime Value", clv, clv_prev, "usd", f"${clv:,.0f} CLV"),
+            (KpiId.REVENUE, 'Выручка', rev, rev_prev, "usd", f'${rev:,.0f} за период'),
+            (KpiId.RETENTION, 'Удержание', retention, retention_prev, "ratio", f'Возвращаются: {retention:.0%}'),
+            (KpiId.AVERAGE_REPAIR_ORDER, 'Средний заказ-наряд', aro, aro_prev, "usd", f'${aro:,.0f} — средний заказ-наряд'),
+            (KpiId.CUSTOMER_LIFETIME_VALUE, 'Пожизненная ценность клиента', clv, clv_prev, "usd", f'${clv:,.0f} — ценность клиента'),
             (
                 KpiId.APPOINTMENT_CONVERSION,
-                "Appointment Conversion",
+                'Конверсия в запись',
                 conv,
                 conv_prev,
                 "ratio",
-                f"{booked}/{offered} booked",
+                f'Записано: {booked}/{offered}',
             ),
-            (KpiId.MARKETING_ROI, "Marketing ROI", roi, roi_prev, "x", f"{roi:.1f}x return"),
+            (KpiId.MARKETING_ROI, 'Окупаемость маркетинга', roi, roi_prev, "x", f'Возврат: {roi:.1f}x'),
             (
                 KpiId.MECHANIC_PRODUCTIVITY,
-                "Mechanic Productivity",
+                'Производительность механиков',
                 prod,
                 prod_prev,
                 "ratio",
-                f"{prod:.0%} utilization",
+                f'Загрузка: {prod:.0%}',
             ),
             (
                 KpiId.AI_SUCCESS_RATE,
-                "AI Success Rate",
+                'Успешность ИИ',
                 ai_rate,
                 ai_prev,
                 "ratio",
-                f"{ai_ok}/{ai_c} resolved",
+                f'Решено: {ai_ok}/{ai_c}',
             ),
         ]
         out: list[KpiMetric] = []
@@ -249,10 +249,10 @@ class AnalyticsEngine:
             by_month[key] = by_month.get(key, 0.0) + float(f.revenue)
         month_points = [SeriesPoint(k, round(v, 2)) for k, v in sorted(by_month.items())[-6:]]
         return [
-            ChartSeries("revenue_daily", "Revenue (daily)", rev_points, "usd"),
-            ChartSeries("revenue_monthly", "Revenue (monthly)", month_points, "usd"),
-            ChartSeries("appointment_conversion", "Appointment conversion", conv_points, "ratio"),
-            ChartSeries("ai_success", "AI success rate", ai_points, "ratio"),
+            ChartSeries("revenue_daily", 'Выручка за день', rev_points, "usd"),
+            ChartSeries("revenue_monthly", 'Выручка за месяц', month_points, "usd"),
+            ChartSeries("appointment_conversion", 'Конверсия в запись', conv_points, "ratio"),
+            ChartSeries("ai_success", 'Успешность ИИ', ai_points, "ratio"),
         ]
 
     def _pull_live_sources(self, shop_id: UUID) -> dict[str, Any]:

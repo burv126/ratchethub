@@ -73,8 +73,8 @@ class PasswordResetService:
             if user.email:
                 await build_email_sender().send(
                     to=user.email,
-                    subject="Reset your RatchetHub password",
-                    body=f"Use this link to reset your password (expires in 1 hour):\n\n{reset_url}\n",
+                    subject='Сброс пароля RatchetHub',
+                    body=f'Для сброса пароля перейдите по ссылке (действует 1 час):\n\n{reset_url}\n',
                 )
             return {
                 "ok": True,
@@ -83,7 +83,7 @@ class PasswordResetService:
 
     async def reset_password(self, *, token: str, new_password: str) -> None:
         if len(new_password) < 8:
-            raise ValidationError("Password must be at least 8 characters")
+            raise ValidationError('Пароль должен содержать не менее 8 символов')
         async with SessionLocal() as session:
             row = await session.scalar(
                 select(PasswordResetTokenModel).where(
@@ -92,10 +92,10 @@ class PasswordResetService:
             )
             now = datetime.now(timezone.utc)
             if row is None or row.used_at is not None or row.expires_at <= now:
-                raise AuthenticationError("Invalid or expired reset token")
+                raise AuthenticationError('Токен сброса недействителен или просрочен')
             user = await session.get(UserModel, row.user_id)
             if user is None or not user.is_active:
-                raise NotFoundError("User not found")
+                raise NotFoundError('Пользователь не найден')
             user.password_hash = hash_password(new_password)
             row.used_at = now
             await session.commit()

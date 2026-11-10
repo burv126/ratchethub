@@ -195,7 +195,7 @@ class RevenueIntelService:
         items = await self._store.list_opportunities(shop_id, status=None, limit=5000)
         opp = next((o for o in items if o.id == opportunity_id), None)
         if opp is None:
-            raise LookupError("Opportunity not found")
+            raise LookupError('Возможность не найдена')
         opp.status = status
         return await self._store.update_opportunity(opp)
 
@@ -216,5 +216,5 @@ class RevenueIntelService:
     async def get_job(self, shop_id: UUID, job_id: UUID) -> AnalysisJob:
         job = await self._store.get_job(shop_id, job_id)
         if job is None:
-            raise LookupError("Analysis job not found")
+            raise LookupError('Задание анализа не найдено')
         return job

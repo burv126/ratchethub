@@ -20,14 +20,14 @@ class StaffCapability(StrEnum):
 
 # Human-readable labels for UI / docs
 CAPABILITY_LABELS: dict[StaffCapability, str] = {
-    StaffCapability.CUSTOMER_MANAGEMENT: "Customer management",
-    StaffCapability.VEHICLE_MANAGEMENT: "Vehicle management",
-    StaffCapability.APPOINTMENT_MANAGEMENT: "Appointment management",
-    StaffCapability.INSPECTION_INPUT: "Inspection input",
-    StaffCapability.ESTIMATE_CREATION: "Estimate creation",
-    StaffCapability.REPAIR_STATUS_UPDATE: "Repair status update",
-    StaffCapability.CUSTOMER_COMMUNICATION: "Customer communication",
-    StaffCapability.PAYMENT_HANDLING: "Payment handling",
+    StaffCapability.CUSTOMER_MANAGEMENT: 'Управление клиентами',
+    StaffCapability.VEHICLE_MANAGEMENT: 'Управление автомобилями',
+    StaffCapability.APPOINTMENT_MANAGEMENT: 'Управление записями',
+    StaffCapability.INSPECTION_INPUT: 'Ввод результатов осмотра',
+    StaffCapability.ESTIMATE_CREATION: 'Создание смет',
+    StaffCapability.REPAIR_STATUS_UPDATE: 'Обновление статуса ремонта',
+    StaffCapability.CUSTOMER_COMMUNICATION: 'Общение с клиентами',
+    StaffCapability.PAYMENT_HANDLING: 'Обработка платежей',
 }
 
 

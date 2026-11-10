@@ -122,7 +122,7 @@ class MarketingAutomationService:
     async def get_campaign(self, shop_id: UUID, campaign_id: UUID) -> Campaign:
         c = await self._store.get_campaign(shop_id, campaign_id)
         if c is None:
-            raise LookupError("Campaign not found")
+            raise LookupError('Кампания не найдена')
         return c
 
     async def update_campaign(
@@ -131,7 +131,7 @@ class MarketingAutomationService:
         c = await self.get_campaign(shop_id, campaign_id)
         if c.status not in {CampaignStatus.DRAFT, CampaignStatus.PAUSED, CampaignStatus.SCHEDULED}:
             if "status" not in patch:
-                raise PermissionError("Only draft/paused/scheduled campaigns can be edited")
+                raise PermissionError('Можно изменять только черновики, приостановленные и запланированные кампании')
         if "name" in patch and patch["name"]:
             c.name = str(patch["name"])
         if "custom_message" in patch:
@@ -154,7 +154,7 @@ class MarketingAutomationService:
     async def schedule_campaign(self, shop_id: UUID, campaign_id: UUID) -> list[CampaignMessage]:
         campaign = await self.get_campaign(shop_id, campaign_id)
         if campaign.status == CampaignStatus.CANCELLED:
-            raise ValueError("Cannot schedule cancelled campaign")
+            raise ValueError('Нельзя запланировать отменённую кампанию')
         return await self._scheduler.schedule_campaign(campaign)
 
     async def process_queue(
@@ -181,17 +181,17 @@ class MarketingAutomationService:
     async def delete_message(self, shop_id: UUID, message_id: UUID) -> None:
         message = await self._store.get_message(shop_id, message_id)
         if message is None:
-            raise LookupError("Message not found")
+            raise LookupError('Сообщение не найдено')
         ok = await self._store.delete_message(shop_id, message_id)
         if not ok:
-            raise LookupError("Message not found")
+            raise LookupError('Сообщение не найдено')
         await self._store.add_log(
             MarketingLog(
                 shop_id=shop_id,
                 campaign_id=message.campaign_id,
                 message_id=message.id,
                 event="message.deleted",
-                detail="Message record deleted",
+                detail='Запись сообщения удалена',
             )
         )
 
@@ -207,7 +207,7 @@ class MarketingAutomationService:
                     campaign_id=None,
                     message_id=None,
                     event="messages.deleted_bulk",
-                    detail=f"Deleted {count} message record(s)",
+                    detail=f'Удалено записей сообщений: {count}',
                 )
             )
         return count
@@ -221,7 +221,7 @@ class MarketingAutomationService:
                     campaign_id=None,
                     message_id=None,
                     event="messages.deleted_all",
-                    detail=f"Deleted {count} message record(s)",
+                    detail=f'Удалено записей сообщений: {count}',
                 )
             )
         return count
@@ -237,7 +237,7 @@ class MarketingAutomationService:
     ) -> CampaignMessage:
         message = await self._store.get_message(shop_id, message_id)
         if message is None:
-            raise LookupError("Message not found")
+            raise LookupError('Сообщение не найдено')
         now = datetime.now(timezone.utc)
         kind = (event or "").strip().lower()
         # Accept open/opened, click/clicked, reply/replied synonyms from clients.
@@ -260,7 +260,7 @@ class MarketingAutomationService:
         elif kind == "revenue":
             message.revenue = revenue or message.revenue
         else:
-            raise ValueError(f"Unknown event: {event}")
+            raise ValueError(f'Неизвестное событие: {event}')
         await self._store.save_message(message)
         await self._store.add_log(
             MarketingLog(
@@ -399,7 +399,7 @@ class MarketingAutomationService:
     ) -> dict[str, Any]:
         campaign = await self.get_campaign(shop_id, campaign_id)
         if not campaign.audience:
-            raise LookupError("Campaign has no audience members")
+            raise LookupError('В кампании нет участников аудитории')
         # Prefer non-demo contacts when mixed. When CRM data reuses sample phone/email
         # fingerprints (common in local shops), fall back to the campaign audience so
         # AI Recommendations can still preview after a successful create.
@@ -467,7 +467,7 @@ class MarketingAutomationService:
 def _parse_member(raw: dict[str, Any]) -> AudienceMember:
     return AudienceMember(
         customer_id=UUID(str(raw["customer_id"])) if raw.get("customer_id") else uuid4(),
-        name=str(raw.get("name") or "Customer"),
+        name=str(raw.get("name") or 'Клиент'),
         phone=raw.get("phone"),
         email=raw.get("email"),
         preferred_channel=Channel(raw["preferred_channel"]) if raw.get("preferred_channel") else None,

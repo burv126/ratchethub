@@ -31,7 +31,7 @@ def _require_shop_id(user: CurrentUser) -> UUID:
     if user.shop_id is None:
         raise HTTPException(
             status_code=http_status.HTTP_403_FORBIDDEN,
-            detail="Shop access required",
+            detail='Требуется доступ к автосервису',
         )
     return user.shop_id
 
@@ -285,7 +285,7 @@ async def suggested_actions(
             hint=(
                 f"{item.count} customer{'s' if item.count != 1 else ''} ready"
                 if item.count > 0
-                else "No customers ready"
+                else 'Нет готовых клиентов'
             ),
             custom_message=item.custom_message,
         )
@@ -351,7 +351,7 @@ async def create_campaign(
     if body.use_demo_audience:
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST,
-            detail="Demo audience is disabled; use real shop customers",
+            detail='Демоаудитория отключена; используйте реальных клиентов',
         )
 
     audience_payload = (
@@ -373,7 +373,7 @@ async def create_campaign(
         if not members:
             raise HTTPException(
                 status_code=http_status.HTTP_400_BAD_REQUEST,
-                detail="No matching customers found for this campaign",
+                detail='Для кампании не найдено подходящих клиентов',
             )
         audience_payload = audience_to_dicts(members)
         shop = await uow.shops.get_by_id(shop_id)

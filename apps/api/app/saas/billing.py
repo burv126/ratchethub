@@ -251,9 +251,9 @@ class BillingService:
         async with SessionLocal() as session:
             plan = await session.get(SaasPlanModel, plan_id)
             if plan is None or not plan.is_public:
-                raise NotFoundError("Plan not found")
+                raise NotFoundError('Тариф не найден')
             if plan.price_cents_monthly <= 0:
-                raise ValidationError("Free plan does not require checkout")
+                raise ValidationError('Бесплатный тариф не требует оплаты')
 
             sub = await session.scalar(
                 select(ShopSubscriptionModel).where(ShopSubscriptionModel.shop_id == shop_id)
@@ -275,12 +275,12 @@ class BillingService:
             if not settings.stripe_secret_key:
                 # Never activate a paid plan without a successful Stripe payment.
                 raise ValidationError(
-                    "Paid plan upgrades require a successful checkout payment."
+                    'Для платного тарифа требуется успешная оплата.'
                 )
 
             price_id = plan.stripe_price_id
             if not price_id:
-                raise ValidationError("Plan is missing stripe_price_id")
+                raise ValidationError('У тарифа отсутствует stripe_price_id')
 
             data = {
                 "mode": "subscription",
@@ -305,7 +305,7 @@ class BillingService:
                 )
             if res.status_code >= 400:
                 logger.error("stripe.checkout_failed status=%s body=%s", res.status_code, res.text)
-                raise ValidationError("Unable to create checkout session")
+                raise ValidationError('Не удалось создать сессию оплаты')
             payload = res.json()
             await session.commit()
             return {
@@ -320,7 +320,7 @@ class BillingService:
         async with SessionLocal() as session:
             plan = await session.get(SaasPlanModel, plan_id)
             if plan is None:
-                raise NotFoundError("Plan not found")
+                raise NotFoundError('Тариф не найден')
             sub = await session.scalar(
                 select(ShopSubscriptionModel).where(ShopSubscriptionModel.shop_id == shop_id)
             )
@@ -451,13 +451,13 @@ class BillingService:
             )
             if sub is None or not sub.stripe_customer_id:
                 raise ValidationError(
-                    "No billing customer on file. Complete a paid checkout first."
+                    'Платёжный профиль отсутствует. Сначала оплатите тариф.'
                 )
             if not settings.stripe_secret_key:
                 return {
                     "mode": "dev",
                     "portal_url": return_url or settings.billing_portal_return_url,
-                    "message": "Billing portal is unavailable; returning to billing page.",
+                    "message": 'Платёжный портал недоступен; возврат на страницу оплаты.',
                 }
             data = {
                 "customer": sub.stripe_customer_id,
@@ -471,7 +471,7 @@ class BillingService:
                 )
             if res.status_code >= 400:
                 logger.error("stripe.portal_failed status=%s body=%s", res.status_code, res.text)
-                raise ValidationError("Unable to open billing portal")
+                raise ValidationError('Не удалось открыть платёжный портал')
             payload = res.json()
             return {"mode": "stripe", "portal_url": payload["url"]}
 

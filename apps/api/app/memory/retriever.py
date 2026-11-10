@@ -105,7 +105,7 @@ class MemoryRetriever:
         lines = ["## Long-term customer memory (use automatically)"]
         if style:
             tone = style.get("tone") or style.get("formality") or "neutral"
-            lines.append(f"- Communication style: {tone}")
+            lines.append(f'- Стиль общения: {tone}')
             for note in (style.get("notes") or [])[:3]:
                 lines.append(f"  · {note}")
         if preferences:

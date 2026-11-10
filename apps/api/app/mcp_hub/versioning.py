@@ -38,7 +38,6 @@ class VersionService:
         supported = self.supported(provider)
         if requested not in supported:
             raise VersionMismatch(
-                f"Unsupported api_version '{requested}' for {provider.value}; "
-                f"supported={supported}"
+                f"Неподдерживаемая api_version '{requested}' для {provider.value}; поддерживаются {supported}"
             )
         return requested

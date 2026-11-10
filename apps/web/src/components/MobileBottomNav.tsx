@@ -15,18 +15,18 @@ const PRIMARY: {
   Icon: NavIcon;
   capability?: StaffCapability;
 }[] = [
-  { href: "/dashboard", label: "Home", short: "Home", Icon: IconGauge },
-  { href: "/dashboard/customer", label: "Customer", short: "Customer", Icon: IconUsers },
-  { href: "/dashboard/appointments", label: "Schedule", short: "Schedule", Icon: IconCalendar },
-  { href: "/dashboard/walk-ins", label: "Walk-ins", short: "Walk-ins", Icon: IconDoorOpen },
+  { href: "/dashboard", label: "Главная", short: "Главная", Icon: IconGauge },
+  { href: "/dashboard/customer", label: "Клиент", short: "Клиент", Icon: IconUsers },
+  { href: "/dashboard/appointments", label: "Расписание", short: "Расписание", Icon: IconCalendar },
+  { href: "/dashboard/walk-ins", label: "Живая очередь", short: "Живая очередь", Icon: IconDoorOpen },
   {
     href: "/dashboard/calls",
-    label: "Calls",
-    short: "Calls",
+    label: "Звонки",
+    short: "Звонки",
     Icon: IconPhone,
     capability: "customer_communication",
   },
-  { href: "/dashboard/marketing", label: "Marketing", short: "Marketing", Icon: IconMarketing },
+  { href: "/dashboard/marketing", label: "Маркетинг", short: "Маркетинг", Icon: IconMarketing },
 ];
 
 export function MobileBottomNav({ hidden = false }: { hidden?: boolean }) {
@@ -45,7 +45,7 @@ export function MobileBottomNav({ hidden = false }: { hidden?: boolean }) {
 
   return (
     <nav
-      aria-label="Primary"
+      aria-label="Основное"
       aria-hidden={hidden}
       className={`z-[45] shrink-0 px-2.5 pt-1 transition-[opacity,transform] duration-200 md:hidden ${
         hidden ? "pointer-events-none translate-y-2 opacity-0" : "opacity-100"

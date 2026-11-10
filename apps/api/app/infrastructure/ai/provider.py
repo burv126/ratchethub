@@ -311,4 +311,4 @@ def build_chat_provider(provider_name: str | None = None) -> ChatProvider:
         return OllamaChatProvider()
     if name == "openai":
         return OpenAIChatProvider()
-    raise ValueError(f"No chat provider for AI_PROVIDER={name!r}")
+    raise ValueError(f'Нет провайдера чата для AI_PROVIDER={name!r}')

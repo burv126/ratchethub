@@ -54,7 +54,7 @@ def validate_record_tenant(record: TenantScopedRecord, ctx: TenantContext) -> Te
         actual_tenant_id=record.tenant_id,
     )
     if not record.tenant_id:
-        raise TenantIsolationError("Imported record missing tenant_id")
+        raise TenantIsolationError('В импортированной записи отсутствует tenant_id')
     return record
 
 

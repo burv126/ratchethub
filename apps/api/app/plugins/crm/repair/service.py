@@ -25,4 +25,4 @@ class RepairPluginService:
     async def add(self, shop_id: UUID, repair: RepairRecord) -> RepairRecord:
         if hasattr(self._directory, "add_repair"):
             return await self._directory.add_repair(shop_id, repair)  # type: ignore[no-any-return]
-        raise RuntimeError("Underlying vehicle directory does not support add_repair")
+        raise RuntimeError('Справочник автомобилей не поддерживает add_repair')

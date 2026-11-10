@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useCallback, useEffect, useState } from "react";
 import { AdminPageHeader, AdminShell, LiveBadge, Panel, Stat } from "@/components/admin/AdminShell";
@@ -46,7 +50,7 @@ function TokensBody({ accessToken }: { accessToken: string }) {
       } catch (err) {
         if (!quiet) {
           setLive(false);
-          setError(err instanceof Error ? err.message : "Failed to load usage");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить использование");
         } else {
           setLive(false);
         }
@@ -82,8 +86,8 @@ function TokensBody({ accessToken }: { accessToken: string }) {
     return stop;
   }, [accessToken, applyData]);
 
-  if (error && !data) return <p className="text-sm text-red-700">{error}</p>;
-  if (!data) return <p className="text-sm text-[var(--muted)]">{busy ? "Loading…" : "No data"}</p>;
+  if (error && !data) return <p className="text-sm text-red-700">{ruError(error)}</p>;
+  if (!data) return <p className="text-sm text-[var(--muted)]">{busy ? "Загрузка…" : "Нет данных"}</p>;
 
   const sms = data.sms_runtime;
   const voice = data.voice_runtime;
@@ -91,44 +95,44 @@ function TokensBody({ accessToken }: { accessToken: string }) {
   return (
     <>
       <AdminPageHeader
-        title="Tokens"
-        description={`Usage totals for the current period · updated ${
-          data.generated_at ? new Date(data.generated_at).toLocaleString() : "—"
+        title="Токены"
+        description={`Суммарное использование за текущий период · обновлено ${
+          data.generated_at ? new Date(data.generated_at).toLocaleString("ru-RU") : "—"
         }`}
         action={<LiveBadge live={live} />}
       />
 
       <section className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Period" value={data.period} />
-        <Stat label="AI calls (tokens)" value={String(data.totals.ai_calls)} />
-        <Stat label="SMS usage (quota)" value={String(data.totals.sms)} />
-        <Stat label="Shops metered" value={String(data.shops.length)} />
+        <Stat label="Период" value={data.period} />
+        <Stat label="Звонки ИИ (токены)" value={String(data.totals.ai_calls)} />
+        <Stat label="Использование SMS (квота)" value={String(data.totals.sms)} />
+        <Stat label="Учтённые автосервисы" value={String(data.shops.length)} />
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="SMS inbound"
+          label="Входящие SMS"
           value={String(sms.inbound_received ?? 0)}
-          hint="From database"
+          hint="Из базы данных"
         />
-        <Stat label="SMS outbound" value={String(sms.outbound_sent ?? 0)} />
+        <Stat label="Исходящие SMS" value={String(sms.outbound_sent ?? 0)} />
         <Stat
-          label="Voice started"
+          label="Начатые звонки"
           value={String(voice.calls_started ?? 0)}
-          hint="From database"
+          hint="Из базы данных"
         />
-        <Stat label="Voice completed" value={String(voice.calls_completed ?? 0)} />
+        <Stat label="Завершённые звонки" value={String(voice.calls_completed ?? 0)} />
       </section>
 
-      <Panel title="Per-shop AI & SMS usage">
+      <Panel title="Использование ИИ и SMS по автосервисам">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[var(--line)] bg-[var(--background)] text-[var(--muted)]">
               <tr>
-                <th className="px-5 py-2 font-medium">Shop</th>
-                <th className="px-5 py-2 font-medium">Plan</th>
-                <th className="px-5 py-2 font-medium">Status</th>
-                <th className="px-5 py-2 font-medium">AI calls</th>
+                <th className="px-5 py-2 font-medium">Автосервис</th>
+                <th className="px-5 py-2 font-medium">Тариф</th>
+                <th className="px-5 py-2 font-medium">Статус</th>
+                <th className="px-5 py-2 font-medium">Звонки ИИ</th>
                 <th className="px-5 py-2 font-medium">SMS</th>
               </tr>
             </thead>
@@ -139,8 +143,8 @@ function TokensBody({ accessToken }: { accessToken: string }) {
                     <div className="font-medium">{s.shop_name}</div>
                     <div className="font-mono text-xs text-[var(--muted)]">{s.shop_slug}</div>
                   </td>
-                  <td className="px-5 py-3">{s.plan_name}</td>
-                  <td className={`px-5 py-3 capitalize ${statusTone(s.status)}`}>{s.status}</td>
+                  <td className="px-5 py-3">{ruLabel(s.plan_name)}</td>
+                  <td className={`px-5 py-3 capitalize ${statusTone(s.status)}`}>{ruLabel(s.status)}</td>
                   <td className="px-5 py-3 font-medium">{s.ai_calls}</td>
                   <td className="px-5 py-3">{s.sms}</td>
                 </tr>
@@ -148,7 +152,7 @@ function TokensBody({ accessToken }: { accessToken: string }) {
               {data.shops.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-5 py-8 text-center text-[var(--muted)]">
-                    No usage recorded this period.
+                    За этот период использование не зарегистрировано.
                   </td>
                 </tr>
               )}

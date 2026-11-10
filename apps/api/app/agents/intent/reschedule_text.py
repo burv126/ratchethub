@@ -8,6 +8,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from app.agents.intent.ru_input import normalize_command_input
+
 # Appointment-like nouns (spoken / abbreviated).
 _APPT = r"(?:appointment|appt|booking|reservation|visit|slot)"
 _TIME = r"(?:time|date|day|schedule)"
@@ -276,12 +278,12 @@ _WEAK_RESCHEDULE = re.compile(
 
 def looks_like_reschedule_text(text: str | None) -> bool:
     """True when free text strongly suggests moving an existing appointment."""
-    return bool(text and RESCHEDULE_PATTERN.search(text))
+    return bool(text and RESCHEDULE_PATTERN.search(normalize_command_input(text)))
 
 
 def looks_like_weak_reschedule_text(text: str | None) -> bool:
     """Softer cue — only use with an existing appointment context."""
-    return bool(text and _WEAK_RESCHEDULE.search(text))
+    return bool(text and _WEAK_RESCHEDULE.search(normalize_command_input(text)))
 
 
 # Service-type swap on an existing visit (not necessarily a time move).
@@ -293,7 +295,7 @@ _SERVICE_TYPE_CHANGE = re.compile(
 
 def looks_like_service_type_change(text: str | None) -> bool:
     """True when free text asks to swap the job, not (only) the clock time."""
-    return bool(text and _SERVICE_TYPE_CHANGE.search(text))
+    return bool(text and _SERVICE_TYPE_CHANGE.search(normalize_command_input(text)))
 
 
 def has_existing_visit_context(metadata: dict[str, Any] | None) -> bool:

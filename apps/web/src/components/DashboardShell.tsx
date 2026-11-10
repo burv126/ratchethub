@@ -65,7 +65,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {menuOpen && (
         <button
           type="button"
-          aria-label="Close navigation"
+          aria-label="Закрыть навигацию"
           className="fixed inset-0 z-[48] bg-[rgba(8,14,18,0.48)] backdrop-blur-[2px] md:hidden"
           onClick={() => setMenuOpen(false)}
         />
@@ -84,10 +84,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-white/70 text-[var(--foreground)] shadow-[var(--shadow-soft)] md:hidden"
             aria-expanded={menuOpen}
             aria-controls="dashboard-nav"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <span className="sr-only">{menuOpen ? "Close" : "Menu"}</span>
+            <span className="sr-only">{menuOpen ? "Закрыть" : "Меню"}</span>
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
               {menuOpen ? (
                 <path

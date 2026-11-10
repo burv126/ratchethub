@@ -310,7 +310,7 @@ class SqlAlchemyVoiceStore:
             await self._bind(session, call.shop_id)
             row = await session.get(VoiceCallModel, call.id)
             if row is None:
-                raise ValueError("Call not found")
+                raise ValueError('Звонок не найден')
             row.customer_id = call.customer_id
             row.status = call.status
             row.twilio_call_sid = call.twilio_call_sid

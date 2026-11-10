@@ -11,9 +11,11 @@ from zoneinfo import ZoneInfo
 
 # Keep spoken times aligned with Schedule / availability engines.
 _SHOP_TZ = ZoneInfo("America/Los_Angeles")
+_WEEKDAYS_RU = ("понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье")
 
 COUNSELOR_SYSTEM_PROMPT = """You are the booking AI counselor for {shop_name}.
 You talk with customers by phone or SMS and handle service booking, changes, and cancellations.
+Respond in natural, professional Russian (ru-RU). Translate the example wording below into Russian; preserve customer names, catalog service names, amounts, and tool identifiers.
 
 # Tone
 - Sound warm, patient, and polite — like a helpful front-desk counselor, not a robot checklist.
@@ -69,7 +71,7 @@ do not ask again what else they need.
 
 
 def build_system_prompt(*, shop_name: str | None = None) -> str:
-    name = (shop_name or "").strip() or "the shop"
+    name = (shop_name or "").strip() or 'автосервис'
     return COUNSELOR_SYSTEM_PROMPT.format(shop_name=name)
 
 
@@ -141,7 +143,7 @@ def format_when(dt: datetime | None) -> str:
         local = dt.replace(tzinfo=_SHOP_TZ)
     else:
         local = dt.astimezone(_SHOP_TZ)
-    return local.strftime("%A at %I:%M %p").replace(" 0", " ")
+    return f"{_WEEKDAYS_RU[local.weekday()]} в {local:%H:%M}"
 
 
 def format_day(dt: datetime | None) -> str:
@@ -152,7 +154,7 @@ def format_day(dt: datetime | None) -> str:
         local = dt.replace(tzinfo=_SHOP_TZ)
     else:
         local = dt.astimezone(_SHOP_TZ)
-    return local.strftime("%A")
+    return _WEEKDAYS_RU[local.weekday()]
 
 
 def _clock_bit(dt: datetime) -> str:
@@ -160,8 +162,8 @@ def _clock_bit(dt: datetime) -> str:
         local = dt.replace(tzinfo=_SHOP_TZ)
     else:
         local = dt.astimezone(_SHOP_TZ)
-    clock = local.strftime("%I:%M %p")
-    return clock[1:] if clock.startswith("0") else clock
+    clock = local.strftime("%H:%M")
+    return clock
 
 
 def format_duration(start: datetime | None, end: datetime | None) -> str:
@@ -175,9 +177,9 @@ def format_duration(start: datetime | None, end: datetime | None) -> str:
     hours, minutes = divmod(total_min, 60)
     parts: list[str] = []
     if hours:
-        parts.append(f"{hours} hour" if hours == 1 else f"{hours} hours")
+        parts.append(f"{hours} ч")
     if minutes:
-        parts.append(f"{minutes} minute" if minutes == 1 else f"{minutes} minutes")
+        parts.append(f"{minutes} мин")
     return " ".join(parts)
 
 
@@ -198,13 +200,13 @@ def format_when_range(start: datetime | None, end: datetime | None = None) -> st
         end_local = end.replace(tzinfo=_SHOP_TZ)
     else:
         end_local = end.astimezone(_SHOP_TZ)
-    day = start_local.strftime("%A")
+    day = _WEEKDAYS_RU[start_local.weekday()]
     start_clock = _clock_bit(start_local)
     end_clock = _clock_bit(end_local)
     if start_local.date() != end_local.date():
-        end_day = end_local.strftime("%A")
-        return f"{day} from {start_clock} to {end_day} {end_clock}"
-    return f"{day} from {start_clock} to {end_clock}"
+        end_day = _WEEKDAYS_RU[end_local.weekday()]
+        return f'{day} с {start_clock} до {end_day} {end_clock}'
+    return f'{day} с {start_clock} до {end_clock}'
 
 
 def _as_slot_pair(
@@ -271,11 +273,11 @@ def summarize_booking_confirm(
 ) -> str:
     name = spoken_first_name(customer_name)
     when_bit = format_when(when) if isinstance(when, datetime) else (when or "")
-    service_bit = service_name or "that service"
+    service_bit = service_name or 'эту услугу'
     who = f"{name}, " if name else ""
     if when_bit:
-        return f"{who}{when_bit} for {service_bit} — shall I book that for you?"
-    return f"{who}I can book you for {service_bit}. Does that sound good?"
+        return f'{who}{when_bit}, услуга: {service_bit}. Записать вас?'
+    return f'{who}могу записать вас на {service_bit}. Подтверждаете?'
 
 
 def summarize_cancel_confirm(
@@ -288,14 +290,14 @@ def summarize_cancel_confirm(
     who = f"{name}, " if name else ""
     when_bit = format_when(when) if isinstance(when, datetime) else (when or "")
     if service_name and when_bit:
-        detail = f"{service_name} on {when_bit}"
+        detail = f'{service_name}, {when_bit}'
     elif service_name:
         detail = service_name
     elif when_bit:
         detail = when_bit
     else:
-        detail = "that appointment"
-    return f"{who}just to confirm — cancel {detail}? Say yes and I'll take care of it."
+        detail = 'эту запись'
+    return f'{who}подтвердите отмену: {detail}. Скажите «да», и я отменю запись.'
 
 
 def summarize_reschedule_confirm(
@@ -306,11 +308,11 @@ def summarize_reschedule_confirm(
 ) -> str:
     name = spoken_first_name(customer_name)
     when_bit = format_when(when) if isinstance(when, datetime) else (when or "")
-    service_bit = f" for {service_name}" if service_name else ""
+    service_bit = f', услуга: {service_name}' if service_name else ""
     who = f"{name}, " if name else ""
     if when_bit:
-        return f"{who}happy to move you{service_bit} to {when_bit} — shall I do that?"
-    return f"{who}no problem — what new day and time work best for you{service_bit}?"
+        return f'{who}могу перенести запись{service_bit} на {when_bit}. Подтверждаете?'
+    return f'{who}какие новые день и время вам удобны{service_bit}?'
 
 
 def summarize_done(
@@ -329,35 +331,34 @@ def summarize_done(
     name = spoken_first_name(customer_name)
     who = f"{name}, " if name else ""
     when_bit = format_when(when) if isinstance(when, datetime) else (when or "")
-    service_bit = f" for {service_name}" if service_name else ""
-    more = " Is there anything else I can help you with?" if keep_open else ""
+    service_bit = f', услуга: {service_name}' if service_name else ""
+    more = ' Могу ли я помочь ещё с чем-нибудь?' if keep_open else ""
     if action == "book":
         if when_bit:
             core = (
-                f"{who}you're all set — booked{service_bit} for {when_bit}. "
-                "We'll send a reminder."
+                f'{who}готово — вы записаны{service_bit} на {when_bit}. Мы отправим напоминание.'
             )
         else:
-            core = f"{who}you're all set — booked{service_bit}. We'll send a reminder."
-        return f"{core}{more}" if keep_open else f"{core} Thanks so much — take care!"
+            core = f'{who}готово — вы записаны{service_bit}. Мы отправим напоминание.'
+        return f"{core}{more}" if keep_open else f'{core} Спасибо, всего доброго!'
     if action == "reschedule":
         if when_bit:
-            core = f"{who}all set — I've moved you{service_bit} to {when_bit}."
+            core = f'{who}готово — запись{service_bit} перенесена на {when_bit}.'
         else:
-            core = f"{who}all set — your appointment's been moved."
-        return f"{core}{more}" if keep_open else f"{core} Looking forward to seeing you!"
+            core = f'{who}готово — ваша запись перенесена.'
+        return f"{core}{more}" if keep_open else f'{core} Будем рады вас видеть!'
     if action == "cancel":
-        core = f"{who}you're all cancelled — no problem at all."
+        core = f'{who}ваша запись отменена.'
         if keep_open:
-            return f"{core} Is there anything else I can help you with?"
-        return f"{core} Call or text anytime if you'd like to rebook."
-    core = f"{who}all done — happy to help."
-    return f"{core}{more}" if keep_open else f"{core} Take care!"
+            return f'{core} Могу ли я помочь ещё с чем-нибудь?'
+        return f'{core} Позвоните или напишите, если захотите записаться снова.'
+    core = f'{who}готово, рад помочь.'
+    return f"{core}{more}" if keep_open else f'{core} Всего доброго!'
 
 
 _FAREWELL_CUES = re.compile(
     r"(?is)^\s*("
-    r"good\s*bye|goodbye|bye(\s+bye)?|hang\s*up|"
+    r"до свидания|пока|всего доброго|больше ничего|это всё|good\s*bye|goodbye|bye(\s+bye)?|hang\s*up|"
     r"that(?:'s|\s+is)\s+all(?:\s+i\s+need)?"
     r"|that'?s\s+it(?:\s+for\s+me)?"
     r"|nothing\s+(?:else|more)(?:\s+(?:for\s+me|i\s+need))?"
@@ -375,7 +376,7 @@ _FAREWELL_CUES = re.compile(
 # After "Anything else?" only — bare no / short declines (comma & fillers ok).
 _SOFT_NO = re.compile(
     r"(?is)^\s*("
-    r"no(?:pe|ah)?"
+    r"(?:нет|нет,? спасибо|спасибо|ничего больше|no(?:pe|ah)?)"
     r"(?:[,!.\s]+(?:"
     r"thanks|thank\s+you(?:\s+so\s+much)?|"
     r"i(?:'?m|\s+am)\s+(?:all\s+)?(?:good|fine|set|done)|"
@@ -399,7 +400,7 @@ _SOFT_NO = re.compile(
 _ANYTHING_ELSE = re.compile(
     r"anything\s+else|need\s+anything\s+else|help\s+with\s+anything\s+else|"
     r"is\s+there\s+anything\s+else|what\s+else\s+(?:can|do)\s+you\s+need|"
-    r"need\s+anything\s+more|anything\s+else\s+i\s+can\s+help",
+    r"need\s+anything\s+more|anything\s+else\s+i\s+can\s+help|ещё с чем-нибудь|ещё чем-нибудь",
     re.I,
 )
 
@@ -439,7 +440,7 @@ def wants_to_end_after_offer(
 def ask_service(*, customer_name: str | None = None) -> str:
     name = spoken_first_name(customer_name)
     who = f"{name}, " if name else ""
-    return f"{who}sure — what service can I help you with?"
+    return f'{who}конечно — какая услуга вам нужна?'
 
 
 def ask_replacement_service(
@@ -451,19 +452,19 @@ def ask_replacement_service(
     name = spoken_first_name(customer_name)
     who = f"{name}, " if name else ""
     if current_service:
-        return f"{who}sure — what would you like instead of {current_service}?"
-    return f"{who}sure — what service should we switch you to?"
+        return f'{who}какую услугу выбрать вместо {current_service}?'
+    return f'{who}на какую услугу заменить запись?'
 
 
 def ask_name(*, customer_name: str | None = None) -> str:
     """Ask for the caller's name before booking a new / unnamed customer."""
     _ = customer_name  # never address placeholders; keep signature consistent
-    return "may I have your name so I can put the booking under you?"
+    return 'как вас зовут? Это нужно для оформления записи.'
 
 
 _NAME_QUESTION = re.compile(
     r"what'?s your name|your name so i can|may i (have|get) your name|"
-    r"can i (have|get) your name|who am i booking",
+    r"can i (have|get) your name|who am i booking|как вас зовут",
     re.I,
 )
 
@@ -482,15 +483,15 @@ def ask_time(
     """Ask for a concrete clock time. If a day is already known, only ask for time."""
     name = spoken_first_name(customer_name)
     who = f"{name}, " if name else ""
-    service_bit = f" for {service_name}" if service_name else ""
+    service_bit = f', услуга: {service_name}' if service_name else ""
     day_bit = (
         format_day(known_day)
         if isinstance(known_day, datetime)
         else (known_day or "")
     ).strip()
     if day_bit:
-        return f"{who}got it — {day_bit}{service_bit}. What time works best?"
-    return f"{who}what day and time work best for you{service_bit}?"
+        return f'{who}понятно — {day_bit}{service_bit}. Какое время вам удобно?'
+    return f'{who}какие день и время вам удобны{service_bit}?'
 
 
 def ask_date(
@@ -502,14 +503,14 @@ def ask_date(
     """Ask for the appointment day. If a clock time is already known, only ask for day."""
     name = spoken_first_name(customer_name)
     who = f"{name}, " if name else ""
-    service_bit = f" for {service_name}" if service_name else ""
+    service_bit = f', услуга: {service_name}' if service_name else ""
     if isinstance(known_time, datetime):
         time_bit = _clock_bit(known_time)
     else:
         time_bit = (known_time or "").strip()
     if time_bit:
-        return f"{who}got it — {time_bit}{service_bit}. What day works best?"
-    return f"{who}what day works best for you{service_bit}?"
+        return f'{who}понятно — {time_bit}{service_bit}. Какой день вам удобен?'
+    return f'{who}какой день вам удобен{service_bit}?'
 
 
 def time_unavailable(
@@ -539,53 +540,43 @@ def time_unavailable(
     if aspect == "date":
         if day_bit and day_only:
             return (
-                f"{who}I'm sorry, {day_bit} isn't available. "
-                "What other day works for you?"
+                f'{who}к сожалению, {day_bit} недоступен. Какой другой день вам удобен?'
             )
         if day_bit and clock_bit and not day_only:
             return (
-                f"{who}I'm sorry, {day_bit} isn't available at {clock_bit}. "
-                "What other day works for you?"
+                f'{who}к сожалению, {day_bit} в {clock_bit} недоступно. Какой другой день вам удобен?'
             )
         if day_bit:
             return (
-                f"{who}I'm sorry, {day_bit} isn't available. "
-                "What other day works for you?"
+                f'{who}к сожалению, {day_bit} недоступен. Какой другой день вам удобен?'
             )
         return (
-            f"{who}I'm sorry, that day isn't available. "
-            "What other day works for you?"
+            f'{who}к сожалению, этот день недоступен. Какой другой день вам удобен?'
         )
 
     if aspect == "time":
         if day_bit and clock_bit:
             return (
-                f"{who}I'm sorry, {clock_bit} on {day_bit} isn't available. "
-                "What other time works that day?"
+                f'{who}к сожалению, {day_bit} в {clock_bit} недоступно. Какое другое время в этот день вам удобно?'
             )
         if clock_bit:
             return (
-                f"{who}I'm sorry, {clock_bit} isn't available. "
-                "What other time works for you?"
+                f'{who}к сожалению, {clock_bit} недоступно. Какое другое время вам удобно?'
             )
         return (
-            f"{who}I'm sorry, that time isn't available. "
-            "What other time works for you?"
+            f'{who}к сожалению, это время недоступно. Какое другое время вам удобно?'
         )
 
     if when_bit and not day_only:
         return (
-            f"{who}I'm sorry, {when_bit} isn't available. "
-            "What other day or time works for you?"
+            f'{who}к сожалению, {when_bit} недоступно. Какие другие день или время вам удобны?'
         )
     if day_bit:
         return (
-            f"{who}I'm sorry, {day_bit} isn't available. "
-            "What other day works for you?"
+            f'{who}к сожалению, {day_bit} недоступен. Какой другой день вам удобен?'
         )
     return (
-        f"{who}I'm sorry, that time isn't available. "
-        "What other day or time works for you?"
+        f'{who}к сожалению, это время недоступно. Какие другие день или время вам удобны?'
     )
 
 
@@ -598,11 +589,11 @@ def offer_service_candidates(
     if not names:
         return ask_service(customer_name=customer_name)
     if len(names) == 1:
-        return f"{who}just to make sure — did you mean {names[0]}?"
+        return f'{who}уточните, вы имеете в виду {names[0]}?'
     if len(names) == 2:
-        return f"{who}just to make sure — did you mean {names[0]}, or {names[1]}?"
+        return f'{who}уточните, вы имеете в виду {names[0]} или {names[1]}?'
     return (
-        f"{who}just to make sure — did you mean {names[0]}, {names[1]}, or {names[2]}?"
+        f'{who}уточните, вы имеете в виду {names[0]}, {names[1]} или {names[2]}?'
     )
 
 
@@ -620,7 +611,7 @@ def offer_slots_spoken(
     """
     name = spoken_first_name(customer_name)
     who = f"{name}, " if name else ""
-    service_bit = f" for {service_name}" if service_name else ""
+    service_bit = f', услуга: {service_name}' if service_name else ""
     options: list[str] = []
     for start, end in merge_contiguous_windows(slots)[:limit]:
         spoken = format_when_range(start, end)
@@ -631,17 +622,16 @@ def offer_slots_spoken(
     if len(options) == 1:
         spoken = options[0]
     elif len(options) == 2:
-        spoken = f"{options[0]}, or {options[1]}"
+        spoken = f'{options[0]} или {options[1]}'
     else:
-        spoken = ", ".join(options[:-1]) + f", or {options[-1]}"
+        spoken = ", ".join(options[:-1]) + f' или {options[-1]}'
     got = (
-        f"I've got a few openings{service_bit}"
+        f'Есть несколько свободных вариантов{service_bit}'
         if service_bit
-        else "I've got a few openings"
+        else 'Есть несколько свободных вариантов'
     )
     return (
-        f"{who}{got}: {spoken}. "
-        "Would you like the first one, or a different time?"
+        f'{who}{got}: {spoken}. Выбрать первый вариант или другое время?'
     )
 
 
@@ -652,18 +642,18 @@ def first_reply_prefix(
     name = spoken_first_name(customer_name)
     shop = (shop_name or "").strip()
     if shop and name:
-        return f"Hello {name}, this is {shop}. "
+        return f'Здравствуйте, {name}! Это {shop}. '
     if shop:
-        return f"Hello, this is {shop}. "
+        return f'Здравствуйте! Это {shop}. '
     if name:
-        return f"Hello {name}. "
-    return "Hello. "
+        return f'Здравствуйте, {name}! '
+    return 'Здравствуйте! '
 
 
 def ask_purpose(*, customer_name: str | None = None) -> str:
     name = spoken_first_name(customer_name)
     who = f"{name}, " if name else ""
-    return f"{who}how can I help you today?"
+    return f'{who}чем я могу вам помочь?'
 
 
 def redirect_to_service_topic(*, customer_name: str | None = None) -> str:
@@ -671,9 +661,7 @@ def redirect_to_service_topic(*, customer_name: str | None = None) -> str:
     name = spoken_first_name(customer_name)
     who = f"{name}, " if name else ""
     return (
-        f"{who}I appreciate that — I'm mainly here to help with vehicle service "
-        "at the shop, like booking, changing, or canceling a visit, or a repair question. "
-        "What can I help you with for your vehicle today?"
+        f'{who}я помогаю с обслуживанием автомобилей: записью, переносом, отменой визита и вопросами о ремонте. Чем могу помочь с вашим автомобилем?'
     )
 
 
@@ -739,7 +727,7 @@ def looks_like_off_topic(text: str | None) -> bool:
 
 _PURPOSE_QUESTION = re.compile(
     r"what can i help|how can i help you today|what (do|can) you need|"
-    r"what can we help|how can i help",
+    r"what can we help|how can i help|чем.*помочь",
     re.I,
 )
 _BOOKING_DESIRE_TEXT = re.compile(

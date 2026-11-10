@@ -21,7 +21,7 @@ class DashboardPlugin:
         return "dashboard"
 
     def plugin_name(self) -> str:
-        return "Owner Dashboard & AI Operations Center"
+        return 'Панель владельца и центр управления ИИ'
 
     def plugin_version(self) -> str:
         return "1.0.0"
@@ -74,7 +74,7 @@ class DashboardPlugin:
     ) -> Any:
         shop_id = kwargs.get("shop_id") or (context.shop_id if context else None)
         if shop_id is None:
-            raise ValueError("shop_id required for dashboard capabilities")
+            raise ValueError('Для возможностей панели требуется shop_id')
         if isinstance(shop_id, str):
             shop_id = UUID(shop_id)
 
@@ -103,4 +103,4 @@ class DashboardPlugin:
             snap = await svc.get_snapshot(shop_id, force=bool(kwargs.get("force")))
             return snap.to_dict()
 
-        raise LookupError(f"Unsupported dashboard capability: {cap}")
+        raise LookupError(f'Неподдерживаемая возможность панели: {cap}')

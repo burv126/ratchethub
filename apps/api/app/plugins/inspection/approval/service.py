@@ -70,7 +70,7 @@ class ApprovalService:
                 channel=ctx.channel,
                 priority=priority,  # type: ignore[arg-type]
                 confidence=0.85,
-                rationale="Inspection approval request (AI decide-only)",
+                rationale='Запрос согласования осмотра (только решение ИИ)',
             )
         ]
 
@@ -116,6 +116,6 @@ class ApprovalService:
                 scheduled_at=datetime.now(timezone.utc) + timedelta(days=3),
                 priority="normal",
                 confidence=0.8,
-                rationale="Inspection follow-up decision (AI decide-only)",
+                rationale='Решение о повторном обращении после осмотра (только решение ИИ)',
             )
         ]

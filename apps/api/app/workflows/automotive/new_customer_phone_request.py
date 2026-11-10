@@ -18,8 +18,7 @@ WORKFLOW_ID = UUID("a1111111-1111-4111-8111-111111111101")
 SPEC = meta(
     workflow_id=str(WORKFLOW_ID),
     purpose=(
-        "Orchestrate a new caller's repair request from inbound phone/voice message "
-        "through identification, recommendation, booking cue, SMS confirm, and CRM timeline."
+        'Обрабатывает звонок нового клиента: определение клиента, рекомендации, запись, подтверждение SMS и история CRM.'
     ),
     trigger=DomainEventType.INBOUND_MESSAGE_RECEIVED.value,
     capabilities=[
@@ -58,8 +57,7 @@ SPEC = meta(
         "compensation undoes reminder/CRM/revenue side-effects on rollback."
     ),
     human_escalation=(
-        "Notify advisors when vehicle is missing or booking cannot complete; "
-        "emit human_escalation_requested for supervisor takeover."
+        'Уведомляет консультантов, если автомобиль не определён или запись не завершена; отправляет human_escalation_requested для подключения руководителя.'
     ),
 )
 
@@ -67,7 +65,7 @@ SPEC = meta(
 def build() -> WorkflowDefinition:
     return build_definition(
         workflow_id=WORKFLOW_ID,
-        name="Automotive: New customer phone repair request",
+        name='Автосервис: запрос ремонта нового клиента по телефону',
         description=SPEC["purpose"],
         trigger=DomainEventType.INBOUND_MESSAGE_RECEIVED,
         conditions=[
@@ -79,7 +77,7 @@ def build() -> WorkflowDefinition:
         actions=[
             action(
                 ActionType.SET_CONTEXT,
-                "Bind AI decision expectations",
+                'Привязать ожидаемые решения ИИ',
                 1,
                 config={
                     "values": {
@@ -91,20 +89,20 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.LOG,
-                "Conversation creation checkpoint",
+                'Проверка создания диалога',
                 2,
                 config={
-                    "message": "Ensure conversation exists (CreateConversation / phone channel)",
+                    "message": 'Проверить наличие диалога (CreateConversation / телефонный канал)',
                     "capability": "CreateConversation",
                     "ai_decision": None,
                 },
             ),
             action(
                 ActionType.UPDATE_CRM,
-                "Customer identification timeline",
+                'Определение клиента в истории',
                 3,
                 config={
-                    "note": "Phone repair request — identify/create customer",
+                    "note": 'Запрос ремонта по телефону — найти / создать клиента',
                     "fields": {
                         "capability": "FindCustomer|CreateCustomer",
                         "ai_decision": "CustomerDecision",
@@ -114,10 +112,10 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_CRM,
-                "Vehicle identification timeline",
+                'Определение автомобиля в истории',
                 4,
                 config={
-                    "note": "Capture or resolve vehicle for repair request",
+                    "note": 'Указать или найти автомобиль для ремонта',
                     "fields": {
                         "capability": "FindVehicle|CreateVehicle",
                         "ai_decision": "VehicleDecision",
@@ -128,7 +126,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_CRM,
-                "Repair recommendation recorded",
+                'Рекомендация ремонта записана',
                 5,
                 config={
                     "note": "RatchetHub repair recommendation applied to CRM",
@@ -141,7 +139,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_REVENUE,
-                "Seed revenue opportunity from repair intent",
+                'Создать возможность выручки по запросу ремонта',
                 6,
                 config={"category": "phone_repair_request", "amount": 0},
                 compensate={"type": "undo_revenue"},
@@ -160,17 +158,17 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.NOTIFY,
-                "Advisor desk — confirm appointment booking",
+                'Приём консультанта — подтвердить запись',
                 8,
                 config={
                     "channel": "in_app",
-                    "message": "New phone repair request needs appointment confirmation",
+                    "message": 'Новый запрос ремонта по телефону требует подтверждения записи',
                 },
                 continue_on_error=True,
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Request human escalation if booking incomplete",
+                'Запросить сотрудника при незавершённой записи',
                 9,
                 config={
                     "event_type": DomainEventType.HUMAN_ESCALATION_REQUESTED.value,
@@ -183,7 +181,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_DASHBOARD,
-                "Refresh operations dashboard",
+                'Обновить операционную панель',
                 10,
                 config={
                     "widget": "overview",

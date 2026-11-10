@@ -1,4 +1,5 @@
 "use client";
+import { ruNotification, ruNotificationTitle } from "@/lib/ru-errors";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -42,7 +43,6 @@ export function AdminShell({ children }: Props) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState<LiveToast | null>(null);
   const [forbidden, setForbidden] = useState(false);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const seenIdsRef = useRef<Set<string> | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastEnabledRef = useRef(true);
@@ -99,7 +99,6 @@ export function AdminShell({ children }: Props) {
   useEffect(() => {
     if (!accessToken) {
       toastEnabledRef.current = true;
-      setMaintenanceMode(false);
       return;
     }
     let cancelled = false;
@@ -108,7 +107,6 @@ export function AdminShell({ children }: Props) {
         const s = await getAdminSettings(accessToken);
         if (cancelled) return;
         toastEnabledRef.current = s.editable?.toast_enabled !== false;
-        setMaintenanceMode(Boolean(s.editable?.maintenance_mode));
       } catch {
         /* keep defaults */
       }
@@ -196,7 +194,7 @@ export function AdminShell({ children }: Props) {
   function showToast(n: AdminNotification) {
     setToast({
       id: n.id,
-      title: n.title || "New notification",
+      title: n.title || "Новое уведомление",
       message: n.message || "",
     });
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -206,7 +204,7 @@ export function AdminShell({ children }: Props) {
   if (authLoading || !canAccessAdminConsole(session)) {
     return (
       <div className="flex h-dvh items-center justify-center text-sm text-[var(--muted)]">
-        Checking admin session…
+        Проверка сессии администратора…
       </div>
     );
   }
@@ -216,7 +214,7 @@ export function AdminShell({ children }: Props) {
       {menuOpen && (
         <button
           type="button"
-          aria-label="Close navigation"
+          aria-label="Закрыть навигацию"
           className="fixed inset-0 z-[48] bg-[rgba(8,14,18,0.48)] backdrop-blur-[2px] md:hidden"
           onClick={() => setMenuOpen(false)}
         />
@@ -236,10 +234,10 @@ export function AdminShell({ children }: Props) {
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-white/70 text-[var(--foreground)] shadow-[var(--shadow-soft)] md:hidden"
             aria-expanded={menuOpen}
             aria-controls="admin-nav"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <span className="sr-only">{menuOpen ? "Close" : "Menu"}</span>
+            <span className="sr-only">{menuOpen ? "Закрыть" : "Меню"}</span>
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
               {menuOpen ? (
                 <path
@@ -266,21 +264,6 @@ export function AdminShell({ children }: Props) {
 
         <main className="asa-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 sm:py-5 md:px-7 md:py-7 [scrollbar-gutter:stable]">
           <div className="space-y-6">
-            {maintenanceMode ? (
-              <div
-                role="status"
-                className="relative overflow-hidden rounded-2xl border border-amber-200/80 bg-amber-50/90 px-4 py-3 text-sm text-amber-900 shadow-[var(--shadow-soft)]"
-              >
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-amber-500"
-                />
-                <p className="pl-2 font-medium">Maintenance mode is enabled</p>
-                <p className="mt-0.5 pl-2 text-amber-800/80">
-                  Platform ops banners are active for admins.
-                </p>
-              </div>
-            ) : null}
             {!forbidden ? children({ username, accessToken }) : null}
           </div>
         </main>
@@ -304,21 +287,21 @@ export function AdminShell({ children }: Props) {
               </svg>
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold tracking-tight">{toast.title}</p>
+              <p className="text-sm font-semibold tracking-tight">{ruNotificationTitle(toast)}</p>
               {toast.message ? (
-                <p className="mt-1 truncate text-xs text-[var(--muted)]">{toast.message}</p>
+                <p className="mt-1 truncate text-xs text-[var(--muted)]">{ruNotification(toast)}</p>
               ) : null}
               <Link
                 href="/admin/notifications"
                 className="mt-2 inline-block text-xs font-medium text-[var(--accent)] hover:underline"
                 onClick={() => setToast(null)}
               >
-                Open notifications
+                Открыть уведомления
               </Link>
             </div>
             <button
               type="button"
-              aria-label="Dismiss"
+              aria-label="Скрыть"
               className="shrink-0 rounded-lg px-1.5 py-0.5 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--line)]/40"
               onClick={() => setToast(null)}
             >
@@ -332,7 +315,7 @@ export function AdminShell({ children }: Props) {
 }
 
 export function AdminPageHeader({
-  eyebrow = "Platform",
+  eyebrow = "Платформа",
   title,
   description,
   action,
@@ -389,7 +372,7 @@ export function LiveBadge({ live }: { live: boolean }) {
           }`}
         />
       </span>
-      {live ? "Live" : "Connecting"}
+      {live ? "В эфире" : "Подключение"}
     </span>
   );
 }

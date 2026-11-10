@@ -50,7 +50,7 @@ class InspectionCompletedScenario(BaseScenario):
             summary="plain-language inspection explanation",
         )
 
-        await ctx.invoke_capability("AnalyzeConversation", plugin="advisor", text="inspection complete")
+        await ctx.invoke_capability("AnalyzeConversation", plugin="advisor", text='осмотр завершён')
         await ctx.emit(
             DomainEventType.REPAIR_FINISHED,
             {

@@ -75,13 +75,13 @@ class PredictionPluginService:
         recommendations: list[str] = []
         shop_u = float(util.get("shop_utilization") or 0)
         if shop_u >= 0.85:
-            recommendations.append("Defer low-priority upsells; protect high-value appointments")
-            recommendations.append("Offer off-peak slots for maintenance reminders")
+            recommendations.append('Отложить низкоприоритетные продажи; сохранить важные записи')
+            recommendations.append('Предложить обслуживание в непиковые часы')
         elif shop_u <= 0.45:
-            recommendations.append("Prioritize lost-customer and declined-estimate recovery outreach")
-            recommendations.append("Fill capacity with overdue maintenance campaigns")
+            recommendations.append('В первую очередь связаться с ушедшими клиентами и по отклонённым сметам')
+            recommendations.append('Заполнить свободное время просроченным обслуживанием')
         else:
-            recommendations.append("Balance outreach with available bay/mechanic capacity")
+            recommendations.append('Согласовать обращения с загрузкой постов и механиков')
         return {
             "shop_id": str(shop_id),
             "utilization": util,

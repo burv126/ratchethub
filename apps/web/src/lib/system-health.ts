@@ -33,32 +33,32 @@ export type HealthFeatureGroup = {
 export const HEALTH_FEATURE_GROUPS: HealthFeatureGroup[] = [
   {
     id: "platform",
-    label: "Platform",
-    description: "Core API and data layer",
+    label: "Платформа",
+    description: "Основной API и слой данных",
     componentIds: ["api", "database"],
   },
   {
     id: "ai",
-    label: "AI",
-    description: "LLM stack and usage monitor",
+    label: "ИИ",
+    description: "Стек LLM и мониторинг использования",
     componentIds: ["ai"],
   },
   {
     id: "messaging",
-    label: "Messaging",
-    description: "SMS provider and runtime",
+    label: "Сообщения",
+    description: "Провайдер SMS и среда выполнения",
     componentIds: ["sms"],
   },
   {
     id: "voice",
-    label: "Voice",
-    description: "Voice provider and runtime",
+    label: "Звонки",
+    description: "Провайдер звонков и среда выполнения",
     componentIds: ["voice"],
   },
   {
     id: "integrations",
-    label: "Integrations",
-    description: "External shop and billing connectors",
+    label: "Интеграции",
+    description: "Внешние коннекторы автосервисов и оплаты",
     componentIds: ["integrations"],
   },
 ];
@@ -84,11 +84,11 @@ export type SystemHealthSnapshot = {
 
 const COMPONENT_LABELS: Record<HealthComponentId, string> = {
   api: "API",
-  database: "Database",
-  ai: "AI service",
-  sms: "SMS provider",
-  voice: "Voice provider",
-  integrations: "Integrations",
+  database: "База данных",
+  ai: "Сервис ИИ",
+  sms: "Провайдер SMS",
+  voice: "Провайдер звонков",
+  integrations: "Интеграции",
 };
 
 function num(v: unknown): number {
@@ -132,18 +132,18 @@ function providerLevel(args: {
   if (args.enabled === false) {
     return {
       level: "yellow",
-      detail: `Disabled · provider ${provider}`,
+      detail: `Отключено · провайдер ${provider}`,
     };
   }
   if (failures > 0 || queueDepth > 25) {
     return {
       level: "yellow",
-      detail: `Provider ${provider} · ${failures} failures · queue ${queueDepth}`,
+      detail: `Провайдер ${provider} · ${failures} ошибок · очередь ${queueDepth}`,
     };
   }
   return {
     level: "green",
-    detail: `Provider ${provider} · queue ${queueDepth}`,
+    detail: `Провайдер ${provider} · очередь ${queueDepth}`,
   };
 }
 
@@ -156,28 +156,28 @@ function aiLevel(args: {
   const aiIncidents = openIncidentsFor(args.incidents, ["ai", "openai", "llm"]);
   const critical = aiIncidents.some((i) => i.severity === "critical" || i.severity === "major");
   if (!args.apiOk) {
-    return { level: "red", detail: "API unavailable — AI stack unreachable" };
+    return { level: "red", detail: "API недоступен — нет связи со стеком ИИ" };
   }
   if (critical) {
     return {
       level: "red",
-      detail: aiIncidents[0]?.title || "Critical AI incident open",
+      detail: aiIncidents[0]?.title || "Открыт критический инцидент ИИ",
     };
   }
   if (aiIncidents.length > 0) {
     return {
       level: "yellow",
-      detail: aiIncidents[0]?.title || "AI incident open",
+      detail: aiIncidents[0]?.title || "Открыт инцидент ИИ",
     };
   }
   const escalations = num(args.sms.escalations) + num(args.voice.escalations);
   if (escalations > 0) {
     return {
       level: "yellow",
-      detail: `${escalations} recent AI escalations (SMS/voice)`,
+      detail: `${escalations} недавних передач сотруднику (SMS/звонки)`,
     };
   }
-  return { level: "green", detail: "API reachable · no open AI incidents" };
+  return { level: "green", detail: "API доступен · открытых инцидентов ИИ нет" };
 }
 
 function integrationsLevel(args: {
@@ -198,24 +198,24 @@ function integrationsLevel(args: {
   if (critical) {
     return {
       level: "red",
-      detail: integIncidents[0]?.title || "Critical integration incident",
+      detail: integIncidents[0]?.title || "Критический инцидент интеграции",
     };
   }
   const providers = worst(args.sms, args.voice);
   const level = worst(providers, args.redis, integIncidents.length > 0 ? "yellow" : "green");
   if (level === "green") {
-    return { level, detail: "Communication providers + Redis OK" };
+    return { level, detail: "Провайдеры связи и Redis работают" };
   }
   if (level === "red") {
-    return { level, detail: "One or more integration dependencies down" };
+    return { level, detail: "Одна или несколько зависимостей интеграций недоступны" };
   }
   return {
     level,
     detail:
       integIncidents[0]?.title ||
       (args.redis === "yellow" || args.redis === "red"
-        ? "Redis degraded — integration queue risk"
-        : "Provider or integration warning"),
+        ? "Сбой Redis — риск для очереди интеграций"
+        : "Предупреждение провайдера или интеграции"),
   };
 }
 
@@ -254,7 +254,7 @@ export function buildSystemHealthFromStatus(system: SystemStatus): SystemHealthS
     label: COMPONENT_LABELS.api,
     level: apiOk ? "green" : "red",
     status: apiOk ? "healthy" : "outage",
-    detail: apiOk ? `env ${env}` : "Admin system endpoint failed",
+    detail: apiOk ? `среда ${env}` : "Ошибка системного запроса администратора",
   };
 
   const database: HealthComponent = {
@@ -262,7 +262,7 @@ export function buildSystemHealthFromStatus(system: SystemStatus): SystemHealthS
     label: COMPONENT_LABELS.database,
     level: dbUp ? "green" : "red",
     status: dbUp ? "healthy" : "outage",
-    detail: dbUp ? "Connection OK" : dbCheck?.error || "Database check failed",
+    detail: dbUp ? "Соединение установлено" : dbCheck?.error || "Ошибка проверки базы данных",
   };
 
   const smsProv = providerLevel({

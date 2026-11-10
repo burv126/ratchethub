@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -38,7 +42,7 @@ function formatCallReceivedAt(call: VoiceCall): string | null {
   if (!raw) return null;
   const d = new Date(raw);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleString(undefined, {
+  return d.toLocaleString("ru-RU", {
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -62,9 +66,9 @@ function formatCallDuration(call: VoiceCall): string | null {
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
   const s = sec % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s.toString().padStart(2, "0")}s`;
-  return `${s}s`;
+  if (h > 0) return `${h}ч ${m}мин`;
+  if (m > 0) return `${m}мин ${s.toString().padStart(2, "0")}с`;
+  return `${s}с`;
 }
 
 function IconPhone({ className = "h-3.5 w-3.5" }: { className?: string }) {
@@ -174,8 +178,8 @@ function LiveCallBadge({ size = "sm" }: { size?: "sm" | "md" }) {
   return (
     <span
       className={`relative inline-flex shrink-0 items-center justify-center ${box}`}
-      title="On call"
-      aria-label="On call"
+      title="На звонке"
+      aria-label="На звонке"
     >
       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/35" />
       <span
@@ -250,7 +254,7 @@ export function VoiceCallsPanel() {
       try {
         await refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load calls");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить звонки");
       } finally {
         setLoading(false);
       }
@@ -264,7 +268,7 @@ export function VoiceCallsPanel() {
     }
     setError(null);
     void loadDetail(selectedId).catch((err) =>
-      setError(err instanceof Error ? err.message : "Failed to load call"),
+      setError(err instanceof Error ? err.message : "Не удалось загрузить звонок"),
     );
   }, [selectedId, loadDetail]);
 
@@ -339,12 +343,12 @@ export function VoiceCallsPanel() {
       if (failed > 0) {
         setError(
           deletedIds.length
-            ? `Deleted ${deletedIds.length}, ${failed} failed`
-            : "Delete failed",
+            ? `Удалено ${deletedIds.length}, ${failed} с ошибкой`
+            : "Не удалось удалить",
         );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete failed");
+      setError(err instanceof Error ? err.message : "Не удалось удалить");
     } finally {
       setDeleting(false);
     }
@@ -373,9 +377,9 @@ export function VoiceCallsPanel() {
         <span className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--background)] text-[var(--muted)] ring-1 ring-[var(--line)]">
           <IconPhone className="h-5 w-5" />
         </span>
-        <p className="font-display text-lg font-semibold tracking-tight">Sign in required</p>
+        <p className="font-display text-lg font-semibold tracking-tight">Требуется вход</p>
         <p className="mt-1 max-w-xs text-sm text-[var(--muted)]">
-          Sign in to view and manage voice calls.
+          Войдите для просмотра звонков и управления ими.
         </p>
       </div>
     );
@@ -388,7 +392,7 @@ export function VoiceCallsPanel() {
           className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -410,8 +414,8 @@ export function VoiceCallsPanel() {
                 <>
                   <p className="min-w-0 flex-1 truncate text-sm font-semibold tracking-tight">
                     {checkedIds.length > 0
-                      ? `${checkedIds.length} selected`
-                      : "Select calls"}
+                      ? `${checkedIds.length} выбрано`
+                      : "Выбрать звонки"}
                   </p>
                   <div className="flex shrink-0 items-center gap-1">
                     <button
@@ -419,7 +423,7 @@ export function VoiceCallsPanel() {
                       onClick={toggleSelectAll}
                       className="rounded-full px-2 py-1 text-[11px] font-semibold text-[var(--muted)] ring-1 ring-[var(--line)] transition hover:bg-[var(--background)]"
                     >
-                      {allSelected ? "Clear" : "All"}
+                      {allSelected ? "Очистить" : "Все"}
                     </button>
                     <button
                       type="button"
@@ -427,13 +431,13 @@ export function VoiceCallsPanel() {
                       disabled={deleting || checkedIds.length === 0}
                       title={
                         checkedIds.length > 0
-                          ? `Delete ${checkedIds.length} selected`
-                          : "Delete selected"
+                          ? `Удалить ${checkedIds.length} выбрано`
+                          : "Удалить выбранные"
                       }
                       aria-label={
                         checkedIds.length > 0
-                          ? `Delete ${checkedIds.length} selected`
-                          : "Delete selected"
+                          ? `Удалить ${checkedIds.length} выбрано`
+                          : "Удалить выбранные"
                       }
                       className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-600 transition hover:bg-red-50 disabled:opacity-40"
                     >
@@ -443,8 +447,8 @@ export function VoiceCallsPanel() {
                       type="button"
                       onClick={exitSelectMode}
                       disabled={deleting}
-                      title="Done"
-                      aria-label="Done"
+                      title="Готово"
+                      aria-label="Готово"
                       className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--background)] hover:text-[var(--foreground)] disabled:opacity-40"
                     >
                       <IconX />
@@ -458,12 +462,12 @@ export function VoiceCallsPanel() {
                       <IconHistory className="h-3.5 w-3.5" />
                     </span>
                     <p className="truncate text-sm font-semibold tracking-tight">
-                      Call history
+                      История звонков
                     </p>
                     {!loading && (
                       <span className="shrink-0 rounded-full bg-[var(--background)] px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[var(--muted)] ring-1 ring-[var(--line)]">
                         {history.length}
-                        {liveCount > 0 ? ` · ${liveCount} live` : ""}
+                        {liveCount > 0 ? ` · ${liveCount} в эфире` : ""}
                       </span>
                     )}
                   </div>
@@ -473,7 +477,7 @@ export function VoiceCallsPanel() {
                       onClick={() => setSelectMode(true)}
                       className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold text-[var(--muted)] ring-1 ring-[var(--line)] transition hover:bg-[var(--background)] hover:text-[var(--foreground)]"
                     >
-                      Select
+                      Выбрать
                     </button>
                   )}
                 </>
@@ -502,7 +506,7 @@ export function VoiceCallsPanel() {
                     <IconPhone className="h-5 w-5" />
                   </span>
                   <p className="font-display text-base font-semibold tracking-tight">
-                    No calls yet
+                    Звонков пока нет
                   </p>
                 </li>
               )}
@@ -540,7 +544,7 @@ export function VoiceCallsPanel() {
                             onChange={() => toggleChecked(c.id)}
                             disabled={deleting}
                             className="h-4 w-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent-glow)]"
-                            aria-label={`Select call ${c.caller_phone}`}
+                            aria-label={`Выбрать звонок ${c.caller_phone}`}
                           />
                         </label>
                       )}
@@ -568,17 +572,17 @@ export function VoiceCallsPanel() {
                                 {isLive && (
                                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800 ring-1 ring-emerald-200/80">
                                     <CallWaveform className="text-emerald-600" />
-                                    Live
+                                    В эфире
                                   </span>
                                 )}
                                 {c.escalate && (
                                   <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200/80">
-                                    Escalate
+                                    Передать сотруднику
                                   </span>
                                 )}
                                 {!isLive && c.status !== "completed" && (
                                   <span className="truncate text-[10px] font-medium uppercase tracking-wide text-[var(--muted)]">
-                                    {c.status}
+                                    {ruLabel(c.status)}
                                   </span>
                                 )}
                               </span>
@@ -587,7 +591,7 @@ export function VoiceCallsPanel() {
                               <p className="mt-0.5 truncate text-xs font-medium text-emerald-700">
                                 <span className="inline-flex items-center gap-1.5">
                                   <CallWaveform className="text-emerald-600" />
-                                  On the line…
+                                  На линии…
                                   {receivedAt ? (
                                     <span className="font-normal text-[var(--muted)]">
                                       · {receivedAt}
@@ -613,8 +617,8 @@ export function VoiceCallsPanel() {
                             openDeleteConfirm(c.id);
                           }}
                           disabled={deleting}
-                          title="Delete call"
-                          aria-label={`Delete call ${c.caller_phone}`}
+                          title="Удалить звонок"
+                          aria-label={`Удалить звонок ${c.caller_phone}`}
                           className="mr-1.5 mt-3.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-red-50 hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 disabled:opacity-40"
                         >
                           <IconTrash />
@@ -654,7 +658,7 @@ export function VoiceCallsPanel() {
                   onClick={() => selectCall(null)}
                   className="mb-1 text-xs font-medium text-[var(--accent)] lg:hidden"
                 >
-                  ← Calls
+                  ← Звонки
                 </button>
               )}
               <div className="flex min-w-0 items-start gap-3">
@@ -670,7 +674,7 @@ export function VoiceCallsPanel() {
                 <div className="min-w-0 flex-1">
                   <div className="flex h-8 items-center justify-between gap-3">
                     <p className="min-w-0 truncate font-display text-base font-semibold leading-8 tracking-tight">
-                      {detail ? detail.call.caller_phone : "Select a call"}
+                      {detail ? detail.call.caller_phone : "Выберите звонок"}
                     </p>
                     {detail && (detailReceivedAt || detailDuration) ? (
                       <p className="shrink-0 text-xs tabular-nums text-[var(--muted)]">
@@ -681,11 +685,11 @@ export function VoiceCallsPanel() {
                   {detail && open ? (
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-emerald-700">
                       <CallWaveform className="text-emerald-600" />
-                      <span>On call</span>
+                      <span>На звонке</span>
                     </p>
                   ) : detail && detail.call.status !== "completed" ? (
                     <p className="mt-0.5 text-xs text-[var(--muted)]">
-                      {detail.call.status}
+                      {ruLabel(detail.call.status)}
                     </p>
                   ) : null}
                 </div>
@@ -704,10 +708,10 @@ export function VoiceCallsPanel() {
                   <IconPhone className="h-6 w-6" />
                 </span>
                 <p className="font-display text-lg font-semibold tracking-tight">
-                  Select a call
+                  Выберите звонок
                 </p>
                 <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-[var(--muted)]">
-                  Choose a call from the history to view the conversation details.
+                  Выберите звонок в истории для просмотра разговора.
                 </p>
               </div>
             )}
@@ -738,7 +742,7 @@ export function VoiceCallsPanel() {
                   />
                   <p className="relative break-words leading-relaxed">{t.text}</p>
                   <p className="relative mt-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                    {isYou ? "Customer" : "AI"}
+                    {isYou ? "Клиент" : "ИИ"}
                   </p>
                 </div>
               );
@@ -758,15 +762,15 @@ export function VoiceCallsPanel() {
               <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-br from-[var(--accent-soft)] via-transparent to-transparent" />
               <div className="relative">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Recording
+                  Запись
                 </p>
-                <h2 className="mt-1 text-sm font-semibold tracking-tight">Call audio</h2>
+                <h2 className="mt-1 text-sm font-semibold tracking-tight">Аудиозапись звонка</h2>
                 <p className="mt-3 break-all font-mono text-[11px] leading-relaxed text-[var(--muted)]">
                   {detail.call.recording_url}
                 </p>
                 {detail.call.recording_duration_sec != null && (
                   <p className="mt-2 inline-flex rounded-full bg-[var(--background)] px-2.5 py-1 text-xs font-semibold tabular-nums text-[var(--muted)] ring-1 ring-[var(--line)]">
-                    {detail.call.recording_duration_sec}s
+                    {detail.call.recording_duration_sec}с
                   </p>
                 )}
               </div>
@@ -802,8 +806,8 @@ export function VoiceCallsPanel() {
                     className="text-base font-semibold tracking-tight text-slate-900"
                   >
                     {pendingDeleteCount > 1
-                      ? `Delete ${pendingDeleteCount} calls?`
-                      : "Delete call history?"}
+                      ? `Удалить ${pendingDeleteCount} звонков?`
+                      : "Удалить историю звонков?"}
                   </h2>
                 </div>
               </div>
@@ -827,7 +831,7 @@ export function VoiceCallsPanel() {
                   </div>
                 ) : (
                   <p className="text-sm text-[var(--muted)]">
-                    {pendingDeleteCount} selected calls will be permanently removed.
+                    {pendingDeleteCount} выбранных звонков будут удалены навсегда.
                   </p>
                 )}
 
@@ -836,7 +840,7 @@ export function VoiceCallsPanel() {
                     className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                     role="alert"
                   >
-                    {error}
+                    {ruError(error)}
                   </p>
                 )}
 
@@ -847,7 +851,7 @@ export function VoiceCallsPanel() {
                     disabled={deleting}
                     className="btn-ghost px-4 py-2 text-sm disabled:opacity-60"
                   >
-                    No
+                    Нет
                   </button>
                   <button
                     type="button"
@@ -855,7 +859,7 @@ export function VoiceCallsPanel() {
                     disabled={deleting}
                     className="inline-flex items-center justify-center rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-red-600/20 transition hover:bg-red-700 disabled:opacity-60"
                   >
-                    {deleting ? "Deleting…" : "Yes"}
+                    {deleting ? "Удаление…" : "Да"}
                   </button>
                 </div>
               </div>

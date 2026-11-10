@@ -26,13 +26,13 @@ class AdvisorFollowUpService:
                     service=service,
                     due_mileage=str(due) if due is not None else None,
                     message_body=(
-                        f"Friendly reminder: your {service.replace('_', ' ')} may be due"
-                        + (f" around {due} miles" if due else "")
-                        + ". Reply to book a convenient time."
+                        f"Напоминаем: возможно, пора выполнить {service.replace('_', ' ')}"
+                        + (f' при пробеге около {due} миль' if due else "")
+                        + '. Ответьте, чтобы выбрать удобное время.'
                     ),
                     channel=ctx.channel or "sms",
                     confidence=0.7,
-                    rationale="Maintenance reminder from advisor follow-up",
+                    rationale='Напоминание об обслуживании по рекомендации консультанта',
                 )
             )
         intent = (ctx.intent or "").lower()
@@ -44,8 +44,7 @@ class AdvisorFollowUpService:
                     customer_id=ctx.customer_id,
                     channel=ctx.channel or "sms",
                     message_body=(
-                        "Thanks for visiting us! If you have 30 seconds, a quick review "
-                        "helps other drivers find a trusted shop."
+                        'Спасибо за визит! Уделите полминуты отзыву — он поможет другим водителям найти надёжный автосервис.'
                     ),
                     confidence=0.6,
                     rationale="Post-service review request",
@@ -63,13 +62,13 @@ class AdvisorFollowUpService:
                 service=service,
                 due_mileage=due_mileage,
                 message_body=(
-                    f"Reminder: {service.replace('_', ' ')} is coming due"
-                    + (f" near {due_mileage} miles" if due_mileage else "")
-                    + ". Want us to hold an appointment?"
+                    f"Напоминание: скоро потребуется {service.replace('_', ' ')}"
+                    + (f' при пробеге около {due_mileage} миль' if due_mileage else "")
+                    + '. Записать вас?'
                 ),
                 channel=ctx.channel or "sms",
                 confidence=0.75,
-                rationale="Explicit maintenance reminder generation",
+                rationale='Создание напоминания об обслуживании',
             )
         ]
 
@@ -79,9 +78,9 @@ class AdvisorFollowUpService:
                 customer_id=ctx.customer_id,
                 channel=ctx.channel or "sms",
                 message_body=(
-                    "We'd love your feedback! A short review helps us keep improving."
+                    'Будем рады вашему отзыву! Он поможет нам стать лучше.'
                 ),
                 confidence=0.7,
-                rationale="Explicit review request generation",
+                rationale='Создание запроса отзыва',
             )
         ]

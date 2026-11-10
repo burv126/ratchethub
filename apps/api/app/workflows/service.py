@@ -94,7 +94,7 @@ class WorkflowEngineService:
     async def get_workflow(self, shop_id: UUID, workflow_id: UUID) -> WorkflowDefinition:
         wf = await self._store.get_workflow(shop_id, workflow_id)
         if wf is None:
-            raise LookupError("Workflow not found")
+            raise LookupError('Процесс не найден')
         return wf
 
     async def create_workflow(
@@ -133,7 +133,7 @@ class WorkflowEngineService:
     ) -> WorkflowDefinition:
         wf = await self.get_workflow(shop_id, workflow_id)
         if wf.shop_id is None:
-            raise PermissionError("Cannot modify global template; clone it first")
+            raise PermissionError('Нельзя изменить общий шаблон; сначала клонируйте его')
         if "name" in patch and patch["name"]:
             wf.name = str(patch["name"])
         if "description" in patch:
@@ -187,7 +187,7 @@ class WorkflowEngineService:
     async def delete_workflow(self, shop_id: UUID, workflow_id: UUID) -> None:
         ok = await self._store.delete_workflow(shop_id, workflow_id)
         if not ok:
-            raise LookupError("Workflow not found or not deletable")
+            raise LookupError('Процесс не найден или недоступен для удаления')
 
     # --- Runs / history / debugger ---
 
@@ -199,7 +199,7 @@ class WorkflowEngineService:
     async def get_run(self, shop_id: UUID, run_id: UUID) -> WorkflowRun:
         run = await self._store.get_run(shop_id, run_id)
         if run is None:
-            raise LookupError("Run not found")
+            raise LookupError('Запуск не найден')
         return run
 
     async def rollback(self, shop_id: UUID, run_id: UUID) -> WorkflowRun:

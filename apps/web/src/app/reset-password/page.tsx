@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
@@ -33,7 +35,7 @@ export default function ResetPasswordPage() {
       if (!res.ok) throw new Error(body.detail || res.statusText);
       router.replace("/?login=1");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Reset failed");
+      setError(err instanceof Error ? err.message : "Не удалось сбросить пароль");
     } finally {
       setBusy(false);
     }
@@ -46,28 +48,28 @@ export default function ResetPasswordPage() {
           size={40}
           wordmarkClassName="text-2xl font-semibold tracking-tight text-[var(--ink)]"
         />
-        <h1 className="font-display mt-5 text-2xl font-semibold tracking-tight">Reset password</h1>
+        <h1 className="font-display mt-5 text-2xl font-semibold tracking-tight">Сбросить пароль</h1>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <PasswordField
-            label="New password"
+            label="Новый пароль"
             value={password}
             onChange={setPassword}
             required
             minLength={8}
             autoComplete="new-password"
           />
-          {error && <p className="text-sm text-red-700">{error}</p>}
+          {error && <p className="text-sm text-red-700">{ruError(error)}</p>}
           <button
             type="submit"
             disabled={busy || !token}
             className="btn-primary w-full disabled:opacity-60"
           >
-            {busy ? "Saving…" : "Update password"}
+            {busy ? "Сохранение…" : "Обновить пароль"}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-[var(--muted)]">
           <Link href="/?login=1" className="text-[var(--accent)]">
-            Back to sign in
+            Вернуться к входу
           </Link>
         </p>
       </div>

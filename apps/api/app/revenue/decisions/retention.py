@@ -42,11 +42,11 @@ class RetentionDecisionFactory:
             customer_id=customer_id,
             risk_score=float(churn_risk),
             priority=scored["priority"],  # type: ignore[arg-type]
-            plan=f"Retain customer (priority={scored['priority']})",
+            plan=f"Удержание клиента (приоритет={scored['priority']})",
             actions=plan_actions,
             suggested_offer=None,  # AI must not apply discounts
             lifetime_value=lifetime_value,
-            rationale=rationale or "Predicted churn risk from revenue intelligence",
+            rationale=rationale or 'Прогноз риска ухода по аналитике выручки',
         )
 
     def value_decision(
@@ -63,5 +63,5 @@ class RetentionDecisionFactory:
             lifetime_value=lifetime_value,
             health_score=health_score,
             churn_risk=churn_risk,
-            rationale=rationale or "Customer value analysis",
+            rationale=rationale or 'Анализ ценности клиента',
         )

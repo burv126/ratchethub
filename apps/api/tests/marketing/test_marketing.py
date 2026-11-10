@@ -250,7 +250,7 @@ async def test_preview_ai_empty_audience_errors(runtime, shop_id):
         campaign_type=CampaignType.THANK_YOU,
         use_demo_audience=False,
     )
-    with pytest.raises(LookupError, match="no audience"):
+    with pytest.raises(LookupError, match="нет участников аудитории"):
         await runtime.service.preview_ai(shop_id, campaign.id)
 
 

@@ -30,7 +30,7 @@ class ContactTimingService:
             customer_id=customer_id,
             channel=channel,
             preferred_window=window,
-            reason="Derived from shop/customer communication preferences",
+            reason='На основе предпочтений связи автосервиса и клиента',
         )
         return {
             "shop_id": str(shop_id),
@@ -38,5 +38,5 @@ class ContactTimingService:
             "preferred_window": window,
             "channel": channel,
             "ai_actions_allowed": False,
-            "note": "Suggestion only — Workflow must not auto-send from this capability",
+            "note": 'Только рекомендация — процесс не должен автоматически отправлять сообщение из этой возможности',
         }

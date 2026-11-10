@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -105,7 +109,7 @@ export default function EnterprisePage() {
       try {
         await refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load enterprise");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить организацию");
       }
     })();
   }, [authLoading, session]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -119,7 +123,7 @@ export default function EnterprisePage() {
       await refresh();
       await loadOrg(org.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Seed failed");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить демоданные");
     } finally {
       setBusy(false);
     }
@@ -137,7 +141,7 @@ export default function EnterprisePage() {
       });
       setBrand(next);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Brand update failed");
+      setError(err instanceof Error ? err.message : "Не удалось обновить оформление");
     } finally {
       setBusy(false);
     }
@@ -150,11 +154,10 @@ export default function EnterprisePage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="page-title" style={{ color: primary }}>
-            {(brand?.product_name as string) || "Enterprise"}
+            {(brand?.product_name as string) || "Организация"}
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Multi-location · central dashboard · roles · franchise analytics · AI policies · white label ·
-            audit · SSO · API gateway
+            Филиалы · общая панель · роли · аналитика сети · политики ИИ · фирменное оформление · аудит · SSO · шлюз API
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -166,7 +169,7 @@ export default function EnterprisePage() {
             }}
             className="rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
           >
-            {!orgs.length && <option value="">No organizations</option>}
+            {!orgs.length && <option value="">Нет организаций</option>}
             {orgs.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.name}
@@ -179,13 +182,13 @@ export default function EnterprisePage() {
             onClick={() => void onSeed()}
             className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
-            {busy ? "Working…" : "Seed franchise demo"}
+            {busy ? "Обработка…" : "Создать демосеть"}
           </button>
         </div>
       </div>
 
       {error && (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{ruError(error)}</p>
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -207,7 +210,7 @@ export default function EnterprisePage() {
 
       {entMetrics && (
         <p className="rounded-md border border-[var(--line)] px-3 py-2 text-xs text-[var(--muted)]">
-          Enterprise metrics: {JSON.stringify(entMetrics)}
+          Показатели организации: {JSON.stringify(entMetrics)}
         </p>
       )}
 
@@ -228,24 +231,24 @@ export default function EnterprisePage() {
                   await refresh();
                   await loadOrg(org.id);
                 } catch (err) {
-                  setError(err instanceof Error ? err.message : "Create org failed");
+                  setError(err instanceof Error ? err.message : "Не удалось создать организацию");
                 } finally {
                   setBusy(false);
                 }
               })();
             }}
           >
-            <h2 className="text-sm font-medium">Create organization</h2>
+            <h2 className="text-sm font-medium">Создать организацию</h2>
             <input
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
-              placeholder="Name"
+              placeholder="Имя"
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
               required
             />
             <input
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
-              placeholder="Slug"
+              placeholder="Идентификатор"
               value={orgSlug}
               onChange={(e) => setOrgSlug(e.target.value)}
               required
@@ -255,7 +258,7 @@ export default function EnterprisePage() {
               disabled={busy}
               className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              Create org
+              Создать организацию
             </button>
           </form>
 
@@ -278,24 +281,24 @@ export default function EnterprisePage() {
                   setLocCode("");
                   await loadOrg(orgId);
                 } catch (err) {
-                  setError(err instanceof Error ? err.message : "Add location failed");
+                  setError(err instanceof Error ? err.message : "Не удалось добавить филиал");
                 } finally {
                   setBusy(false);
                 }
               })();
             }}
           >
-            <h2 className="text-sm font-medium">Add location</h2>
-            <p className="text-xs text-[var(--muted)]">Uses session shop: {session?.shopId}</p>
+            <h2 className="text-sm font-medium">Добавить филиал</h2>
+            <p className="text-xs text-[var(--muted)]">Используется автосервис сессии: {session?.shopId}</p>
             <input
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
-              placeholder="Location name"
+              placeholder="Название филиала"
               value={locName}
               onChange={(e) => setLocName(e.target.value)}
             />
             <input
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
-              placeholder="Code"
+              placeholder="Код"
               value={locCode}
               onChange={(e) => setLocCode(e.target.value)}
             />
@@ -304,7 +307,7 @@ export default function EnterprisePage() {
               disabled={busy || !orgId}
               className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              Add location
+              Добавить филиал
             </button>
           </form>
 
@@ -325,14 +328,14 @@ export default function EnterprisePage() {
                   });
                   await loadOrg(orgId);
                 } catch (err) {
-                  setError(err instanceof Error ? err.message : "Create policy failed");
+                  setError(err instanceof Error ? err.message : "Не удалось создать политику");
                 } finally {
                   setBusy(false);
                 }
               })();
             }}
           >
-            <h2 className="text-sm font-medium">Create policy</h2>
+            <h2 className="text-sm font-medium">Создать политику</h2>
             <input
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
               value={policyName}
@@ -343,7 +346,7 @@ export default function EnterprisePage() {
               disabled={busy || !orgId}
               className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              Create policy
+              Создать политику
             </button>
           </form>
 
@@ -360,14 +363,14 @@ export default function EnterprisePage() {
                   const key = await createApiKey(orgId, { name: apiKeyName });
                   setRawApiKey(key.api_key);
                 } catch (err) {
-                  setError(err instanceof Error ? err.message : "Create API key failed");
+                  setError(err instanceof Error ? err.message : "Не удалось создать ключ API");
                 } finally {
                   setBusy(false);
                 }
               })();
             }}
           >
-            <h2 className="text-sm font-medium">Create API key</h2>
+            <h2 className="text-sm font-medium">Создать ключ API</h2>
             <input
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
               value={apiKeyName}
@@ -378,11 +381,11 @@ export default function EnterprisePage() {
               disabled={busy || !orgId}
               className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              Create API key
+              Создать ключ API
             </button>
             {rawApiKey && (
               <p className="break-all rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-900">
-                Copy now (shown once): {rawApiKey}
+                Скопируйте сейчас (показывается один раз): {rawApiKey}
               </p>
             )}
           </form>
@@ -403,30 +406,30 @@ export default function EnterprisePage() {
                   });
                   await loadOrg(orgId);
                 } catch (err) {
-                  setError(err instanceof Error ? err.message : "Grant membership failed");
+                  setError(err instanceof Error ? err.message : "Не удалось добавить участника");
                 } finally {
                   setBusy(false);
                 }
               })();
             }}
           >
-            <h2 className="text-sm font-medium">Grant membership</h2>
+            <h2 className="text-sm font-medium">Добавить участника</h2>
             <div className="grid gap-2 sm:grid-cols-3">
               <input
                 className="rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
-                placeholder="Email"
+                placeholder="Эл. почта"
                 value={memberEmail}
                 onChange={(e) => setMemberEmail(e.target.value)}
               />
               <input
                 className="rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
-                placeholder="User ID"
+                placeholder="ID пользователя"
                 value={memberUserId}
                 onChange={(e) => setMemberUserId(e.target.value)}
               />
               <input
                 className="rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
-                placeholder="Role"
+                placeholder="Роль"
                 value={memberRole}
                 onChange={(e) => setMemberRole(e.target.value)}
               />
@@ -436,13 +439,13 @@ export default function EnterprisePage() {
               disabled={busy || !orgId}
               className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              Grant membership
+              Добавить участника
             </button>
             {memberships.length > 0 && (
               <ul className="mt-2 space-y-1 text-xs text-[var(--muted)]">
                 {memberships.map((m) => (
                   <li key={m.id}>
-                    {m.email} · {m.role}
+                    {m.email} · {ruLabel(m.role)}
                   </li>
                 ))}
               </ul>
@@ -459,7 +462,7 @@ export default function EnterprisePage() {
                 <p className="text-xs uppercase tracking-wide text-[var(--muted)]">{k.label}</p>
                 <p className="mt-1 text-xl font-semibold">
                   {k.unit === "usd"
-                    ? `$${k.value.toLocaleString()}`
+                    ? `$${k.value.toLocaleString("ru-RU")}`
                     : k.unit === "ratio"
                       ? `${(k.value * 100).toFixed(1)}%`
                       : k.value}
@@ -471,11 +474,11 @@ export default function EnterprisePage() {
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-[var(--line)] text-xs uppercase text-[var(--muted)]">
                 <tr>
-                  <th className="px-3 py-2">Location</th>
-                  <th className="px-3 py-2">Revenue</th>
-                  <th className="px-3 py-2">Appts</th>
-                  <th className="px-3 py-2">Retention</th>
-                  <th className="px-3 py-2">AI</th>
+                  <th className="px-3 py-2">Филиал</th>
+                  <th className="px-3 py-2">Выручка</th>
+                  <th className="px-3 py-2">Записи</th>
+                  <th className="px-3 py-2">Удержание</th>
+                  <th className="px-3 py-2">ИИ</th>
                 </tr>
               </thead>
               <tbody>
@@ -484,7 +487,7 @@ export default function EnterprisePage() {
                     <td className="px-3 py-2">
                       {l.location_name} ({l.code})
                     </td>
-                    <td className="px-3 py-2">${l.revenue.toLocaleString()}</td>
+                    <td className="px-3 py-2">${l.revenue.toLocaleString("ru-RU")}</td>
                     <td className="px-3 py-2">{l.appointments}</td>
                     <td className="px-3 py-2">{(l.retention * 100).toFixed(0)}%</td>
                     <td className="px-3 py-2">{(l.ai_success_rate * 100).toFixed(0)}%</td>
@@ -495,15 +498,15 @@ export default function EnterprisePage() {
           </section>
           {analytics && (
             <p className="text-xs text-[var(--muted)]">
-              Rankings by revenue: {((analytics.rankings as { revenue?: string[] })?.revenue || []).join(" → ")}
+              Рейтинг по выручке: {((analytics.rankings as { revenue?: string[] })?.revenue || []).join(" → ")}
             </p>
           )}
           <section className="rounded-md border border-[var(--line)] p-4">
-            <h2 className="text-sm font-medium">Role hierarchy</h2>
+            <h2 className="text-sm font-medium">Иерархия ролей</h2>
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
               {roles.map((r) => (
-                <li key={r.role}>
-                  {r.label} <span className="text-xs text-[var(--muted)]">(rank {r.rank})</span>
+                <li key={ruLabel(r.role)}>
+                  {r.label} <span className="text-xs text-[var(--muted)]">(уровень {r.rank})</span>
                 </li>
               ))}
             </ol>
@@ -516,11 +519,11 @@ export default function EnterprisePage() {
           <ul className="space-y-2">
             {policies.map((p) => (
               <li key={p.id} className="rounded-md border border-[var(--line)] px-3 py-2 text-sm">
-                <span className="font-medium">{p.name}</span> · {p.effect} · priority {p.priority}
+                <span className="font-medium">{p.name}</span> · {ruLabel(p.effect)} · приоритет {p.priority}
                 <pre className="mt-1 text-[11px] text-[var(--muted)]">{JSON.stringify(p.rules)}</pre>
               </li>
             ))}
-            {!policies.length && <li className="text-sm text-[var(--muted)]">No policies</li>}
+            {!policies.length && <li className="text-sm text-[var(--muted)]">Нет политик</li>}
           </ul>
           <button
             type="button"
@@ -533,7 +536,7 @@ export default function EnterprisePage() {
               })()
             }
           >
-            Evaluate emergency policy
+            Проверить аварийную политику
           </button>
           {policyResult && <pre className="rounded bg-[var(--panel)] p-3 text-[11px]">{policyResult}</pre>}
         </section>
@@ -542,7 +545,7 @@ export default function EnterprisePage() {
       {tab === "brand" && brand && (
         <section className="max-w-lg space-y-3 rounded-md border border-[var(--line)] p-4">
           <label className="block text-xs text-[var(--muted)]">
-            Product name
+            Название продукта
             <input
               className="mt-1 w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
               value={String(brand.product_name || "")}
@@ -550,7 +553,7 @@ export default function EnterprisePage() {
             />
           </label>
           <label className="block text-xs text-[var(--muted)]">
-            Primary color
+            Основной цвет
             <input
               className="mt-1 w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
               value={String(brand.primary_color || "")}
@@ -558,7 +561,7 @@ export default function EnterprisePage() {
             />
           </label>
           <label className="block text-xs text-[var(--muted)]">
-            Login tagline
+            Слоган на странице входа
             <input
               className="mt-1 w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
               value={String(brand.login_tagline || "")}
@@ -571,7 +574,7 @@ export default function EnterprisePage() {
             onClick={() => void onSaveBrand()}
             className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white"
           >
-            Save white-label
+            Сохранить оформление
           </button>
         </section>
       )}
@@ -579,9 +582,7 @@ export default function EnterprisePage() {
       {tab === "sso" && (
         <section className="space-y-3">
           <p className="text-sm text-[var(--muted)]">
-            SSO {dash?.sso_enabled ? "enabled" : "disabled"} for this organization. Without a client
-            secret the flow runs in demo mode; with a secret, users are redirected to your IdP and
-            return at <code className="text-xs">/enterprise/sso/callback</code>.
+            SSO {dash?.sso_enabled ? "enabled" : "disabled"} для этой организации. Без секрета клиента используется деморежим; при наличии секрета пользователь направляется к провайдеру идентификации и возвращается на <code className="text-xs">/enterprise/sso/callback</code>.
           </p>
           <form
             className="max-w-lg space-y-2 rounded-md border border-[var(--line)] p-4"
@@ -610,19 +611,19 @@ export default function EnterprisePage() {
                   setSsoInfo(JSON.stringify(cfg, null, 2));
                   await loadOrg(orgId);
                 } catch (err) {
-                  setError(err instanceof Error ? err.message : "SSO configure failed");
+                  setError(err instanceof Error ? err.message : "Не удалось настроить SSO");
                 } finally {
                   setBusy(false);
                 }
               })();
             }}
           >
-            <h2 className="text-sm font-medium">Configure SSO</h2>
+            <h2 className="text-sm font-medium">Настроить SSO</h2>
             <input
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
               value={ssoProvider}
               onChange={(e) => setSsoProvider(e.target.value)}
-              placeholder="provider"
+              placeholder="провайдер"
             />
             <input
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
@@ -641,7 +642,7 @@ export default function EnterprisePage() {
               className="w-full rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
               value={ssoClientSecret}
               onChange={(e) => setSsoClientSecret(e.target.value)}
-              placeholder="client_secret (optional — enables real OIDC)"
+              placeholder="client_secret (необязательно — включает OIDC)"
               autoComplete="off"
             />
             <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
@@ -650,14 +651,14 @@ export default function EnterprisePage() {
                 checked={ssoRequire}
                 onChange={(e) => setSsoRequire(e.target.checked)}
               />
-              Require SSO (block password login for linked shops)
+              Требовать SSO (запретить вход по паролю для связанных автосервисов)
             </label>
             <button
               type="submit"
               disabled={busy || !orgId}
               className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              Save SSO config
+              Сохранить настройки SSO
             </button>
           </form>
           <button
@@ -683,14 +684,14 @@ export default function EnterprisePage() {
                     window.location.href = authorizeUrl;
                   }
                 } catch (err) {
-                  setError(err instanceof Error ? err.message : "SSO begin failed");
+                  setError(err instanceof Error ? err.message : "Не удалось запустить SSO");
                 } finally {
                   setBusy(false);
                 }
               })()
             }
           >
-            Begin SSO login
+            Войти через SSO
           </button>
           {ssoInfo && <pre className="rounded bg-[var(--panel)] p-3 text-[11px]">{ssoInfo}</pre>}
         </section>
@@ -700,7 +701,7 @@ export default function EnterprisePage() {
         <section className="space-y-4">
           <div className="flex flex-wrap items-end gap-2">
             <label className="text-xs text-[var(--muted)]">
-              Authorize path
+              Путь авторизации
               <input
                 className="mt-1 block w-64 rounded-md border border-[var(--line)] bg-transparent px-3 py-2 text-sm"
                 value={gatewayPath}
@@ -713,10 +714,10 @@ export default function EnterprisePage() {
               onClick={() =>
                 void authorizeGateway({ path: gatewayPath, role: "org_admin" })
                   .then((r) => setGatewayResult(JSON.stringify(r, null, 2)))
-                  .catch((err) => setError(err instanceof Error ? err.message : "Authorize failed"))
+                  .catch((err) => setError(err instanceof Error ? err.message : "Не удалось авторизовать"))
               }
             >
-              Test authorize
+              Проверить авторизацию
             </button>
           </div>
           {gatewayResult && <pre className="rounded bg-[var(--panel)] p-3 text-[11px]">{gatewayResult}</pre>}
@@ -724,11 +725,11 @@ export default function EnterprisePage() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[var(--line)] text-xs uppercase text-[var(--muted)]">
               <tr>
-                <th className="px-3 py-2">Route</th>
-                <th className="px-3 py-2">Auth</th>
-                <th className="px-3 py-2">Role</th>
-                <th className="px-3 py-2">RPM</th>
-                <th className="px-3 py-2">Description</th>
+                <th className="px-3 py-2">Маршрут</th>
+                <th className="px-3 py-2">Авторизация</th>
+                <th className="px-3 py-2">Роль</th>
+                <th className="px-3 py-2">Запросов/мин</th>
+                <th className="px-3 py-2">Описание</th>
               </tr>
             </thead>
             <tbody>
@@ -754,11 +755,11 @@ export default function EnterprisePage() {
               <span className="font-medium uppercase">{e.action}</span> {e.resource}
               {e.actor_email && <span className="text-[var(--muted)]"> · {e.actor_email}</span>}
               {e.created_at && (
-                <span className="ml-2 text-[var(--muted)]">{new Date(e.created_at).toLocaleString()}</span>
+                <span className="ml-2 text-[var(--muted)]">{new Date(e.created_at).toLocaleString("ru-RU")}</span>
               )}
             </li>
           ))}
-          {!audit.length && <li className="text-sm text-[var(--muted)]">No audit events</li>}
+          {!audit.length && <li className="text-sm text-[var(--muted)]">Нет событий аудита</li>}
         </ul>
       )}
     </div>

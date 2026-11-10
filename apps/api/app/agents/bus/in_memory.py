@@ -65,7 +65,7 @@ class InMemoryEventBus:
         existing = self._handlers[event_type]
         if len(existing) >= agent_settings.bus_max_handlers_per_event:
             raise AgentValidationError(
-                f"Max handlers reached for event type '{event_type}'",
+                f"Достигнут лимит обработчиков события '{event_type}'",
                 agent="event_bus",
             )
         if handler not in existing:

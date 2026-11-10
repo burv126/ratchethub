@@ -57,7 +57,7 @@ def _name_update_decision(
         phone=_normalize_phone(request.phone) or existing.phone,
         email=(request.email or existing.email),
         profile_patch={"name": new_name},
-        rationale="Fill in real customer name before booking",
+        rationale='Укажите настоящее имя клиента до записи',
     )
 
 
@@ -115,7 +115,7 @@ class InMemoryCustomerDirectory:
     ) -> CustomerProfile:
         primary = await self.find_by_id(shop_id, primary_id)
         if primary is None:
-            raise AgentValidationError("Primary customer not found", agent="customer")
+            raise AgentValidationError('Основной клиент не найден', agent="customer")
         for dup_id in duplicate_ids:
             dup = await self.find_by_id(shop_id, dup_id)
             if dup is None:
@@ -198,7 +198,7 @@ class CustomerAgent(Agent[CustomerResolveRequest, CustomerResolveResult]):
                 name=request.name,
                 phone=_normalize_phone(request.phone),
                 email=request.email,
-                rationale="Multiple matches — recommend merge",
+                rationale='Несколько совпадений — рекомендуется объединение',
             )
             return AgentResult.ok(
                 CustomerResolveResult(
@@ -245,7 +245,7 @@ class CustomerAgent(Agent[CustomerResolveRequest, CustomerResolveResult]):
             name=name,
             phone=_normalize_phone(request.phone),
             email=request.email.lower().strip() if request.email else None,
-            rationale="No match — recommend create customer",
+            rationale='Совпадений нет — рекомендуется создать клиента',
         )
         # Provisional profile for downstream AI (not persisted until Workflow applies)
         provisional = CustomerProfile(
@@ -281,7 +281,7 @@ class CustomerAgent(Agent[CustomerResolveRequest, CustomerResolveResult]):
                 "address": profile.address,
                 "tags": list(profile.tags),
             },
-            rationale="Recommend customer profile update",
+            rationale='Рекомендуется обновить профиль клиента',
         )
         # Attach decision on metadata via result — return profile unchanged pending apply
         result = AgentResult.ok(profile)
@@ -293,5 +293,5 @@ class CustomerAgent(Agent[CustomerResolveRequest, CustomerResolveResult]):
     ) -> AgentResult[CustomerProfile]:
         profile = await self._directory.find_by_id(context.shop_id, customer_id)
         if profile is None:
-            return AgentResult.fail("Customer not found")
+            return AgentResult.fail('Клиент не найден')
         return AgentResult.ok(profile)

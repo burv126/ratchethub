@@ -14,5 +14,5 @@ class ManualConnector:
     async def extract(self, ctx: ConnectorContext) -> NormalizedBatch:
         sections = ctx.manual_sections or ctx.options.get("sections")
         if not sections or not isinstance(sections, dict):
-            raise ValueError("Manual import requires sections payload")
+            raise ValueError('Для ручного импорта требуются разделы данных')
         return build_batch_from_sections(sections, source=self.source)

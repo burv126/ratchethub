@@ -63,10 +63,10 @@ def _is_overdue(
     if last is None:
         # Never serviced — overdue if mileage or age suggests it
         if vehicle.mileage >= spec.interval_miles:
-            return True, f"No {spec.label} on record; mileage {vehicle.mileage:,} exceeds interval"
+            return True, f'В истории нет {spec.label}; пробег {vehicle.mileage:,} превышает интервал'
         age_days = max(0, (now.year - vehicle.year) * 365)
         if age_days >= spec.interval_days:
-            return True, f"No {spec.label} on record; vehicle age exceeds interval"
+            return True, f'В истории нет {spec.label}; возраст автомобиля превышает интервал'
         return False, ""
     miles_since = vehicle.mileage - (last.mileage or 0)
     days = days_since(last.performed_at, now=now) or 0
@@ -129,8 +129,8 @@ class RevenueAnalysisEngine:
                     customer,
                     vehicle=None,
                     kind=OpportunityKind.LOST_CUSTOMER,
-                    title="Win back lost customer",
-                    reason=f"No visit in {inactive} days; CLV ${clv}",
+                    title='Вернуть ушедшего клиента',
+                    reason=f'Нет визитов {inactive} дней; ценность клиента ${clv}',
                     revenue=max(clv * Decimal("0.15"), Decimal("120")),
                     base_prob=0.28,
                     customer_health=c_score.score,
@@ -148,8 +148,8 @@ class RevenueAnalysisEngine:
                     customer,
                     vehicle=None,
                     kind=OpportunityKind.LIKELY_RETURN,
-                    title="Customer likely to return",
-                    reason=f"Visit cadence suggests return window ({inactive} days since last)",
+                    title='Клиент, вероятно, вернётся',
+                    reason=f'Периодичность визитов указывает на срок возвращения (прошло {inactive} дней)',
                     revenue=max(customer.total_spend / max(customer.visit_count, 1), Decimal("99")),
                     base_prob=0.55,
                     customer_health=c_score.score,
@@ -172,8 +172,8 @@ class RevenueAnalysisEngine:
                     customer,
                     vehicle=vehicle,
                     kind=OpportunityKind.DECLINED_ESTIMATE,
-                    title=f"Revisit declined {service}",
-                    reason="Previously declined estimate — high acceptance if reframed",
+                    title=f'Вернуться к отклонённой услуге: {service}',
+                    reason='Ранее отклонённая смета — высокая вероятность согласия при новом подходе',
                     revenue=amount,
                     base_prob=0.42,
                     customer_health=c_score.score,
@@ -190,8 +190,8 @@ class RevenueAnalysisEngine:
                     customer,
                     vehicle=vehicle,
                     kind=OpportunityKind.LIKELY_ACCEPT,
-                    title=f"Likely to accept {service}",
-                    reason="Acceptance model based on prior estimate + engagement",
+                    title=f'Вероятно согласится на {service}',
+                    reason='Модель согласия по прошлой смете и взаимодействиям',
                     revenue=amount,
                     base_prob=0.48,
                     customer_health=c_score.score,
@@ -244,8 +244,8 @@ class RevenueAnalysisEngine:
                         customer,
                         vehicle=vehicle,
                         kind=OpportunityKind.MAINTENANCE_OVERDUE,
-                        title=f"Maintenance overdue — {label}",
-                        reason="One or more scheduled services exceed mileage/time intervals",
+                        title=f'Просрочено обслуживание — {label}',
+                        reason='Для одной или нескольких услуг превышен интервал пробега или времени',
                         revenue=Decimal("199.00"),
                         base_prob=0.52,
                         customer_health=c_score.score,

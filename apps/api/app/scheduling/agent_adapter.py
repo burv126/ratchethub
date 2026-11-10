@@ -185,7 +185,7 @@ class IntelligenceSchedulingStore:
             # SMS/voice claim a booking while the customer's requested time
             # (often outside business hours) was rejected.
             raise AgentValidationError(
-                result.message or "Unable to book requested slot",
+                result.message or 'Не удалось записать на выбранное время',
                 agent="scheduling",
             )
         return _to_record(result.appointment)
@@ -225,7 +225,7 @@ class IntelligenceSchedulingStore:
         )
         if not result.success or result.appointment is None:
             raise AgentValidationError(
-                result.message or "Unable to reschedule",
+                result.message or 'Не удалось перенести',
                 agent="scheduling",
             )
         return _to_record(result.appointment)
@@ -240,7 +240,7 @@ class IntelligenceSchedulingStore:
         except ValidationError as exc:
             raise AgentValidationError(str(exc), agent="scheduling") from exc
         if appt is None:
-            raise AgentValidationError("Appointment not found", agent="scheduling")
+            raise AgentValidationError('Запись не найдена', agent="scheduling")
         return _to_record(appt)
 
     async def get(self, shop_id: UUID, appointment_id: UUID) -> AppointmentRecord | None:

@@ -103,7 +103,7 @@ async def test_book_rejects_unavailable_preferred_start(runtime, shop_id):
     )
     assert not second.success
     assert second.conflicts and second.conflicts.has_conflict
-    assert "not available" in (second.message or "").lower() or "unavailable" in (
+    assert 'недоступ' in (second.message or "").lower() or 'недоступ' in (
         second.message or ""
     ).lower()
 
@@ -494,7 +494,7 @@ async def test_rejects_when_no_mechanic_has_required_skill(runtime, shop_id):
     )
     assert not result.success
     assert result.message
-    assert "skill" in result.message.lower() or "slots" in result.message.lower()
+    assert 'квалификац' in result.message.lower() or 'врем' in result.message.lower()
 
 
 @pytest.mark.asyncio
@@ -684,7 +684,7 @@ async def test_overflow_preferred_time_rejects_with_alternatives(runtime, shop_i
     assert overflow.recommended_slot is not None
     assert overflow.recommended_slot.start != preferred
     msg = (overflow.message or "").lower()
-    assert "available" in msg or "unavailable" in msg or "conflict" in msg
+    assert 'свобод' in msg or 'недоступ' in msg or 'конфликт' in msg
 
 
 @pytest.mark.asyncio
@@ -733,7 +733,7 @@ async def test_agent_validate_rejects_full_preferred_time(runtime, shop_id):
     assert not validation["valid"]
     assert validation["has_conflict"]
     joined = " ".join(validation.get("errors") or []).lower()
-    assert "staff" in joined or "bay" in joined or "available" in joined
+    assert "сотрудник" in joined or "пост" in joined or "свобод" in joined
 
     free = preferred + timedelta(hours=2)
     free_ok = await avail.validate_appointment(
@@ -861,7 +861,7 @@ async def test_change_service_rejects_cancelled(runtime, shop_id):
         estimated_revenue=Decimal("100.00"),
     )
     assert not changed.success
-    assert "cancelled" in (changed.message or "").lower()
+    assert 'отмен' in (changed.message or "").lower()
 
 
 @pytest.mark.asyncio
@@ -940,7 +940,7 @@ async def test_complete_appointment_and_walk_in_active_check(runtime, shop_id):
     await runtime.service.cancel(
         shop_id=shop_id, appointment_id=cancelled.appointment.id, reason="nope"
     )
-    with pytest.raises(ValidationError, match="Cannot complete"):
+    with pytest.raises(ValidationError, match="Нельзя завершить"):
         await runtime.service.complete(
             shop_id=shop_id, appointment_id=cancelled.appointment.id
         )
@@ -964,9 +964,9 @@ async def test_completed_appointment_cannot_reschedule_or_cancel(runtime, shop_i
         preferred_start=booked.appointment.start + timedelta(days=1),
     )
     assert not moved.success
-    assert "completed" in (moved.message or "").lower()
+    assert 'заверш' in (moved.message or "").lower()
 
-    with pytest.raises(ValidationError, match="Cannot cancel"):
+    with pytest.raises(ValidationError, match="Нельзя отменить"):
         await runtime.service.cancel(
             shop_id=shop_id, appointment_id=booked.appointment.id, reason="oops"
         )
@@ -1060,4 +1060,4 @@ async def test_walk_in_start_rejects_outside_business_hours(runtime, shop_id):
         )
     )
     assert not result.success
-    assert "business hours" in (result.message or "").lower()
+    assert 'рабочие часы' in (result.message or "").lower()

@@ -126,8 +126,8 @@ class MarketingAiChooser:
             name=member.name.split()[0] if member.name else "there",
             vehicle=str(meta.get("vehicle") or "vehicle"),
             service=str(meta.get("service") or "service"),
-            shop=str(meta.get("shop") or campaign.metadata.get("shop_name") or "our shop"),
-            offer=str(meta.get("offer") or campaign.metadata.get("offer") or "a special offer"),
+            shop=str(meta.get("shop") or campaign.metadata.get("shop_name") or 'наш автосервис'),
+            offer=str(meta.get("offer") or campaign.metadata.get("offer") or 'специальное предложение'),
             custom=campaign.custom_message,
         )
         subject = None
@@ -171,7 +171,7 @@ class MarketingAiChooser:
             return self.plan_for_member(campaign, campaign.audience[0], now=now)
         member = AudienceMember(
             customer_id=campaign.id,
-            name="Customer",
+            name='Клиент',
             phone="+15550001111",
             email="customer@example.com",
         )

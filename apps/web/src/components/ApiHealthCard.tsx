@@ -17,15 +17,15 @@ export function ApiHealthCard() {
         if (cancelled) return;
         if (res.ok && data.status === "ok") {
           setStatus("ok");
-          setDetail(`phase ${data.phase ?? "?"}`);
+          setDetail(`этап ${data.phase ?? "?"}`);
         } else {
           setStatus("down");
-          setDetail("unexpected response");
+          setDetail("неожиданный ответ");
         }
       } catch {
         if (!cancelled) {
           setStatus("down");
-          setDetail(`cannot reach ${apiUrl}`);
+          setDetail(`нет связи с ${apiUrl}`);
         }
       }
     })();
@@ -36,11 +36,11 @@ export function ApiHealthCard() {
 
   return (
     <div className="surface-panel p-4">
-      <p className="font-display text-sm font-semibold tracking-tight">API health</p>
+      <p className="font-display text-sm font-semibold tracking-tight">Состояние API</p>
       <p className="mt-2 text-sm text-[var(--muted)]">
-        {status === "loading" && "Checking FastAPI…"}
-        {status === "ok" && `Connected (${detail})`}
-        {status === "down" && `Unavailable — ${detail}`}
+        {status === "loading" && "Проверка FastAPI…"}
+        {status === "ok" && `Подключено (${detail})`}
+        {status === "down" && `Недоступно — ${detail}`}
       </p>
     </div>
   );

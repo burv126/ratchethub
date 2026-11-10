@@ -1,3 +1,5 @@
+
+import { readApiError } from "@/lib/ru-errors";
 import { clearSession, getApiUrl, loadSession, refresh, saveSession } from "@/lib/api";
 
 export type DashboardCard = {
@@ -51,17 +53,12 @@ export type ExecutiveDashboard = {
 };
 
 async function parseError(res: Response) {
-  try {
-    const data = await res.json();
-    return typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail ?? data);
-  } catch {
-    return res.statusText;
-  }
+  return readApiError(res);
 }
 
 async function authFetch(path: string, init: RequestInit = {}) {
   let current = loadSession();
-  if (!current) throw new Error("Not authenticated");
+  if (!current) throw new Error("Вход не выполнен");
   const doFetch = (accessToken: string) =>
     fetch(`${getApiUrl()}${path}`, {
       ...init,
@@ -79,7 +76,7 @@ async function authFetch(path: string, init: RequestInit = {}) {
       res = await doFetch(current.accessToken);
     } catch {
       clearSession();
-      throw new Error("Session expired");
+      throw new Error("Сессия истекла");
     }
   }
   return res;

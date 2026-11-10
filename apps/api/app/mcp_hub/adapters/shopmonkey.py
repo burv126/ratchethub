@@ -9,7 +9,7 @@ from app.mcp_hub.enums import AuthMethod, IntegrationCategory, IntegrationProvid
 class ShopmonkeyAdapter(BaseAdapter):
     provider = IntegrationProvider.SHOPMONKEY
     display_name = "Shopmonkey"
-    description = "Modern shop OS — jobs, inventory, and customer CRM."
+    description = 'Современная система автосервиса — работы, склад и CRM клиентов.'
     category = IntegrationCategory.PMS
     auth_method = AuthMethod.API_KEY
     api_version = "v1"
@@ -20,13 +20,13 @@ class ShopmonkeyAdapter(BaseAdapter):
     tool_defs = [
         (
             "shopmonkey.list_jobs",
-            "List open jobs",
+            'Список открытых работ',
             {"type": "object", "properties": {"status": {"type": "string"}}},
             ["pms", "read"],
         ),
         (
             "shopmonkey.update_job",
-            "Update job status or notes",
+            'Обновить статус или примечания работы',
             {
                 "type": "object",
                 "properties": {"job_id": {"type": "string"}, "status": {"type": "string"}, "notes": {"type": "string"}},

@@ -5,21 +5,18 @@ export default function TermsPage() {
     <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
         <BrandLogo size={40} wordmarkClassName="text-2xl font-semibold tracking-tight" />
       <h1 className="font-display mt-10 text-3xl font-semibold tracking-tight sm:text-4xl">
-        Terms of Service
+        Условия использования
       </h1>
-      <p className="mt-2 text-sm text-[var(--muted)]">Last updated: July 29, 2026</p>
+      <p className="mt-2 text-sm text-[var(--muted)]">Последнее обновление: 29 июля 2026 г.</p>
       <div className="surface-panel mt-8 space-y-4 p-6 text-sm leading-relaxed text-[var(--muted)]">
         <p>
-          By creating a shop account you agree to use RatchetHub only for lawful automotive
-          service operations and to keep credentials secure.
+          Создавая учётную запись автосервиса, вы соглашаетесь использовать АвтоЦентр только для законной деятельности по обслуживанию автомобилей и обеспечивать безопасность учётных данных.
         </p>
         <p>
-          Paid plans renew monthly unless canceled. Usage over plan quotas may be blocked until you
-          upgrade. The Free plan includes a trial period.
+          Платные тарифы продлеваются ежемесячно до отмены. При превышении квот использование может быть заблокировано до повышения тарифа. Тариф «Бесплатный» включает пробный период.
         </p>
         <p>
-          The service is provided as-is. Operators may suspend shops that abuse SMS, AI, or payment
-          systems.
+          Сервис предоставляется «как есть». Операторы могут приостановить работу автосервисов, злоупотребляющих SMS, ИИ или платёжными системами.
         </p>
       </div>
     </main>

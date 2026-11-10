@@ -13,6 +13,10 @@ from app.sms.twilio.provider import validate_twilio_signature
 logger = logging.getLogger("asa.voice.twilio")
 
 
+def _localized_voice(voice: str) -> str:
+    return "Polly.Tatyana" if voice == "Polly.Joanna" else voice
+
+
 @dataclass(slots=True)
 class VoiceTwilioSettings:
     account_sid: str
@@ -119,14 +123,14 @@ class FakeVoiceProvider:
         return f'<?xml version="1.0" encoding="UTF-8"?><Response><Redirect>{escape(url)}</Redirect></Response>'
 
     def build_hangup_twiml(self, *, say_text: str | None = None) -> str:
-        say = f"<Say voice=\"{escape(self.settings.say_voice)}\">{escape(say_text)}</Say>" if say_text else ""
+        say = f"<Say language=\"ru-RU\" voice=\"{escape(_localized_voice(self.settings.say_voice))}\">{escape(say_text)}</Say>" if say_text else ""
         return f'<?xml version="1.0" encoding="UTF-8"?><Response>{say}<Hangup/></Response>'
 
     def build_dial_human_twiml(self, *, say_text: str, client_identity: str = "shop") -> str:
         return (
             '<?xml version="1.0" encoding="UTF-8"?>'
             "<Response>"
-            f'<Say voice="{escape(self.settings.say_voice)}">{escape(say_text)}</Say>'
+            f'<Say language="ru-RU" voice="{escape(_localized_voice(self.settings.say_voice))}">{escape(say_text)}</Say>'
             f"<Dial><Client>{escape(client_identity)}</Client></Dial>"
             "</Response>"
         )
@@ -191,14 +195,14 @@ class TwilioVoiceProvider:
         return f'<?xml version="1.0" encoding="UTF-8"?><Response><Redirect>{escape(url)}</Redirect></Response>'
 
     def build_hangup_twiml(self, *, say_text: str | None = None) -> str:
-        say = f"<Say voice=\"{escape(self.settings.say_voice)}\">{escape(say_text)}</Say>" if say_text else ""
+        say = f"<Say language=\"ru-RU\" voice=\"{escape(_localized_voice(self.settings.say_voice))}\">{escape(say_text)}</Say>" if say_text else ""
         return f'<?xml version="1.0" encoding="UTF-8"?><Response>{say}<Hangup/></Response>'
 
     def build_dial_human_twiml(self, *, say_text: str, client_identity: str = "shop") -> str:
         return (
             '<?xml version="1.0" encoding="UTF-8"?>'
             "<Response>"
-            f'<Say voice="{escape(self.settings.say_voice)}">{escape(say_text)}</Say>'
+            f'<Say language="ru-RU" voice="{escape(_localized_voice(self.settings.say_voice))}">{escape(say_text)}</Say>'
             f"<Dial><Client>{escape(client_identity)}</Client></Dial>"
             "</Response>"
         )
@@ -216,7 +220,7 @@ def render_gather_twiml(
     barge = "true" if barge_in else "false"
     # Allow silent re-listen (empty silence timeout) without speaking.
     say = (
-        f'<Say voice="{escape(voice)}">{escape(say_text)}</Say>'
+        f'<Say language="ru-RU" voice="{escape(_localized_voice(voice))}">{escape(say_text)}</Say>'
         if (say_text or "").strip()
         else ""
     )
@@ -226,7 +230,7 @@ def render_gather_twiml(
         "<Response>"
         f'<Gather input="speech" action="{escape(action_url)}" method="POST" '
         f'timeout="{gather_timeout}" speechTimeout="{escape(speech_timeout)}" '
-        f'speechModel="phone_call" language="en-US" '
+        f'speechModel="phone_call" language="ru-RU" '
         f'bargeIn="{barge}" actionOnEmptyResult="true">'
         f"{say}"
         "</Gather>"
@@ -272,9 +276,9 @@ def render_answer_twiml(
     parts.append(
         f'<Gather input="speech" action="{escape(action_url)}" method="POST" '
         f'timeout="{gather_timeout}" speechTimeout="{escape(speech_timeout)}" '
-        f'speechModel="phone_call" language="en-US" '
+        f'speechModel="phone_call" language="ru-RU" '
         f'bargeIn="{barge}" actionOnEmptyResult="true">'
-        f'<Say voice="{escape(voice)}">{escape(say_text)}</Say>'
+        f'<Say language="ru-RU" voice="{escape(_localized_voice(voice))}">{escape(say_text)}</Say>'
         "</Gather>"
     )
     parts.append(f'<Redirect method="POST">{escape(action_url)}</Redirect>')

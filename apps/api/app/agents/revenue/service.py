@@ -41,7 +41,7 @@ class RevenueAgent(Agent[RevenueAnalysisRequest, RevenueInsights]):
                 upsells.append(
                     UpsellOpportunity(
                         service=item.service,
-                        reason=f"Maintenance {item.status} at {item.due_mileage} miles",
+                        reason=f'Обслуживание {item.status} при пробеге {item.due_mileage} миль',
                         estimated_revenue=est,
                         priority="high" if item.status == "due_soon" else "medium",
                     )
@@ -61,7 +61,7 @@ class RevenueAgent(Agent[RevenueAnalysisRequest, RevenueInsights]):
             upsells.append(
                 UpsellOpportunity(
                     service=service,
-                    reason="Previously declined estimate",
+                    reason='Ранее отклонённая смета',
                     estimated_revenue=amount,
                     priority="high",
                 )
@@ -71,16 +71,16 @@ class RevenueAgent(Agent[RevenueAnalysisRequest, RevenueInsights]):
         if request.days_since_last_visit is not None:
             if request.days_since_last_visit > 365:
                 lost_risk = 0.9
-                notes.append("Customer inactive > 1 year — high churn risk.")
+                notes.append('Клиент не посещал более года — высокий риск ухода.')
             elif request.days_since_last_visit > 180:
                 lost_risk = 0.55
-                notes.append("Customer inactive > 6 months.")
+                notes.append('Клиент не посещал более 6 месяцев.')
             elif request.days_since_last_visit > 90:
                 lost_risk = 0.25
 
         predicted = sum((u.estimated_revenue for u in upsells), Decimal("0.00"))
         if request.intent == "price_question":
-            notes.append("Price question — opportunity to present packaged maintenance.")
+            notes.append('Вопрос о цене — возможность предложить комплексное обслуживание.')
 
         insights = RevenueInsights(
             upsell_opportunities=upsells,
@@ -105,7 +105,7 @@ class RevenueAgent(Agent[RevenueAnalysisRequest, RevenueInsights]):
                         "service": r0.get("service", "service"),
                         "due_mileage": r0.get("due_mileage", "—"),
                     },
-                    rationale="Revenue scored maintenance due — recommend reminder",
+                    rationale='По анализу выручки наступил срок обслуживания — рекомендуется напоминание',
                 )
             )
         insights.decision = RevenueDecision(
@@ -124,6 +124,6 @@ class RevenueAgent(Agent[RevenueAnalysisRequest, RevenueInsights]):
             predicted_revenue=insights.predicted_revenue,
             notes=notes,
             marketing_actions=marketing_actions,
-            rationale="Revenue opportunity / risk scoring",
+            rationale='Оценка возможностей выручки и рисков',
         )
         return AgentResult.ok(insights)

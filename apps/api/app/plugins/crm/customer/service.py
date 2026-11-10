@@ -46,8 +46,8 @@ class CustomerPluginService:
     async def summary(self, shop_id: UUID, customer_id: UUID) -> str:
         profile = await self._directory.find_by_id(shop_id, customer_id)
         if profile is None:
-            return f"Customer {customer_id}: not found."
-        parts = [f"Customer {profile.name} ({profile.id})"]
+            return f'Клиент {customer_id}: не найден.'
+        parts = [f'Клиент {profile.name} ({profile.id})']
         if profile.phone:
             parts.append(f"phone={profile.phone}")
         if profile.email:

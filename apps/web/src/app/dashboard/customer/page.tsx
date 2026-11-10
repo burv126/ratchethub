@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -42,7 +44,7 @@ function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString();
+  return d.toLocaleDateString("ru-RU");
 }
 
 function buildRow(
@@ -68,7 +70,7 @@ function buildRow(
   let nextService: CustomerRow["nextService"] = null;
   if (nextAppt) {
     nextService = {
-      label: nextAppt.repair_type || "Appointment",
+      label: nextAppt.repair_type || "Запись",
       at: nextAppt.start,
     };
   } else if (openOpp) {
@@ -376,7 +378,7 @@ function CustomersPageContent() {
         ),
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load customers");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить клиентов");
     } finally {
       setLoading(false);
     }
@@ -416,7 +418,7 @@ function CustomersPageContent() {
       await load();
       selectCustomer(created.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create customer");
+      setError(err instanceof Error ? err.message : "Не удалось создать клиента");
     } finally {
       setSaving(false);
     }
@@ -426,7 +428,7 @@ function CustomersPageContent() {
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden md:h-full">
       <div className="flex shrink-0 items-center gap-2">
         <IconUsers className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-        <h1 className="page-title">Customer</h1>
+        <h1 className="page-title">Клиент</h1>
       </div>
 
       <form
@@ -442,12 +444,12 @@ function CustomersPageContent() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name, phone, VIN, vehicle…"
+            placeholder="Поиск по имени, телефону, VIN, автомобилю…"
             className="w-full rounded-lg border-0 bg-transparent py-2 pl-8 pr-3 text-sm outline-none"
           />
         </div>
         <button type="submit" className="btn-ghost shrink-0 px-3 py-1.5 text-sm">
-          Search
+          Поиск
         </button>
       </form>
 
@@ -456,7 +458,7 @@ function CustomersPageContent() {
           className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -470,7 +472,7 @@ function CustomersPageContent() {
             <header className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--line)] px-3 py-2.5">
               <div className="flex items-center gap-1.5 text-sm font-semibold">
                 <IconUsers className="h-3.5 w-3.5 text-[var(--muted)]" />
-                List
+                Список
               </div>
               <span className="rounded-full bg-[var(--background)] px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-[var(--muted)] ring-1 ring-[var(--line)]">
                 {loading ? "…" : visible.length}
@@ -495,11 +497,11 @@ function CustomersPageContent() {
                   <span className="mb-2.5 inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--background)] text-[var(--muted)] ring-1 ring-[var(--line)]">
                     <IconUsers className="h-4 w-4" />
                   </span>
-                  <p className="text-sm font-medium">No customers found</p>
+                  <p className="text-sm font-medium">Клиенты не найдены</p>
                   <p className="mt-1 text-xs text-[var(--muted)]">
                     {appliedQuery
-                      ? "Try a different name, phone, or VIN."
-                      : "Add your first customer to build the directory."}
+                      ? "Попробуйте другое имя, телефон или VIN."
+                      : "Добавьте первого клиента в справочник."}
                   </p>
                 </li>
               )}
@@ -543,12 +545,12 @@ function CustomersPageContent() {
                             {row.customer.name}
                           </div>
                           <div className="mt-0.5 truncate text-[11px] text-[var(--muted)]">
-                            {row.customer.phone ?? "No phone"}
+                            {row.customer.phone ?? "Нет телефона"}
                             {vehicleHint ? ` · ${vehicleHint}` : ""}
                           </div>
                           {row.lastService && (
                             <div className="mt-0.5 truncate text-[10px] text-[var(--muted)]">
-                              Last · {row.lastService.label} ·{" "}
+                              Последний · {row.lastService.label} ·{" "}
                               {formatDate(row.lastService.at)}
                             </div>
                           )}
@@ -562,7 +564,7 @@ function CustomersPageContent() {
             <button
               type="button"
               onClick={() => setCreateMode("known")}
-              aria-label="Add customer"
+              aria-label="Добавить клиента"
               className="btn-primary absolute bottom-2.5 right-5 z-10 inline-flex h-11 w-11 items-center justify-center p-0 shadow-md"
             >
               <IconUserPlus className="h-5 w-5" />
@@ -592,11 +594,10 @@ function CustomersPageContent() {
                 <IconUsers className="h-5 w-5" />
               </span>
               <p className="font-display text-base font-semibold tracking-tight">
-                Select a customer
+                Выберите клиента
               </p>
               <p className="mt-1 max-w-xs text-xs text-[var(--muted)]">
-                Open a record from the directory to review profile, vehicles,
-                repairs, and calls.
+                Откройте запись в справочнике для просмотра профиля, автомобилей, ремонтов и звонков.
               </p>
             </div>
           )}
@@ -629,7 +630,7 @@ function CustomersPageContent() {
                     id="add-customer-title"
                     className="text-base font-semibold tracking-tight text-[var(--ink)]"
                   >
-                    Customer
+                    Клиент
                   </h2>
                 </div>
               </div>
@@ -637,21 +638,21 @@ function CustomersPageContent() {
               <div className="asa-scroll min-h-0 flex-1 space-y-3.5 overflow-y-auto overscroll-contain px-5 py-4">
                 <div>
                   <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                    Visit type
+                    Тип визита
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <ModeOption
                       active={createMode === "known"}
                       icon={<IconUser className="h-4 w-4" />}
-                      label="Known customer"
-                      description="Name, phone, or email on file"
+                      label="Известный клиент"
+                      description="Имя, телефон или почта в базе"
                       onClick={() => setCreateMode("known")}
                     />
                     <ModeOption
                       active={createMode === "unknown"}
                       icon={<IconDoorOpen className="h-4 w-4" />}
-                      label="Unknown walk-in"
-                      description="Vehicle-first — no name needed"
+                      label="Неизвестный посетитель"
+                      description="Сначала автомобиль — имя не требуется"
                       onClick={() => setCreateMode("unknown")}
                     />
                   </div>
@@ -669,13 +670,13 @@ function CustomersPageContent() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-slate-900">
-                          {name.trim() || "New customer"}
+                          {name.trim() || "Новый клиент"}
                         </p>
                         <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--muted)]">
                           {phone.trim() ? (
                             <span className="tabular-nums">{phone.trim()}</span>
                           ) : (
-                            <span>Phone optional</span>
+                            <span>Телефон необязателен</span>
                           )}
                           {email.trim() ? (
                             <span className="truncate">{email.trim()}</span>
@@ -689,26 +690,26 @@ function CustomersPageContent() {
                         className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
                         role="alert"
                       >
-                        {error}
+                        {ruError(error)}
                       </p>
                     )}
 
                     <div className="space-y-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                        Contact
+                        Контакт
                       </p>
                       <div className="grid grid-cols-2 gap-2.5">
                         <Field
-                          label="Name"
+                          label="Имя"
                           icon={<IconUser />}
                           value={name}
                           onChange={setName}
                           required
-                          placeholder="Full name"
+                          placeholder="Полное имя"
                           className="col-span-2"
                         />
                         <Field
-                          label="Phone"
+                          label="Телефон"
                           icon={<IconPhone />}
                           type="tel"
                           value={phone}
@@ -716,12 +717,12 @@ function CustomersPageContent() {
                           placeholder={PHONE_PLACEHOLDER}
                         />
                         <Field
-                          label="Email"
+                          label="Эл. почта"
                           icon={<IconMail />}
                           type="email"
                           value={email}
                           onChange={setEmail}
-                          placeholder="Optional"
+                          placeholder="Необязательно"
                         />
                       </div>
                     </div>
@@ -734,11 +735,10 @@ function CustomersPageContent() {
                       <IconDoorOpen className="h-4 w-4" />
                     </span>
                     <p className="mt-2.5 text-sm font-semibold text-slate-900">
-                      Skip the customer record
+                      Пропустить создание клиента
                     </p>
                     <p className="mx-auto mt-1 max-w-[18rem] text-xs leading-relaxed text-[var(--muted)]">
-                      Start a vehicle-first walk-in without a name or phone.
-                      You can link a customer later.
+                      Начните визит с автомобиля без имени и телефона. Клиента можно привязать позже.
                     </p>
                   </div>
                 )}
@@ -752,7 +752,7 @@ function CustomersPageContent() {
                   className="btn-ghost inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-sm disabled:opacity-60"
                 >
                   <IconCancel />
-                  Cancel
+                  Отмена
                 </button>
                 {createMode === "known" ? (
                   <button
@@ -762,7 +762,7 @@ function CustomersPageContent() {
                     className="btn-primary inline-flex items-center justify-center gap-1.5 px-5 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {!saving && <IconSave />}
-                    {saving ? "Saving…" : "Save"}
+                    {saving ? "Сохранение…" : "Сохранить"}
                   </button>
                 ) : (
                   <Link
@@ -770,7 +770,7 @@ function CustomersPageContent() {
                     className="btn-primary inline-flex items-center justify-center gap-1.5 px-5 py-2 text-sm"
                   >
                     <IconDoorOpen />
-                    Open walk-ins
+                    Открыть живую очередь
                   </Link>
                 )}
               </div>
@@ -882,7 +882,7 @@ function Field({
 export default function CustomersPage() {
   return (
     <Suspense
-      fallback={<p className="text-sm text-[var(--muted)]">Loading customers…</p>}
+      fallback={<p className="text-sm text-[var(--muted)]">Загрузка клиентов…</p>}
     >
       <CustomersPageContent />
     </Suspense>

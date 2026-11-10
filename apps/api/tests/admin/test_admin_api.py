@@ -55,7 +55,7 @@ async def test_admin_rejects_non_allowlisted_user(admin_email: str) -> None:
             headers={"Authorization": f"Bearer {other['access_token']}"},
         )
     assert res.status_code == 403
-    assert res.json()["detail"] == "Platform admin required"
+    assert res.json()["detail"] == 'Требуются права администратора платформы'
 
 
 @pytest.mark.asyncio

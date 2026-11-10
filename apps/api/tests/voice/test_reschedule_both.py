@@ -149,10 +149,10 @@ async def test_change_service_and_time_two_turns(runtime, shop_id):
         ),
     )
     assert ask.pipeline.stages["scheduling"].data.message != "no_appointment_to_reschedule"
-    assert "not seeing" not in (ask.spoken_text or "").lower()
+    assert 'не вижу' not in (ask.spoken_text or "").lower()
     spoken = (ask.spoken_text or "").lower()
-    assert "service" in spoken or "instead" in spoken
-    assert "day" in spoken or "time" in spoken
+    assert 'услуг' in spoken or 'вместо' in spoken
+    assert 'день' in spoken or 'время' in spoken
 
     day2 = second.strftime("%A")
     clock2 = second.strftime("%I:%M %p").lstrip("0")
@@ -192,7 +192,7 @@ async def test_change_service_only_then_time(runtime, shop_id):
         ),
     )
     assert swap.pipeline.stages["scheduling"].data.message != "no_appointment_to_reschedule"
-    assert "not seeing" not in (swap.spoken_text or "").lower()
+    assert 'не вижу' not in (swap.spoken_text or "").lower()
 
     day2 = second.strftime("%A")
     clock2 = second.strftime("%I:%M %p").lstrip("0")
@@ -235,7 +235,7 @@ async def test_bare_change_both_is_reschedule_ask(runtime, shop_id):
         ),
     )
     assert r.pipeline.stages["intent"].data.intent.value == "reschedule"
-    assert "not seeing" not in (r.spoken_text or "").lower()
+    assert 'не вижу' not in (r.spoken_text or "").lower()
     spoken = (r.spoken_text or "").lower()
-    assert "service" in spoken
-    assert "day" in spoken or "time" in spoken
+    assert 'услуг' in spoken
+    assert 'день' in spoken or 'время' in spoken

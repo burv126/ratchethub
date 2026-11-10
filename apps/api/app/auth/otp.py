@@ -106,7 +106,7 @@ def get_sent_otp_emails() -> list[dict[str, str]]:
 def normalize_phone(raw: str) -> str:
     text = (raw or "").strip()
     if not text:
-        raise ValidationError("Phone number is required")
+        raise ValidationError('Укажите номер телефона')
     digits = re.sub(r"\D", "", text)
     if text.startswith("+"):
         normalized = "+" + digits
@@ -118,14 +118,14 @@ def normalize_phone(raw: str) -> str:
         normalized = "+" + digits
     body = normalized[1:]
     if len(body) < 8 or len(body) > 15 or not body.isdigit():
-        raise ValidationError("Invalid phone number")
+        raise ValidationError('Некорректный номер телефона')
     return normalized
 
 
 def normalize_email(raw: str) -> str:
     email = (raw or "").strip().lower()
     if not email or not _EMAIL_RE.match(email):
-        raise ValidationError("Valid email is required")
+        raise ValidationError('Укажите корректную почту')
     return email
 
 
@@ -191,7 +191,7 @@ class AuthOtpService:
             age = (now - existing.created_at).total_seconds()
             if age < OTP_RESEND_COOLDOWN_SECONDS:
                 raise ConflictError(
-                    f"Please wait {int(OTP_RESEND_COOLDOWN_SECONDS - age)}s before resending"
+                    f'Подождите {int(OTP_RESEND_COOLDOWN_SECONDS - age)} с перед повторной отправкой'
                 )
 
         code = _generate_code()
@@ -213,7 +213,7 @@ class AuthOtpService:
                 OutboundSms(
                     to_number=target,
                     from_number=from_number,
-                    body=f"RatchetHub verification code: {code}",
+                    body=f'Код подтверждения RatchetHub: {code}',
                 )
             )
             logger.info("auth.otp.sms_sent phone=%s purpose=%s", target, purpose)
@@ -222,8 +222,8 @@ class AuthOtpService:
 
             await build_email_sender().send(
                 to=target,
-                subject="RatchetHub verification code",
-                body=f"Your verification code is: {code}",
+                subject='Код подтверждения RatchetHub',
+                body=f'Ваш код подтверждения: {code}',
             )
             # Keep local mirror for tests when fake provider is used
             _sent_emails.clear()
@@ -259,18 +259,18 @@ class AuthOtpService:
 
         challenge = await self._store.get_active(channel, target, purpose)
         if challenge is None or challenge.consumed_at is not None:
-            raise AuthenticationError("Verification code expired or not found")
+            raise AuthenticationError('Код подтверждения истёк или не найден')
         now = datetime.now(timezone.utc)
         if challenge.expires_at <= now:
-            raise AuthenticationError("Verification code expired")
+            raise AuthenticationError('Код подтверждения истёк')
         if challenge.attempts >= OTP_MAX_ATTEMPTS:
-            raise AuthenticationError("Too many invalid verification attempts")
+            raise AuthenticationError('Слишком много неверных попыток подтверждения')
 
         ok = _verify_code((code or "").strip(), challenge.code_hash)
         challenge.attempts += 1
         if not ok:
             await self._store.update(challenge)
-            raise AuthenticationError("Invalid verification code")
+            raise AuthenticationError('Неверный код подтверждения')
 
         if consume:
             challenge.consumed_at = now

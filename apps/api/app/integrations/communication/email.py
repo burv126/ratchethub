@@ -15,7 +15,7 @@ class EmailAdapter(BaseAdapter):
     provider = IntegrationProvider.EMAIL
     category = IntegrationCategory.COMMUNICATION
     display_name = "Email"
-    description = "Transactional email send/receive for customer messages."
+    description = 'Отправка и получение писем клиентам.'
     auth_method = AuthMethod.API_KEY
     docs_url = None
     credential_fields = ["smtp_host", "smtp_user", "smtp_password", "from_email"]

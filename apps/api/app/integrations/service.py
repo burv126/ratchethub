@@ -340,7 +340,7 @@ class IntegrationsService:
     ) -> IntegrationConnection:
         conn = await self._store.get_by_provider(shop_id, provider)
         if conn is None or conn.status != ConnectionStatus.CONNECTED:
-            raise LookupError(f"No connected integration for {provider.value}")
+            raise LookupError(f'Нет активной интеграции {provider.value}')
         if conn.shop_id != shop_id:
             raise TenantIsolationError("Cross-shop connection access denied")
         return conn

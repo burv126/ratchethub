@@ -13,7 +13,7 @@ from app.domain.enums import UserRole, normalize_user_role
 
 
 class PermissionDenied(Exception):
-    def __init__(self, message: str = "Permission denied") -> None:
+    def __init__(self, message: str = 'Доступ запрещён') -> None:
         super().__init__(message)
         self.message = message
 
@@ -88,7 +88,7 @@ class PermissionService:
         else:
             ok = self.has_any(role=role, capabilities=capabilities, required=required)
         if not ok:
-            raise PermissionDenied("Missing required capability")
+            raise PermissionDenied('Отсутствует необходимое разрешение')
 
     def is_owner(self, role: UserRole | str) -> bool:
         return normalize_user_role(role) == UserRole.OWNER

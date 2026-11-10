@@ -17,8 +17,7 @@ WORKFLOW_ID = UUID("a1111111-1111-4111-8111-111111111105")
 SPEC = meta(
     workflow_id=str(WORKFLOW_ID),
     purpose=(
-        "Handle counter walk-ins: temporary intake without full customer, capture vehicle, "
-        "kick off inspection path, and support later customer merge/convert."
+        'Обрабатывает визиты без записи: временный приём без полного профиля, данные автомобиля, запуск осмотра и последующее объединение или преобразование клиента.'
     ),
     trigger=DomainEventType.WALK_IN_CREATED.value,
     capabilities=[
@@ -47,11 +46,10 @@ SPEC = meta(
         DomainEventType.HUMAN_ESCALATION_REQUESTED.value,
     ],
     failure_handling=(
-        "Retry CRM updates; inspection kickoff emit continue_on_error; "
-        "rollback reverses CRM/dashboard side-effects."
+        'Повторяет обновления CRM; запуск осмотра продолжает при ошибке; откат отменяет изменения CRM и панели.'
     ),
     human_escalation=(
-        "Notify advisors of new walk-in; escalate when convert/merge is required before repair."
+        'Уведомляет консультантов о посетителе; передаёт сотруднику при необходимости преобразования или объединения до ремонта.'
     ),
 )
 
@@ -59,7 +57,7 @@ SPEC = meta(
 def build() -> WorkflowDefinition:
     return build_definition(
         workflow_id=WORKFLOW_ID,
-        name="Automotive: Walk-in customer",
+        name="Автосервис: посетитель без записи",
         description=SPEC["purpose"],
         trigger=DomainEventType.WALK_IN_CREATED,
         tags=["walkin", "intake", "scenario-5"],
@@ -67,7 +65,7 @@ def build() -> WorkflowDefinition:
         actions=[
             action(
                 ActionType.SET_CONTEXT,
-                "Bind walk-in scenario",
+                'Привязать сценарий живой очереди',
                 1,
                 config={
                     "values": {
@@ -80,7 +78,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_CRM,
-                "Temporary customer / visit intake",
+                'Временный клиент / приём визита',
                 2,
                 config={
                     "note": "Walk-in created — temporary intake (customer optional)",
@@ -94,7 +92,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_CRM,
-                "Vehicle capture",
+                'Данные автомобиля',
                 3,
                 config={
                     "note": "Walk-in vehicle captured (VIN/year/make/model/mileage)",
@@ -107,7 +105,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Acknowledge vehicle on visit",
+                'Подтвердить автомобиль визита',
                 4,
                 config={
                     "event_type": DomainEventType.VEHICLE_CREATED.value,
@@ -117,7 +115,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Start inspection workflow path",
+                'Запустить процесс осмотра',
                 5,
                 config={
                     "event_type": DomainEventType.REPAIR_STARTED.value,
@@ -126,19 +124,19 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.NOTIFY,
-                "Notify advisors — new walk-in",
+                'Уведомить консультантов — новый посетитель',
                 6,
                 config={
                     "channel": "in_app",
-                    "message": "New walk-in arrived — convert/merge customer when ready",
+                    "message": 'Пришёл посетитель — преобразуйте или объедините клиента, когда будет возможно',
                 },
             ),
             action(
                 ActionType.UPDATE_CRM,
-                "Customer merge checkpoint",
+                'Проверка объединения клиента',
                 7,
                 config={
-                    "note": "Awaiting convert-to-customer / merge with existing CRM record",
+                    "note": 'Ожидает преобразования в клиента или объединения с записью CRM',
                     "fields": {
                         "capability": "UpdateCustomer|CreateCustomer",
                         "ai_decision": "CustomerDecision",
@@ -150,7 +148,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Escalate if merge blocked before repair",
+                'Передать сотруднику при блокировке объединения до ремонта',
                 8,
                 config={
                     "event_type": DomainEventType.HUMAN_ESCALATION_REQUESTED.value,
@@ -163,7 +161,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_DASHBOARD,
-                "Refresh walk-ins widget",
+                'Обновить виджет живой очереди',
                 9,
                 config={
                     "widget": "overview",

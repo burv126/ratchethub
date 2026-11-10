@@ -72,7 +72,7 @@ class SimulationEngine:
     async def run(self, count: int = 10) -> SimulationReport:
         """Run `count` simulations (supports 10 / 100 / 1000)."""
         if count < 1:
-            raise ValueError("count must be >= 1")
+            raise ValueError('count должен быть не менее 1')
         started = datetime.now(timezone.utc)
         results: list[SimulationRunResult] = []
         cycle = self._scenario_cycle()

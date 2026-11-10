@@ -215,7 +215,7 @@ class SqlAlchemyShopRepository:
     async def update(self, shop: Shop) -> Shop:
         row = await self._session.get(ShopModel, shop.id)
         if row is None:
-            raise ValueError("Shop not found")
+            raise ValueError('Автосервис не найден')
         row.name = shop.name
         row.slug = shop.slug
         row.timezone = shop.timezone
@@ -232,7 +232,7 @@ class SqlAlchemyShopRepository:
     ) -> None:
         row = await self._session.get(ShopModel, shop_id)
         if row is None:
-            raise ValueError("Shop not found")
+            raise ValueError('Автосервис не найден')
         row.sms_phone_e164 = sms_phone_e164
         row.voice_phone_e164 = voice_phone_e164
         await self._session.flush()
@@ -449,7 +449,7 @@ class SqlAlchemyMembershipRepository:
             select(ShopMembershipModel).where(ShopMembershipModel.id == membership.id)
         )
         if row is None:
-            raise LookupError(f"Membership not found: {membership.id}")
+            raise LookupError(f'Участие не найдено: {membership.id}')
         row.role = normalize_user_role(membership.role).value
         if membership.capabilities is not None:
             row.capabilities_json = json.dumps(list(membership.capabilities))
@@ -558,7 +558,7 @@ class SqlAlchemyCustomerRepository:
             )
         )
         if model is None:
-            raise ValueError("Customer not found")
+            raise ValueError('Клиент не найден')
         model.name = customer.name
         model.phone = customer.phone
         model.email = customer.email
@@ -794,7 +794,7 @@ class SqlAlchemyVehicleRepository:
             )
         )
         if model is None:
-            raise ValueError("Vehicle not found")
+            raise ValueError('Автомобиль не найден')
         model.customer_id = vehicle.customer_id
         model.vin = vehicle.vin
         model.license_plate = vehicle.license_plate
@@ -1062,7 +1062,7 @@ class SqlAlchemyWalkInVisitRepository:
             )
         )
         if model is None:
-            raise ValueError("Walk-in visit not found")
+            raise ValueError('Визит без записи не найден')
         model.vehicle_id = visit.vehicle_id
         model.customer_id = visit.customer_id
         model.complaint = visit.complaint
@@ -1122,7 +1122,7 @@ class SqlAlchemyVoiceNoteRepository:
             )
         )
         if model is None:
-            raise ValueError("Voice note not found")
+            raise ValueError('Голосовая заметка не найдена')
         model.audio_url = note.audio_url
         model.transcript = note.transcript
         await self._session.flush()

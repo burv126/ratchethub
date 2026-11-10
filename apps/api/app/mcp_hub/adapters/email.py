@@ -20,7 +20,7 @@ class EmailAdapter(BaseAdapter):
     tool_defs = [
         (
             "email.send",
-            "Send an email",
+            'Отправить письмо',
             {
                 "type": "object",
                 "properties": {
@@ -34,7 +34,7 @@ class EmailAdapter(BaseAdapter):
         ),
         (
             "email.send_template",
-            "Send a templated email",
+            'Отправить письмо по шаблону',
             {
                 "type": "object",
                 "properties": {

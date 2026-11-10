@@ -17,8 +17,7 @@ WORKFLOW_ID = UUID("a1111111-1111-4111-8111-111111111102")
 SPEC = meta(
     workflow_id=str(WORKFLOW_ID),
     purpose=(
-        "When maintenance reminder is requested, evaluate vehicle health and customer risk, "
-        "surface revenue opportunity, and schedule marketing follow-up."
+        'При запросе напоминания оценивает состояние автомобиля и риск ухода клиента, выявляет возможность выручки и планирует маркетинговое обращение.'
     ),
     trigger=DomainEventType.MAINTENANCE_REMINDER_REQUESTED.value,
     capabilities=[
@@ -45,12 +44,10 @@ SPEC = meta(
         DomainEventType.DASHBOARD_UPDATED.value,
     ],
     failure_handling=(
-        "Retry CRM/reminder steps; marketing notify is continue_on_error; "
-        "rollback undoes CRM/reminder records. Revenue detect is logged/emitted "
-        "without nested UPDATE_REVENUE to avoid reminder re-entry loops."
+        'Повторяет шаги CRM и напоминания; маркетинг продолжает при ошибке; откат отменяет записи CRM и напоминания. Выявление выручки не вызывает вложенный UPDATE_REVENUE для предотвращения цикла.'
     ),
     human_escalation=(
-        "High churn-risk customers trigger advisor notify for personal outreach."
+        'Высокий риск ухода вызывает уведомление консультанта для личного обращения.'
     ),
 )
 
@@ -58,7 +55,7 @@ SPEC = meta(
 def build() -> WorkflowDefinition:
     return build_definition(
         workflow_id=WORKFLOW_ID,
-        name="Automotive: Maintenance reminder",
+        name='Автосервис: напоминание об обслуживании',
         description=SPEC["purpose"],
         trigger=DomainEventType.MAINTENANCE_REMINDER_REQUESTED,
         tags=["maintenance", "marketing", "scenario-2"],
@@ -66,7 +63,7 @@ def build() -> WorkflowDefinition:
         actions=[
             action(
                 ActionType.SET_CONTEXT,
-                "Bind maintenance scenario context",
+                'Привязать контекст напоминания',
                 1,
                 config={
                     "values": {
@@ -78,16 +75,16 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.LOG,
-                "Vehicle health analysis",
+                'Анализ состояния автомобиля',
                 2,
                 config={
-                    "message": "CalculateVehicleHealth / Advisor maintenance analysis",
+                    "message": 'CalculateVehicleHealth / анализ обслуживания консультантом',
                     "capability": "CalculateVehicleHealth",
                 },
             ),
             action(
                 ActionType.LOG,
-                "Customer risk scoring",
+                'Оценка риска клиента',
                 3,
                 config={
                     "message": "CalculateCustomerHealth / RetentionDecision inputs",
@@ -97,17 +94,17 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.LOG,
-                "Detect maintenance revenue opportunity",
+                'Выявить возможность выручки от обслуживания',
                 4,
                 config={
-                    "message": "Capability DetectRevenueOpportunity / GenerateUpsellRecommendations",
+                    "message": 'Возможности DetectRevenueOpportunity / GenerateUpsellRecommendations',
                     "capability": "DetectRevenueOpportunity",
                     "ai_decision": "RevenueDecision",
                 },
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Publish revenue opportunity detected",
+                'Опубликовать найденную возможность выручки',
                 5,
                 config={
                     "event_type": DomainEventType.REVENUE_OPPORTUNITY_DETECTED.value,
@@ -120,14 +117,14 @@ def build() -> WorkflowDefinition:
                 "CRM maintenance follow-up note",
                 6,
                 config={
-                    "note": "Maintenance reminder — vehicle health + risk assessed",
+                    "note": 'Напоминание — состояние автомобиля и риск оценены',
                     "fields": {"ai_decision": "MaintenanceReminderDecision"},
                 },
                 compensate={"type": "undo_crm"},
             ),
             action(
                 ActionType.SCHEDULE_REMINDER,
-                "Schedule customer maintenance outreach",
+                'Запланировать связь по обслуживанию',
                 7,
                 config={
                     "hours_before": 0,
@@ -138,7 +135,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Request marketing follow-up",
+                'Запросить маркетинговое обращение',
                 8,
                 config={
                     "event_type": DomainEventType.MARKETING_ACTION_REQUESTED.value,
@@ -147,7 +144,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.NOTIFY,
-                "Escalate high-risk customers to advisors",
+                'Передать консультантам клиентов с высоким риском',
                 9,
                 config={
                     "channel": "in_app",
@@ -157,7 +154,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_DASHBOARD,
-                "Refresh marketing/revenue widgets",
+                'Обновить виджеты маркетинга и выручки',
                 10,
                 config={
                     "widget": "overview",

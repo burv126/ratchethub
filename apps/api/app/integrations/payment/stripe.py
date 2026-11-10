@@ -15,7 +15,7 @@ class StripeAdapter(BaseAdapter):
     provider = IntegrationProvider.STRIPE
     category = IntegrationCategory.PAYMENT
     display_name = "Stripe"
-    description = "Payment processing and payment sync."
+    description = 'Обработка и синхронизация платежей.'
     auth_method = AuthMethod.API_KEY
     docs_url = "https://stripe.com/docs"
     credential_fields = ["secret_key"]

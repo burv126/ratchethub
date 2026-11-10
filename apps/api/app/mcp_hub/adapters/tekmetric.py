@@ -9,7 +9,7 @@ from app.mcp_hub.enums import AuthMethod, IntegrationCategory, IntegrationProvid
 class TekmetricAdapter(BaseAdapter):
     provider = IntegrationProvider.TEKMETRIC
     display_name = "Tekmetric"
-    description = "Shop management — customers, vehicles, repair orders."
+    description = 'Управление автосервисом — клиенты, автомобили и заказ-наряды.'
     category = IntegrationCategory.PMS
     auth_method = AuthMethod.API_KEY
     api_version = "v1"
@@ -20,19 +20,19 @@ class TekmetricAdapter(BaseAdapter):
     tool_defs = [
         (
             "tekmetric.list_customers",
-            "List customers from Tekmetric",
+            'Список клиентов Tekmetric',
             {"type": "object", "properties": {"query": {"type": "string"}, "limit": {"type": "integer"}}},
             ["pms", "read"],
         ),
         (
             "tekmetric.get_repair_order",
-            "Fetch a repair order by id",
+            'Получить заказ-наряд по ID',
             {"type": "object", "properties": {"repair_order_id": {"type": "string"}}, "required": ["repair_order_id"]},
             ["pms", "read"],
         ),
         (
             "tekmetric.upsert_customer",
-            "Create or update a customer",
+            'Создать или обновить клиента',
             {"type": "object", "properties": {"name": {"type": "string"}, "phone": {"type": "string"}}},
             ["pms", "write"],
         ),

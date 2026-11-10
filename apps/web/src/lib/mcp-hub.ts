@@ -80,7 +80,7 @@ export type HubMetrics = {
 
 async function authFetch(path: string, init?: RequestInit): Promise<Response> {
   const session = loadSession();
-  if (!session) throw new Error("Not signed in");
+  if (!session) throw new Error("Вход не выполнен");
   const url = `${getApiUrl()}${path}`;
   const headers: Record<string, string> = {
     Authorization: `Bearer ${session.accessToken}`,
@@ -92,7 +92,7 @@ async function authFetch(path: string, init?: RequestInit): Promise<Response> {
     const next = await refresh(session.refreshToken);
     if (!next) {
       clearSession();
-      throw new Error("Session expired");
+      throw new Error("Сессия истекла");
     }
     saveSession(next);
     headers.Authorization = `Bearer ${next.accessToken}`;
@@ -104,7 +104,7 @@ async function authFetch(path: string, init?: RequestInit): Promise<Response> {
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || body.message || `Request failed (${res.status})`);
+    throw new Error(body.detail || body.message || `Ошибка запроса (${res.status})`);
   }
   return res.json() as Promise<T>;
 }

@@ -209,7 +209,7 @@ def _demo_customers(shop_id: UUID) -> list[CustomerSnapshot]:
                             cost=Decimal("380"),
                             mileage=70000,
                             performed_at=now - timedelta(days=800),
-                            recommendation="Replace pads within 6 months",
+                            recommendation='Заменить колодки в течение 6 месяцев',
                         ),
                     ],
                 )
@@ -248,7 +248,7 @@ def _demo_customers(shop_id: UUID) -> list[CustomerSnapshot]:
                 )
             ],
             communications=[
-                CommunicationSnapshot("email", "inbound", "Price question", now - timedelta(days=30)),
+                CommunicationSnapshot("email", "inbound", 'Вопрос о цене', now - timedelta(days=30)),
             ],
         ),
         CustomerSnapshot(

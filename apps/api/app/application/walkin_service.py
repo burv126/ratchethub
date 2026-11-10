@@ -46,7 +46,7 @@ class WalkInService:
     ) -> WalkInDetail:
         await self._uow.bind_shop(shop_id)
         if not complaint.strip():
-            raise ValidationError("Complaint is required")
+            raise ValidationError('Укажите жалобу')
 
         normalized_vin = _normalize_vin(vin)
         normalized_plate = _normalize_plate(license_plate)
@@ -138,7 +138,7 @@ class WalkInService:
         if visit.customer_id is not None:
             raise ConflictError("Walk-in already has a customer")
         if not name.strip():
-            raise ValidationError("Name is required to convert walk-in into a customer")
+            raise ValidationError('Для преобразования посетителя в клиента укажите имя')
 
         customer = await self._uow.customers.add(
             Customer(
@@ -153,7 +153,7 @@ class WalkInService:
 
         vehicle = await self._uow.vehicles.get_by_id(shop_id, visit.vehicle_id)
         if vehicle is None:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
         vehicle = await self._uow.vehicles.update(
             Vehicle(
                 id=vehicle.id,
@@ -203,11 +203,11 @@ class WalkInService:
         if vehicle_id is not None:
             vehicle = await self._uow.vehicles.get_by_id(shop_id, vehicle_id)
             if vehicle is None:
-                raise NotFoundError("Vehicle not found")
+                raise NotFoundError('Автомобиль не найден')
         else:
             if not vin or year is None or not make or not model or mileage is None:
                 raise ValidationError(
-                    "Provide vehicle_id or full vehicle details (vin, year, make, model, mileage)"
+                    'Укажите vehicle_id или полные данные автомобиля (vin, year, make, model, mileage)'
                 )
             normalized_vin = _normalize_vin(vin)
             existing = await self._uow.vehicles.get_by_vin(shop_id, normalized_vin)
@@ -281,11 +281,11 @@ class WalkInService:
         await self._uow.bind_shop(shop_id)
         visit = await self._uow.walk_ins.get_by_id(shop_id, visit_id)
         if visit is None:
-            raise NotFoundError("Walk-in visit not found")
+            raise NotFoundError('Визит без записи не найден')
         if visit.status == WalkInStatus.CLOSED:
             return await self._detail(shop_id, visit.id)
         if visit.status == WalkInStatus.CANCELLED:
-            raise ConflictError("Cannot close a cancelled walk-in")
+            raise ConflictError('Нельзя закрыть отменённый визит')
 
         visit = await self._uow.walk_ins.update(
             WalkInVisit(
@@ -307,11 +307,11 @@ class WalkInService:
         await self._uow.bind_shop(shop_id)
         visit = await self._uow.walk_ins.get_by_id(shop_id, visit_id)
         if visit is None:
-            raise NotFoundError("Walk-in visit not found")
+            raise NotFoundError('Визит без записи не найден')
         if visit.status == WalkInStatus.CANCELLED:
             return await self._detail(shop_id, visit.id)
         if visit.status == WalkInStatus.CLOSED:
-            raise ConflictError("Cannot cancel a closed walk-in")
+            raise ConflictError('Нельзя отменить закрытый визит')
 
         visit = await self._uow.walk_ins.update(
             WalkInVisit(
@@ -341,13 +341,13 @@ class WalkInService:
         await self._uow.bind_shop(shop_id)
         visit = await self._uow.walk_ins.get_by_id(shop_id, visit_id)
         if visit is None:
-            raise NotFoundError("Walk-in visit not found")
+            raise NotFoundError('Визит без записи не найден')
         if visit.status in (WalkInStatus.CLOSED, WalkInStatus.CANCELLED):
-            raise ConflictError("Cannot attach repair history to a closed or cancelled walk-in")
+            raise ConflictError('Нельзя добавить ремонт в закрытый или отменённый визит')
 
         vehicle = await self._uow.vehicles.get_by_id(shop_id, visit.vehicle_id)
         if vehicle is None:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
 
         await self._uow.repair_histories.add(
             RepairHistory(
@@ -367,7 +367,7 @@ class WalkInService:
     async def _require_open_visit(self, shop_id: UUID, visit_id: UUID) -> WalkInVisit:
         visit = await self._uow.walk_ins.get_by_id(shop_id, visit_id)
         if visit is None:
-            raise NotFoundError("Walk-in visit not found")
+            raise NotFoundError('Визит без записи не найден')
         if visit.status == WalkInStatus.CLOSED:
             raise ConflictError("Walk-in visit is closed")
         if visit.status == WalkInStatus.CANCELLED:
@@ -378,10 +378,10 @@ class WalkInService:
         await self._uow.bind_shop(shop_id)
         visit = await self._uow.walk_ins.get_by_id(shop_id, visit_id)
         if visit is None:
-            raise NotFoundError("Walk-in visit not found")
+            raise NotFoundError('Визит без записи не найден')
         vehicle = await self._uow.vehicles.get_by_id(shop_id, visit.vehicle_id)
         if vehicle is None:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
         customer = None
         if visit.customer_id:
             customer = await self._uow.customers.get_by_id(shop_id, visit.customer_id)

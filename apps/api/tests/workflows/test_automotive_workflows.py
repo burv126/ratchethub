@@ -36,12 +36,12 @@ def test_automotive_catalog_complete():
     assert len(wfs) == 6
     assert len(AUTOMOTIVE_SPECS) == 6
     names = {w.name for w in wfs}
-    assert any("phone repair" in n.lower() for n in names)
-    assert any("maintenance reminder" in n.lower() for n in names)
-    assert any("inspection completed" in n.lower() for n in names)
-    assert any("declined estimate" in n.lower() for n in names)
-    assert any("walk-in customer" in n.lower() for n in names)
-    assert any("repair completed" in n.lower() for n in names)
+    assert any("ремонта нового клиента по телефону" in n.lower() for n in names)
+    assert any("напоминание об обслуживании" in n.lower() for n in names)
+    assert any("осмотр завершён" in n.lower() for n in names)
+    assert any("отклонённых смет" in n.lower() for n in names)
+    assert any("посетитель без записи" in n.lower() for n in names)
+    assert any("ремонт завершён" in n.lower() for n in names)
     for spec in AUTOMOTIVE_SPECS:
         assert spec["workflow_id"]
         assert spec["purpose"]
@@ -65,7 +65,7 @@ async def test_scenario_1_new_customer_phone(runtime, shop_id):
         },
         source="test.automotive",
     )
-    run = next(r for r in runs if "phone repair" in r.workflow_name.lower())
+    run = next(r for r in runs if "ремонта нового клиента по телефону" in r.workflow_name.lower())
     assert run.status == RunStatus.COMPLETED
     assert all(s.status == StepStatus.SUCCEEDED for s in run.steps)
     types = {e.event_type for e in await runtime.store.list_events(shop_id, limit=80)}
@@ -81,7 +81,7 @@ async def test_scenario_2_maintenance_reminder(runtime, shop_id):
         payload={"customer_id": str(uuid4()), "vehicle_id": str(uuid4())},
         source="test.automotive",
     )
-    run = next(r for r in runs if r.workflow_name.startswith("Automotive: Maintenance"))
+    run = next(r for r in runs if r.workflow_name.startswith("Автосервис: напоминание"))
     assert run.status == RunStatus.COMPLETED
     types = {e.event_type for e in await runtime.store.list_events(shop_id, limit=80)}
     assert DomainEventType.REVENUE_OPPORTUNITY_DETECTED in types
@@ -101,9 +101,9 @@ async def test_scenario_3_inspection_completed(runtime, shop_id):
         source="test.automotive",
     )
     names = [r.workflow_name for r in runs]
-    assert any("Inspection completed" in n for n in names)
-    assert not any(n.startswith("Automotive: Repair completed") for n in names)
-    run = next(r for r in runs if "Inspection completed" in r.workflow_name)
+    assert any("осмотр завершён" in n for n in names)
+    assert not any(n.startswith('Автосервис: ремонт завершён') for n in names)
+    run = next(r for r in runs if "осмотр завершён" in r.workflow_name)
     assert run.status == RunStatus.COMPLETED
     types = {e.event_type for e in await runtime.store.list_events(shop_id, limit=80)}
     assert DomainEventType.ESTIMATE_SENT in types
@@ -120,7 +120,7 @@ async def test_scenario_4_declined_estimate(runtime, shop_id):
         },
         source="test.automotive",
     )
-    run = next(r for r in runs if "Declined estimate" in r.workflow_name)
+    run = next(r for r in runs if "отклонённых смет" in r.workflow_name)
     assert run.status == RunStatus.COMPLETED
     types = {e.event_type for e in await runtime.store.list_events(shop_id, limit=80)}
     assert DomainEventType.REVENUE_OPPORTUNITY_DETECTED in types
@@ -139,7 +139,7 @@ async def test_scenario_5_walk_in_customer(runtime, shop_id):
         },
         source="test.automotive",
     )
-    run = next(r for r in runs if "Walk-in customer" in r.workflow_name)
+    run = next(r for r in runs if "посетитель без записи" in r.workflow_name)
     assert run.status == RunStatus.COMPLETED
     types = {e.event_type for e in await runtime.store.list_events(shop_id, limit=80)}
     assert DomainEventType.REPAIR_STARTED in types
@@ -159,9 +159,9 @@ async def test_scenario_6_repair_completed(runtime, shop_id):
         source="test.automotive",
     )
     names = [r.workflow_name for r in runs]
-    assert any("Repair completed" in n for n in names)
-    assert not any("Inspection completed" in n for n in names)
-    run = next(r for r in runs if "Repair completed" in r.workflow_name)
+    assert any("ремонт завершён" in n for n in names)
+    assert not any("осмотр завершён" in n for n in names)
+    run = next(r for r in runs if "ремонт завершён" in r.workflow_name)
     assert run.status == RunStatus.COMPLETED
     types = {e.event_type for e in await runtime.store.list_events(shop_id, limit=80)}
     assert DomainEventType.MAINTENANCE_REMINDER_REQUESTED in types

@@ -125,7 +125,7 @@ def _turn_out(t) -> TurnOut:
 async def _detail_out(runtime: VoiceRuntime, shop_id: UUID, call_id: UUID) -> CallDetailOut:
     call = await runtime.store.get_call(shop_id, call_id)
     if call is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Call not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Звонок не найден')
     turns = await runtime.store.list_turns(shop_id, call_id)
     return CallDetailOut(
         call=_call_out(call),
@@ -140,7 +140,7 @@ async def _detail_out(runtime: VoiceRuntime, shop_id: UUID, call_id: UUID) -> Ca
 def _ensure_dev_simulate_allowed() -> None:
     if settings.environment == "production" and settings.voice_provider == "twilio":
         raise HTTPException(
-            status.HTTP_403_FORBIDDEN, detail="Simulate chat disabled in production"
+            status.HTTP_403_FORBIDDEN, detail='Симуляция чата отключена в рабочей среде'
         )
 
 
@@ -171,7 +171,7 @@ async def get_call(
 ) -> CallDetailOut:
     call = await runtime.store.get_call(user.shop_id, call_id)
     if call is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Call not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Звонок не найден')
     turns = await runtime.store.list_turns(user.shop_id, call_id)
     return CallDetailOut(
         call=_call_out(call),
@@ -290,7 +290,7 @@ async def send_caller_chat_message(
 
     call = await runtime.store.get_call(user.shop_id, call_id)
     if call is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Call not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Звонок не найден')
     if call.ended_at or call.status in {
         "completed",
         "failed",
@@ -302,16 +302,16 @@ async def send_caller_chat_message(
     }:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
-            detail="This call has already ended — start a new conversation",
+            detail='Звонок уже завершён — начните новый разговор',
         )
     if not call.twilio_call_sid:
         raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, detail="Call has no session id"
+            status.HTTP_400_BAD_REQUEST, detail='У звонка нет ID сессии'
         )
 
     text = body.text.strip()
     if not text:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Message text required")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail='Введите текст сообщения')
 
     await runtime.service.handle_speech(
         shop_id=user.shop_id,

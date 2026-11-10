@@ -36,7 +36,7 @@ class ShopProfileService:
         self._ltm.remember(
             RememberRequest(
                 shop_id=shop_id,
-                content=f"Shop profile updated: {saved.display_name or shop_id}",
+                content=f'Профиль автосервиса обновлён: {saved.display_name or shop_id}',
                 memory_type=MemoryType.SHOP,
                 category=MemoryCategory.SHOP_PROFILE,
                 importance=0.8,

@@ -20,7 +20,7 @@ class StripeAdapter(BaseAdapter):
     tool_defs = [
         (
             "stripe.create_payment_intent",
-            "Create a payment intent",
+            'Создать платёж',
             {
                 "type": "object",
                 "properties": {"amount": {"type": "integer"}, "currency": {"type": "string"}, "customer": {"type": "string"}},
@@ -30,7 +30,7 @@ class StripeAdapter(BaseAdapter):
         ),
         (
             "stripe.list_invoices",
-            "List invoices",
+            'Список счетов',
             {"type": "object", "properties": {"customer": {"type": "string"}, "limit": {"type": "integer"}}},
             ["payments", "read"],
         ),

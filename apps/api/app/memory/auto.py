@@ -72,7 +72,7 @@ class MemoryAutoPilot:
                 self._indexer.remember(
                     RememberRequest(
                         shop_id=shop_id,
-                        content=f"Customer said: {message_text[:500]}",
+                        content=f'Клиент сказал: {message_text[:500]}',
                         memory_type=MemoryType.CONVERSATION,
                         category=MemoryCategory.PREVIOUS_CONVERSATIONS,
                         customer_id=customer_id,
@@ -96,7 +96,7 @@ class MemoryAutoPilot:
                     self._indexer.remember(
                         RememberRequest(
                             shop_id=shop_id,
-                            content=f"Appointment behavior: customer intent={intent_name}",
+                            content=f'Поведение записи: намерение клиента={intent_name}',
                             memory_type=MemoryType.CUSTOMER,
                             category=MemoryCategory.APPOINTMENT_BEHAVIOR,
                             customer_id=customer_id,
@@ -127,7 +127,7 @@ class MemoryAutoPilot:
                     self._indexer.remember(
                         RememberRequest(
                             shop_id=shop_id,
-                            content=f"Vehicle on file: {label}",
+                            content=f'Автомобиль в базе: {label}',
                             memory_type=MemoryType.CUSTOMER,
                             category=MemoryCategory.VEHICLE_HISTORY,
                             customer_id=customer_id,
@@ -153,7 +153,7 @@ class MemoryAutoPilot:
                     self._indexer.remember(
                         RememberRequest(
                             shop_id=shop_id,
-                            content=f"Declined estimate: {title}",
+                            content=f'Отклонённая смета: {title}',
                             memory_type=MemoryType.CUSTOMER,
                             category=MemoryCategory.DECLINED_ESTIMATES,
                             customer_id=customer_id,
@@ -170,7 +170,7 @@ class MemoryAutoPilot:
                     self._indexer.remember(
                         RememberRequest(
                             shop_id=shop_id,
-                            content=f"Repair decision context: {title}",
+                            content=f'Контекст решения о ремонте: {title}',
                             memory_type=MemoryType.SEMANTIC,
                             category=MemoryCategory.REPAIR_DECISIONS,
                             customer_id=customer_id,
@@ -192,7 +192,7 @@ class MemoryAutoPilot:
                 self._indexer.remember(
                     RememberRequest(
                         shop_id=shop_id,
-                        content=f"Completed scheduling action: {action_name}",
+                        content=f'Выполненное действие расписания: {action_name}',
                         memory_type=MemoryType.CUSTOMER,
                         category=MemoryCategory.APPOINTMENT_BEHAVIOR,
                         customer_id=customer_id,
@@ -209,7 +209,7 @@ class MemoryAutoPilot:
                 self._indexer.remember(
                     RememberRequest(
                         shop_id=shop_id,
-                        content="Conversation required human escalation",
+                        content='Потребовалась передача диалога сотруднику',
                         memory_type=MemoryType.CONVERSATION,
                         category=MemoryCategory.PREVIOUS_CONVERSATIONS,
                         customer_id=customer_id,
@@ -227,7 +227,7 @@ class MemoryAutoPilot:
                 self._indexer.remember(
                     RememberRequest(
                         shop_id=shop_id,
-                        content=f"Prefers {style} replies based on message length",
+                        content=f'Предпочитает ответы в стиле {style} по длине сообщений',
                         memory_type=MemoryType.CUSTOMER,
                         category=MemoryCategory.COMMUNICATION_STYLE,
                         customer_id=customer_id,

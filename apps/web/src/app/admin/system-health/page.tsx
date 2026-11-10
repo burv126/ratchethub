@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useCallback, useEffect, useState } from "react";
 import { AdminShell, LiveBadge, Panel, Stat } from "@/components/admin/AdminShell";
@@ -65,7 +69,7 @@ function SystemHealthBody({ accessToken }: { accessToken: string }) {
       } catch (err) {
         if (!quiet) {
           setLive(false);
-          setError(err instanceof Error ? err.message : "Failed to load system health");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить состояние системы");
         }
       } finally {
         if (!quiet) setBusy(false);
@@ -105,8 +109,8 @@ function SystemHealthBody({ accessToken }: { accessToken: string }) {
     return stop;
   }, [accessToken, applySystem]);
 
-  if (error && !data) return <p className="text-sm text-red-700">{error}</p>;
-  if (!data) return <p className="text-sm text-[var(--muted)]">{busy ? "Loading…" : "No data"}</p>;
+  if (error && !data) return <p className="text-sm text-red-700">{ruError(error)}</p>;
+  if (!data) return <p className="text-sm text-[var(--muted)]">{busy ? "Загрузка…" : "Нет данных"}</p>;
 
   const openIncidents = data.incidents.filter((i) => i.status !== "resolved");
   const overallLabel =
@@ -126,12 +130,12 @@ function SystemHealthBody({ accessToken }: { accessToken: string }) {
   return (
     <div className="flex h-[calc(100dvh-8.5rem)] min-h-[32rem] flex-col gap-3">
       <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
-        <h1 className="page-title">System Health</h1>
+        <h1 className="page-title">Состояние системы</h1>
         <div className="flex flex-wrap items-center gap-2">
           <span className="hidden text-[11px] text-[var(--muted)] sm:inline-flex sm:gap-3">
-            <LegendDot level="green" label="healthy" />
-            <LegendDot level="yellow" label="degraded" />
-            <LegendDot level="red" label="outage" />
+            <LegendDot level="green" label="Работает" />
+            <LegendDot level="yellow" label="Сбой" />
+            <LegendDot level="red" label="Недоступно" />
           </span>
           <LiveBadge live={live} />
         </div>
@@ -139,13 +143,13 @@ function SystemHealthBody({ accessToken }: { accessToken: string }) {
 
       <section className="grid shrink-0 gap-2.5 sm:grid-cols-2">
         <Stat
-          label="Overall"
+          label="Общее состояние"
           value={overallLabel}
           tone={healthTextClass(data.overall)}
-          hint="Worst feature status"
+          hint="Наихудшее состояние функции"
         />
         <Stat
-          label="Open incidents"
+          label="Открытые инциденты"
           value={String(openIncidents.length)}
           tone={openIncidents.length > 0 ? "text-amber-700" : "text-emerald-700"}
         />
@@ -165,19 +169,19 @@ function SystemHealthBody({ accessToken }: { accessToken: string }) {
 
       <Panel
         className="flex min-h-[10rem] flex-1 flex-col"
-        title="Incidents"
+        title="Инциденты"
         action={
           openIncidents.length > 0 ? (
-            <span className="text-xs text-amber-700">{openIncidents.length} open</span>
+            <span className="text-xs text-amber-700">{openIncidents.length} открыто</span>
           ) : (
-            <span className="text-xs text-emerald-700">All clear</span>
+            <span className="text-xs text-emerald-700">Всё в порядке</span>
           )
         }
       >
         <div className="asa-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
           {data.incidents.length === 0 ? (
             <p className="flex h-full items-center justify-center px-5 py-6 text-sm text-[var(--muted)]">
-              No incidents recorded.
+              Инцидентов не зарегистрировано.
             </p>
           ) : (
             <ul className="divide-y divide-[var(--line)]">
@@ -186,7 +190,7 @@ function SystemHealthBody({ accessToken }: { accessToken: string }) {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="min-w-0 truncate font-medium">{incident.title}</p>
                     <span className={`shrink-0 text-xs capitalize ${statusTone(incident.status)}`}>
-                      {incident.severity} · {incident.status}
+                      {ruLabel(incident.severity)} · {ruLabel(incident.status)}
                     </span>
                   </div>
                   <p className="mt-0.5 line-clamp-1 text-xs text-[var(--muted)]">
@@ -203,9 +207,9 @@ function SystemHealthBody({ accessToken }: { accessToken: string }) {
 }
 
 function levelLabel(level: HealthLevel): string {
-  if (level === "green") return "healthy";
-  if (level === "yellow") return "degraded";
-  return "outage";
+  if (level === "green") return "Работает";
+  if (level === "yellow") return "Работает со сбоями";
+  return "Недоступно";
 }
 
 function groupLevel(components: HealthComponent[]): HealthLevel {
@@ -220,17 +224,17 @@ function featureMetrics(
 ): [string, number | string | null | undefined][] | null {
   if (groupId === "messaging") {
     return [
-      ["In", data.metrics.sms.inbound_received],
-      ["Out", data.metrics.sms.outbound_sent],
-      ["Queue fail", data.metrics.sms.queue_failures],
+      ["Входящие", data.metrics.sms.inbound_received],
+      ["Исходящие", data.metrics.sms.outbound_sent],
+      ["Ошибки очереди", data.metrics.sms.queue_failures],
       ["Esc.", data.metrics.sms.escalations],
     ];
   }
   if (groupId === "voice") {
     return [
-      ["Started", data.metrics.voice.calls_started],
-      ["Done", data.metrics.voice.calls_completed],
-      ["Live", data.metrics.voice.live_calls],
+      ["Начало", data.metrics.voice.calls_started],
+      ["Готово", data.metrics.voice.calls_completed],
+      ["В эфире", data.metrics.voice.live_calls],
       ["Esc.", data.metrics.voice.escalations],
     ];
   }
@@ -268,7 +272,7 @@ function FeatureCard({
               <div className="flex items-baseline justify-between gap-2">
                 <p className="font-medium">{c.label}</p>
                 <span className={`shrink-0 text-xs capitalize ${healthTextClass(c.level)}`}>
-                  {c.status}
+                  {ruLabel(c.status)}
                 </span>
               </div>
               <p className="truncate text-[11px] text-[var(--muted)]">{c.detail}</p>

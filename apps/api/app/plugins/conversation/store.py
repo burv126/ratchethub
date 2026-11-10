@@ -96,7 +96,7 @@ class InMemoryConversationStore:
             metadata=dict(metadata or {}),
         )
         conv.events.append(
-            ConversationEvent(kind="created", summary=f"Conversation opened on {channel}")
+            ConversationEvent(kind="created", summary=f'Диалог открыт в канале {channel}')
         )
         self._by_id[cid] = conv
         if external_key:
@@ -105,7 +105,7 @@ class InMemoryConversationStore:
 
     async def update(self, shop_id: UUID, conversation: Conversation) -> Conversation:
         if conversation.shop_id != shop_id:
-            raise ValueError("shop_id mismatch")
+            raise ValueError('shop_id не совпадает')
         conversation.touch()
         self._by_id[conversation.id] = conversation
         if conversation.external_key:
@@ -117,9 +117,9 @@ class InMemoryConversationStore:
     async def close(self, shop_id: UUID, conversation_id: UUID) -> Conversation:
         conv = await self.get(shop_id, conversation_id)
         if conv is None:
-            raise LookupError(f"Conversation not found: {conversation_id}")
+            raise LookupError(f'Диалог не найден: {conversation_id}')
         conv.status = ConversationStatus.CLOSED.value
-        conv.events.append(ConversationEvent(kind="closed", summary="Conversation closed"))
+        conv.events.append(ConversationEvent(kind="closed", summary='Диалог закрыт'))
         return await self.update(shop_id, conv)
 
     async def merge(
@@ -127,7 +127,7 @@ class InMemoryConversationStore:
     ) -> Conversation:
         primary = await self.get(shop_id, primary_id)
         if primary is None:
-            raise LookupError(f"Primary conversation not found: {primary_id}")
+            raise LookupError(f'Основной диалог не найден: {primary_id}')
         for dup_id in duplicate_ids:
             if dup_id == primary_id:
                 continue
@@ -153,7 +153,7 @@ class InMemoryConversationStore:
         primary.events.append(
             ConversationEvent(
                 kind="merged",
-                summary=f"Merged {len(duplicate_ids)} conversations",
+                summary=f'Объединено диалогов: {len(duplicate_ids)}',
                 metadata={"duplicate_ids": [str(i) for i in duplicate_ids]},
             )
         )
@@ -193,7 +193,7 @@ class InMemoryConversationStore:
     ) -> Conversation:
         conv = await self.get(shop_id, conversation_id)
         if conv is None:
-            raise LookupError(f"Conversation not found: {conversation_id}")
+            raise LookupError(f'Диалог не найден: {conversation_id}')
         conv.messages.append(message)
         if message.channel and message.channel not in conv.channel_history:
             conv.channel_history.append(message.channel)

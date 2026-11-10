@@ -7,6 +7,8 @@ and proposes AppointmentDecision — never writes appointments to the database.
 
 from __future__ import annotations
 
+from app.localization import status_label
+
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID
@@ -134,7 +136,7 @@ class InMemorySchedulingStore:
                 and a.start < end
                 and start < a.end
             ):
-                raise AgentValidationError("Time slot not available", agent="scheduling")
+                raise AgentValidationError('Время недоступно', agent="scheduling")
         record = AppointmentRecord(
             id=uuid4(),
             shop_id=shop_id,
@@ -167,10 +169,10 @@ class InMemorySchedulingStore:
 
         existing = await self.get(shop_id, appointment_id)
         if existing is None:
-            raise AgentValidationError("Appointment not found", agent="scheduling")
+            raise AgentValidationError('Запись не найдена', agent="scheduling")
         if str(existing.status).lower() not in {"booked", "confirmed", "in_progress"}:
             raise AgentValidationError(
-                f"Cannot reschedule {existing.status} appointment",
+                f'Нельзя перенести запись со статусом {status_label(existing.status)}',
                 agent="scheduling",
             )
         existing.status = "rescheduled"
@@ -181,7 +183,7 @@ class InMemorySchedulingStore:
             end=end,
             customer_id=existing.customer_id,
             vehicle_id=existing.vehicle_id,
-            notes=f"Rescheduled from {existing.id}",
+            notes=f'Перенесено из {existing.id}',
             service_id=service_id if service_id is not None else existing.service_id,
             service_name=service_name if service_name is not None else existing.service_name,
             duration_minutes=duration_minutes,
@@ -197,10 +199,10 @@ class InMemorySchedulingStore:
 
         existing = await self.get(shop_id, appointment_id)
         if existing is None:
-            raise AgentValidationError("Appointment not found", agent="scheduling")
+            raise AgentValidationError('Запись не найдена', agent="scheduling")
         if str(existing.status).lower() not in {"booked", "confirmed", "in_progress"}:
             raise AgentValidationError(
-                f"Cannot cancel appointment with status '{existing.status}'",
+                f"Нельзя отменить запись со статусом '{status_label(existing.status)}'",
                 agent="scheduling",
             )
         existing.status = "cancelled"
@@ -303,7 +305,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                     metadata={"action": "reschedule", "no_appointment": True},
                     decision=AppointmentDecision(
                         action="noop",
-                        rationale="No appointment found to reschedule",
+                        rationale='Запись для переноса не найдена',
                         confidence=0.0,
                     ),
                 )
@@ -377,9 +379,9 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                     required_skill=match.skill if match else None,
                     required_bay=match.bay if match else None,
                     rationale=(
-                        "Ask preferred day — clock already known"
+                        'Уточните день — время уже известно'
                         if clock_known
-                        else "Ask preferred time — do not volunteer openings"
+                        else 'Уточните желаемое время — не предлагайте варианты без запроса'
                     )
                     + (f" for {match.name}" if match else ""),
                     confidence=match.confidence if match else 1.0,
@@ -476,7 +478,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                         duration_minutes=duration,
                         required_skill=match.skill if match else None,
                         required_bay=match.bay if match else None,
-                        rationale="Preferred clock time unavailable"
+                        rationale='Желаемое время недоступно'
                         + (f" for {match.name}" if match else ""),
                         confidence=match.confidence if match else 1.0,
                         offer_policy="unavailable",
@@ -525,7 +527,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                 required_bay=match.bay if match else None,
                 recommended_slot_start=pending_start,
                 recommended_slot_end=pending_end,
-                rationale="List available appointment slots"
+                rationale='Показать свободное время для записи'
                 + (f" for {match.name}" if match else "")
                 + ("; soft preference — offer times" if soft_pref else "")
                 + (
@@ -576,13 +578,13 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                     SchedulingResult(
                         action=action.value,
                         success=False,
-                        message="No available slots",
+                        message='Нет свободного времени',
                         decision=self._catalog_decision(
                             action="book",
                             request=request,
                             context=context,
                             match=match,
-                            rationale="No slots available to recommend",
+                            rationale='Нет свободного времени для рекомендации',
                             confidence=0.0,
                         ),
                     )
@@ -619,7 +621,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                             duration_minutes=duration,
                             required_skill=match.skill if match else None,
                             required_bay=match.bay if match else None,
-                            rationale="No preferred time — ask instead of volunteering openings",
+                            rationale='Желаемое время не указано — уточните его',
                             confidence=match.confidence if match else 1.0,
                             offer_policy="ask_time",
                             hold_action=pending_action,  # type: ignore[arg-type]
@@ -665,7 +667,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                             duration_minutes=duration,
                             required_skill=match.skill if match else None,
                             required_bay=match.bay if match else None,
-                            rationale="Soft time preference — ask for a clock time",
+                            rationale='Неточное пожелание — уточните конкретное время',
                             confidence=match.confidence if match else 0.7,
                             offer_policy="ask_time",
                             hold_action=pending_action,  # type: ignore[arg-type]
@@ -721,7 +723,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                             duration_minutes=duration,
                             required_skill=match.skill if match else None,
                             required_bay=match.bay if match else None,
-                            rationale="Preferred clock time unavailable",
+                            rationale='Желаемое время недоступно',
                             confidence=match.confidence if match else 0.7,
                             offer_policy="unavailable",
                         ),
@@ -760,17 +762,16 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                             required_bay=match.bay if match else None,
                             recommended_slot_start=slot.start,
                             recommended_slot_end=end,
-                            rationale="Need customer name before booking",
+                            rationale='Перед записью нужно имя клиента',
                             confidence=match.confidence if match else 0.7,
                             hold_action="book",
                         ),
                     )
                 )
-            rationale = "Recommend slot matching customer preferred time"
+            rationale = 'Рекомендуется время по предпочтениям клиента'
             if match:
                 rationale = (
-                    f"Matched catalog service '{match.name}' "
-                    f"({match.duration_minutes} min); recommend slot"
+                    f"Найдена услуга '{match.name}' ({match.duration_minutes} мин); рекомендуется запись"
                 )
             decision = self._catalog_decision(
                 action="book",
@@ -787,7 +788,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                     action=action.value,
                     success=True,
                     available_slots=slots,
-                    message="Appointment booking recommended",
+                    message='Рекомендуется создать запись',
                     decision=decision,
                     metadata={
                         "service_id": str(match.service_id) if match else None,
@@ -814,7 +815,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                         metadata={"action": "reschedule", "no_appointment": True},
                         decision=AppointmentDecision(
                             action="noop",
-                            rationale="No appointment found to reschedule",
+                            rationale='Запись для переноса не найдена',
                             confidence=0.0,
                             service_id=match.service_id if match else None,
                             service_name=match.name if match else None,
@@ -823,7 +824,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                     )
                 )
             if not slots:
-                return AgentResult.fail("No slots available to reschedule")
+                return AgentResult.fail('Нет свободного времени для переноса')
             # Chat path with a preferred time but no YES → hold for confirmation.
             # Day / part-of-day: offer openings instead of inventing a clock time.
             if inferred_from_intent and not request.confirm_booking:
@@ -857,14 +858,14 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                             action=SchedulingAction.LIST_SLOTS.value,
                             success=True,
                             available_slots=soft_slots or slots,
-                            message=f"{len(soft_slots or slots)} slots available",
+                            message=f'Доступно вариантов времени: {len(soft_slots or slots)}',
                             decision=AppointmentDecision(
                                 action="list_slots",
                                 appointment_id=request.appointment_id,
                                 service_id=match.service_id if match else None,
                                 service_name=match.name if match else None,
                                 duration_minutes=duration,
-                                rationale="Soft preference — offer reschedule times",
+                                rationale='Неточное пожелание — предложите время для переноса',
                                 confidence=match.confidence if match else 0.7,
                             ),
                         )
@@ -901,7 +902,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                                     service_id=match.service_id if match else None,
                                     service_name=match.name if match else None,
                                     duration_minutes=duration,
-                                    rationale="Preferred clock time unavailable to reschedule",
+                                    rationale='Желаемое время переноса недоступно',
                                     confidence=match.confidence if match else 0.7,
                                     offer_policy="unavailable",
                                     hold_action="reschedule",
@@ -931,7 +932,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                                 service_id=match.service_id if match else None,
                                 service_name=match.name if match else None,
                                 duration_minutes=duration,
-                                rationale="No preferred time for reschedule",
+                                rationale='Не указано желаемое время переноса',
                                 confidence=match.confidence if match else 0.7,
                                 offer_policy="ask_time",
                                 hold_action="reschedule",
@@ -961,7 +962,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                             service_id=match.service_id if match else None,
                             service_name=match.name if match else None,
                             duration_minutes=duration,
-                            rationale="Awaiting confirmation before reschedule",
+                            rationale='Ожидание подтверждения переноса',
                             confidence=match.confidence if match else 0.7,
                             hold_action="reschedule",
                         ),
@@ -1007,7 +1008,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                                 service_id=match.service_id if match else None,
                                 service_name=match.name if match else None,
                                 duration_minutes=duration,
-                                rationale="Preferred clock time unavailable to reschedule",
+                                rationale='Желаемое время переноса недоступно',
                                 confidence=match.confidence if match else 0.7,
                                 offer_policy="unavailable",
                                 hold_action="reschedule",
@@ -1034,7 +1035,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                             service_id=match.service_id if match else None,
                             service_name=match.name if match else None,
                             duration_minutes=duration,
-                            rationale="Confirmed reschedule without preferred time",
+                            rationale='Перенос подтверждён без желаемого времени',
                             confidence=match.confidence if match else 0.7,
                             offer_policy="ask_time",
                             hold_action="reschedule",
@@ -1056,14 +1057,14 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                 required_skill=match.skill if match else None,
                 required_bay=match.bay if match else None,
                 estimated_revenue=_revenue_for_decision(match, request.estimated_revenue),
-                rationale="Recommend reschedule to exact preferred slot",
+                rationale='Рекомендуется перенос на точное желаемое время',
             )
             return AgentResult.ok(
                 SchedulingResult(
                     action=action.value,
                     success=True,
                     available_slots=slots,
-                    message="Appointment reschedule recommended",
+                    message='Рекомендуется перенести запись',
                     decision=decision,
                 )
             )
@@ -1079,7 +1080,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                         metadata={"action": "cancel", "no_appointment": True},
                         decision=AppointmentDecision(
                             action="noop",
-                            rationale="No appointment found to cancel",
+                            rationale='Запись для отмены не найдена',
                             confidence=0.0,
                         ),
                     )
@@ -1095,7 +1096,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                         decision=AppointmentDecision(
                             action="noop",
                             appointment_id=request.appointment_id,
-                            rationale="Awaiting customer confirmation before cancel",
+                            rationale='Ожидание подтверждения отмены клиентом',
                             confidence=0.0,
                         ),
                     )
@@ -1104,13 +1105,13 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                 action="cancel",
                 appointment_id=request.appointment_id,
                 reason=request.reason,
-                rationale="Recommend cancellation",
+                rationale='Рекомендуется отмена',
             )
             return AgentResult.ok(
                 SchedulingResult(
                     action=action.value,
                     success=True,
-                    message="Appointment cancellation recommended",
+                    message='Рекомендуется отменить запись',
                     decision=decision,
                 )
             )
@@ -1120,8 +1121,8 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                 SchedulingResult(
                     action=action.value,
                     success=True,
-                    message="No pending reminders",
-                    decision=AppointmentDecision(action="noop", rationale="Reminders query"),
+                    message='Нет ожидающих напоминаний',
+                    decision=AppointmentDecision(action="noop", rationale='Запрос напоминаний'),
                 )
             )
 
@@ -1129,7 +1130,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
             SchedulingResult(
                 action=SchedulingAction.NOOP.value,
                 success=True,
-                message="No scheduling action required",
+                message='Действия с расписанием не требуются',
                 decision=AppointmentDecision(action="noop"),
             )
         )
@@ -1183,13 +1184,13 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                 appointment_id=appointment.id,
                 channel="sms",
                 send_at=appointment.start - timedelta(hours=24),
-                message="Reminder: your appointment is tomorrow.",
+                message='Напоминание: ваша запись завтра.',
             ),
             Reminder(
                 appointment_id=appointment.id,
                 channel="sms",
                 send_at=appointment.start - timedelta(hours=2),
-                message="Reminder: your appointment is in 2 hours.",
+                message='Напоминание: ваша запись через 2 часа.',
             ),
         ]
 
@@ -1260,7 +1261,7 @@ class SchedulingAgent(Agent[SchedulingRequest, SchedulingResult]):
                     duration_minutes=duration,
                     required_skill=match.skill if match else None,
                     required_bay=match.bay if match else None,
-                    rationale="Preferred day has no openings (closed or full)",
+                    rationale='В желаемый день нет свободного времени (закрыто или всё занято)',
                     confidence=match.confidence if match else 0.7,
                     offer_policy="unavailable",
                     hold_action=hold,  # type: ignore[arg-type]

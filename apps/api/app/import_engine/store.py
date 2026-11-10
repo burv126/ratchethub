@@ -41,7 +41,7 @@ class InMemoryImportStore:
         now = datetime.now(timezone.utc)
         job.created_at = now
         job.updated_at = now
-        job.progress = ImportProgress(stage=job.status, percent=0, message="Created", updated_at=now)
+        job.progress = ImportProgress(stage=job.status, percent=0, message='Создано', updated_at=now)
         self.jobs[job.id] = job
         self.records.setdefault(job.id, [])
         return job

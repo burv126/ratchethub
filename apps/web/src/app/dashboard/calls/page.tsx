@@ -72,14 +72,14 @@ function CallsContent() {
         <div className="flex shrink-0 flex-wrap items-end justify-between gap-3">
           <div className="flex items-center gap-2">
             <IconPhone className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-            <h1 className="page-title">Calls</h1>
+            <h1 className="page-title">Звонки</h1>
           </div>
         </div>
         <p
           className="rounded-xl border border-red-200/80 bg-red-50 px-4 py-3 text-sm text-red-700"
           role="alert"
         >
-          Calls &amp; Messages permission required to open Calls.
+          Для открытия звонков нужно разрешение на звонки и сообщения.
         </p>
       </div>
     );
@@ -90,7 +90,7 @@ function CallsContent() {
       <div className="flex shrink-0 flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-2">
           <IconPhone className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-          <h1 className="page-title">Calls</h1>
+          <h1 className="page-title">Звонки</h1>
         </div>
       </div>
 

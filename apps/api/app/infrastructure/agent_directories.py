@@ -162,7 +162,7 @@ class SqlCustomerDirectory:
             await uow.bind_shop(shop_id)
             primary = await uow.customers.get_by_id(shop_id, primary_id)
             if primary is None:
-                raise ValueError("Primary customer not found")
+                raise ValueError('Основной клиент не найден')
 
             for dup_id in duplicate_ids:
                 if dup_id == primary_id:
@@ -294,7 +294,7 @@ class SqlVehicleDirectory:
             await uow.bind_shop(shop_id)
             vehicle = await uow.vehicles.get_by_id(shop_id, repair.vehicle_id)
             if vehicle is None:
-                raise ValueError("Vehicle not found")
+                raise ValueError('Автомобиль не найден')
             created = await uow.repair_histories.add(
                 RepairHistory(
                     id=repair.id or uuid4(),

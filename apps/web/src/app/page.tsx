@@ -1,5 +1,7 @@
 "use client";
 
+import { ruLabel } from "@/lib/ru";
+
 import Link from "next/link";
 import Image from "next/image";
 import { type MouseEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -15,13 +17,13 @@ const PLANS = [
     name: "Free",
     price: "$0",
     features: [
-      "Walk-in + VIN decode",
-      "Appointments",
-      "Customer CRM",
-      "Team roles & permissions",
-      "CSV / data import",
-      "10 AI calls / mo",
-      "2 seats",
+      "Живая очередь и расшифровка VIN",
+      "Записи",
+      "CRM клиентов",
+      "Роли и разрешения команды",
+      "Импорт CSV / данных",
+      "10 звонков ИИ / мес.",
+      "2 места",
     ],
   },
   {
@@ -29,13 +31,13 @@ const PLANS = [
     name: "Pro",
     price: "$150",
     features: [
-      "Walk-in + VIN decode",
-      "Appointments",
-      "Customer CRM",
-      "Team roles & permissions",
-      "CSV / data import",
-      "150 AI calls / mo",
-      "4 seats",
+      "Живая очередь и расшифровка VIN",
+      "Записи",
+      "CRM клиентов",
+      "Роли и разрешения команды",
+      "Импорт CSV / данных",
+      "150 звонков ИИ / мес.",
+      "4 места",
     ],
   },
   {
@@ -43,13 +45,13 @@ const PLANS = [
     name: "Enterprise",
     price: "$400",
     features: [
-      "Walk-in + VIN decode",
-      "Appointments",
-      "Customer CRM",
-      "Team roles & permissions",
-      "CSV / data import",
-      "500 AI calls / mo",
-      "10+ seats",
+      "Живая очередь и расшифровка VIN",
+      "Записи",
+      "CRM клиентов",
+      "Роли и разрешения команды",
+      "Импорт CSV / данных",
+      "500 звонков ИИ / мес.",
+      "10+ мест",
     ],
   },
 ] as const;
@@ -176,7 +178,7 @@ export default function HomePage() {
       }`}
     >
       <header className="landing-nav landing-nav--solid">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:flex-nowrap sm:px-6">
           <BrandLogo
             size={44}
             priority
@@ -201,7 +203,7 @@ export default function HomePage() {
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              Sign in
+              Войти
             </button>
             <button type="button" onClick={openRegister} className="btn-primary gap-1.5">
               <svg
@@ -219,7 +221,7 @@ export default function HomePage() {
                 <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
                 <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
               </svg>
-              Start free
+              Начать бесплатно
             </button>
           </div>
         </div>
@@ -247,17 +249,16 @@ export default function HomePage() {
                 <BrandWordmark className="text-[1em] leading-none text-white" />
               </p>
               <h1 className="hero-motion-delay mt-4 max-w-xl font-display text-[clamp(1.2rem,4.6vw,1.85rem)] font-medium leading-snug tracking-[-0.02em] text-white sm:mt-6">
-                Raise the standard for every bay and every call.
+                Новый стандарт для каждого поста и каждого звонка.
               </h1>
               <p className="hero-motion-delay mt-3.5 max-w-[22rem] text-[0.9rem] leading-relaxed text-white/90 sm:mt-5 sm:max-w-lg sm:text-base sm:text-white">
-                Voice, workflows, and vehicle knowledge — composed into one elevated front desk for
-                independent shops.
+                Звонки, рабочие процессы и знания об автомобилях — единая система приёма клиентов для независимых автосервисов.
               </p>
             </div>
           </div>
 
           <ul className="hero-motion-late grid w-full shrink-0 grid-cols-3 border-t border-white/15 pt-4 sm:pt-6">
-            {["Independent shops", "Human-led AI", "Every repair, elevated"].map((label, i) => (
+            {["Независимые автосервисы", "ИИ под вашим контролем", "Каждый ремонт на новом уровне"].map((label, i) => (
               <li
                 key={label}
                 className={`px-1 text-center sm:px-3 ${
@@ -278,9 +279,9 @@ export default function HomePage() {
       <section className="bg-[#f2f2f2]">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
           <div className="w-full">
-            <p className="section-label">All-in-one</p>
+            <p className="section-label">Всё в одном</p>
             <FitWidthHeadline className="font-display mt-2 w-full whitespace-nowrap font-extrabold leading-[1.05] tracking-[-0.035em]">
-              Shop software that saves time and grows profit.
+              Программа для автосервиса, которая экономит время и увеличивает прибыль.
             </FitWidthHeadline>
           </div>
 
@@ -288,14 +289,14 @@ export default function HomePage() {
             {[
               {
                 num: "01",
-                title: "Lightning-fast workflow",
-                body: "Replace paper trails and missed calls with AI that books, reminds, and routes work while your team stays on the bay.",
+                title: "Быстрая работа",
+                body: "ИИ записывает клиентов, напоминает и распределяет работы, пока ваша команда занимается автомобилями, избавляя от бумажной рутины и пропущенных звонков.",
                 icon: <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />,
               },
               {
                 num: "02",
-                title: "Smarter opportunities",
-                body: "Surface declined estimates, maintenance reminders, and upsell moments with workflows built for repair shops.",
+                title: "Перспективные возможности",
+                body: "Возвращайте отклонённые сметы, напоминайте об обслуживании и предлагайте дополнительные услуги с помощью процессов для автосервисов.",
                 icon: (
                   <>
                     <path d="M3 3v18h18" />
@@ -305,8 +306,8 @@ export default function HomePage() {
               },
               {
                 num: "03",
-                title: "Happier customers",
-                body: "Precise communication over the phone builds trust, approvals, and five-star reviews that keep cars coming back.",
+                title: "Довольные клиенты",
+                body: "Точное общение по телефону укрепляет доверие, помогает согласовывать работы и получать отличные отзывы, чтобы клиенты возвращались.",
                 icon: (
                   <>
                     <path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7-6.3-4.6L5.7 21l2.3-7-6-4.6h7.6L12 2z" />
@@ -348,20 +349,19 @@ export default function HomePage() {
         <div className="relative mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-10">
             <div>
-              <p className="section-label !text-[var(--signal)]">Built differently</p>
+              <p className="section-label !text-[var(--signal)]">Особый подход</p>
               <h2 className="font-display mt-2 max-w-xl text-[clamp(2rem,4.2vw,3.1rem)] font-extrabold leading-[1.05] tracking-[-0.035em]">
-                Everything the front desk needs — without the noise.
+                Всё для приёма клиентов — без лишнего.
               </h2>
               <p className="mt-4 max-w-md text-sm leading-relaxed text-white/55 sm:text-base">
-                From the first ring to the final review, RatchetHub keeps the shop calm,
-                precise, and always ready.
+                От первого звонка до итогового отзыва АвтоЦентр помогает автосервису работать спокойно, точно и без задержек.
               </p>
             </div>
             <ul className="space-y-0 border-t border-white/10">
               {[
                 {
-                  title: "Voice AI",
-                  body: "Answer and assist without missing a beat.",
+                  title: "Голосовой ИИ",
+                  body: "Отвечайте и помогайте без задержек.",
                   icon: (
                     <>
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.36 1.6.68 2.35a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.75.32 1.54.55 2.35.68A2 2 0 0 1 22 16.92z" />
@@ -369,8 +369,8 @@ export default function HomePage() {
                   ),
                 },
                 {
-                  title: "Appointments",
-                  body: "Fill the schedule with fewer callbacks.",
+                  title: "Записи",
+                  body: "Заполняйте расписание с меньшим числом обратных звонков.",
                   icon: (
                     <>
                       <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -379,8 +379,8 @@ export default function HomePage() {
                   ),
                 },
                 {
-                  title: "Marketing",
-                  body: "Reminders, reviews, and campaigns on autopilot.",
+                  title: "Маркетинг",
+                  body: "Напоминания, отзывы и кампании автоматически.",
                   icon: (
                     <>
                       <path d="M22 2 11 13" />
@@ -389,8 +389,8 @@ export default function HomePage() {
                   ),
                 },
                 {
-                  title: "Vehicle knowledge",
-                  body: "Health, history, and context for every RO.",
+                  title: "Знания об автомобилях",
+                  body: "Состояние, история и контекст каждого заказ-наряда.",
                   icon: (
                     <>
                       <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
@@ -434,9 +434,9 @@ export default function HomePage() {
       {/* Pricing — last content section */}
       <section id="pricing" className="relative overflow-hidden bg-[#ececec] px-4 py-12 sm:px-6 sm:py-16">
         <div className="relative mx-auto max-w-6xl">
-          <h2 className="section-label">Pricing</h2>
+          <h2 className="section-label">Тарифы</h2>
           <p className="mt-3 text-sm leading-relaxed text-[#5c5c5c] sm:text-base">
-            Simple monthly plans. Upgrade anytime from Billing.
+            Простые ежемесячные тарифы. Повысить тариф можно в разделе оплаты.
           </p>
 
           <div className="mt-8 grid gap-3 sm:mt-10 sm:gap-4 md:grid-cols-3 md:items-stretch">
@@ -450,14 +450,14 @@ export default function HomePage() {
                   style={{ animationDelay: `${index * 80}ms` }}
                 >
                   <h3 className="font-display text-xl font-bold tracking-tight sm:text-2xl">
-                    {plan.name}
+                    {ruLabel(plan.name)}
                   </h3>
 
                   <p className="mt-4 flex items-end gap-1.5">
                     <span className="font-display text-[2.6rem] font-extrabold leading-none tracking-[-0.04em] sm:text-[2.75rem]">
                       {plan.price}
                     </span>
-                    <span className="mb-1 text-sm text-[#8a8a8a]">/mo</span>
+                    <span className="mb-1 text-sm text-[#8a8a8a]">/мес.</span>
                   </p>
 
                   <div className="my-5 h-px bg-gradient-to-r from-black/10 via-black/5 to-transparent" aria-hidden />
@@ -484,7 +484,7 @@ export default function HomePage() {
                           : "border border-black/10 text-[#9a9a9a] cursor-not-allowed"
                     }`}
                   >
-                    {canStart ? "Get started" : "Upgrade in Billing"}
+                    {canStart ? "Начать" : "Повысить тариф в разделе оплаты"}
                   </button>
                 </div>
               );
@@ -498,10 +498,10 @@ export default function HomePage() {
         <div className="landing-footer-line" aria-hidden />
         <div className="relative mx-auto flex max-w-6xl flex-col items-center px-4 py-7 text-center sm:px-6 sm:py-8">
           <p className="font-display text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-[var(--accent)]">
-            Independent shops
+            Независимые автосервисы
           </p>
           <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#6b6b6b]">
-            Crafted for shops that treat service as a craft.
+            Для автосервисов, которые ценят качество обслуживания.
           </p>
           <div className="mt-4 h-px w-12 bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-70" aria-hidden />
           <p className="mt-3 font-mono text-[10px] tracking-[0.18em] text-[#9a9a9a]">

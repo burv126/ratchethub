@@ -29,7 +29,7 @@ class CampaignDecisionFactory:
             message_draft=message_draft,
             audience_size=audience_size,
             auto_send=False,  # hard rule — Workflow records suggestion only
-            rationale=rationale or f"Campaign suggestion: {campaign_type}",
+            rationale=rationale or f'Рекомендация кампании: {campaign_type}',
         )
 
     def contact_timing(
@@ -44,6 +44,6 @@ class CampaignDecisionFactory:
             customer_id=customer_id,
             channel=channel,
             preferred_window=preferred_window,
-            reason=reason or "Optimal contact timing from engagement patterns",
+            reason=reason or 'Оптимальное время связи по истории взаимодействий',
             rationale=reason,
         )

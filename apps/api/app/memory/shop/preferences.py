@@ -44,7 +44,7 @@ class ShopPreferenceService:
         return self._ltm.remember(
             RememberRequest(
                 shop_id=shop_id,
-                content=f"Shop preference {key}={value}",
+                content=f'Предпочтение автосервиса {key}={value}',
                 summary=rationale or None,
                 memory_type=MemoryType.SHOP,
                 category=MemoryCategory.SHOP_PREFERENCES,

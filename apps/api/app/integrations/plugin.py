@@ -20,15 +20,14 @@ class IntegrationPlugin:
         return "integrations"
 
     def plugin_name(self) -> str:
-        return "External Integration Layer"
+        return 'Слой внешних интеграций'
 
     def plugin_version(self) -> str:
         return "1.0.0"
 
     def plugin_description(self) -> str:
         return (
-            "Adapter layer for DMS, accounting, communication, and payment systems. "
-            "Routes through Capability Registry into existing plugins and workflows."
+            'Адаптеры DMS, бухгалтерии, связи и платежей. Вызовы проходят через реестр возможностей к существующим плагинам и процессам.'
         )
 
     def supported_capabilities(self) -> list[str]:
@@ -62,11 +61,11 @@ class IntegrationPlugin:
 
         shop_id = kwargs.get("shop_id") or (context.shop_id if context else None)
         if shop_id is None:
-            raise ValueError("shop_id is required for integration capabilities")
+            raise ValueError('Для интеграций требуется shop_id')
         tenant_id = kwargs.get("tenant_id") or (context.tenant_id if context else None) or shop_id
         provider_raw = kwargs.get("provider")
         if provider_raw is None:
-            raise ValueError("provider is required for integration capabilities")
+            raise ValueError('Для интеграций требуется provider')
         provider = (
             provider_raw
             if isinstance(provider_raw, IntegrationProvider)

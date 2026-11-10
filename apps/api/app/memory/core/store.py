@@ -118,7 +118,7 @@ class InMemoryKnowledgeBaseStore:
     async def upsert_document(self, doc: KnowledgeDocument) -> KnowledgeDocument:
         existing = self._docs.get(doc.id)
         if existing is not None and existing.shop_id != doc.shop_id:
-            raise PermissionError("Cross-shop knowledge document write blocked")
+            raise PermissionError('Запись знаний другого автосервиса запрещена')
         doc.updated_at = _utcnow()
         self._docs[doc.id] = doc
         return doc

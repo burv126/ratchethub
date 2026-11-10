@@ -30,47 +30,47 @@ _WATCHED: frozenset[str] = frozenset(
 _META: dict[str, dict[str, str]] = {
     DomainEventType.SAAS_SIGNUP.value: {
         "severity": "info",
-        "title": "New signup",
+        "title": 'Новая регистрация',
         "kind": "new_signup",
     },
     DomainEventType.SAAS_MEMBER_JOINED.value: {
         "severity": "info",
-        "title": "Member joined",
+        "title": 'Новый сотрудник',
         "kind": "member_joined",
     },
     DomainEventType.SAAS_SHOP_DELETED.value: {
         "severity": "major",
-        "title": "Shop deleted",
+        "title": 'Автосервис удалён',
         "kind": "shop_deleted",
     },
     DomainEventType.SAAS_CONTACT_CHANGED.value: {
         "severity": "info",
-        "title": "Contact updated",
+        "title": 'Контакт обновлён',
         "kind": "contact_changed",
     },
     DomainEventType.BILLING_PAYMENT_SUCCEEDED.value: {
         "severity": "info",
-        "title": "Payment success",
+        "title": 'Платёж выполнен',
         "kind": "payment_success",
     },
     DomainEventType.BILLING_PAYMENT_FAILED.value: {
         "severity": "major",
-        "title": "Payment failure",
+        "title": 'Ошибка платежа',
         "kind": "payment_failure",
     },
     DomainEventType.BILLING_QUOTA_WARNING.value: {
         "severity": "major",
-        "title": "Token limit warning",
+        "title": 'Предупреждение о лимите токенов',
         "kind": "token_limit_warning",
     },
     DomainEventType.SYSTEM_ERROR.value: {
         "severity": "critical",
-        "title": "System error",
+        "title": 'Системная ошибка',
         "kind": "system_error",
     },
     DomainEventType.WORKFLOW_FAILED.value: {
         "severity": "major",
-        "title": "System error",
+        "title": 'Системная ошибка',
         "kind": "system_error",
     },
 }
@@ -124,7 +124,7 @@ def _message_for(event_type: str, shop_id: UUID, payload: dict[str, Any]) -> str
         pct = payload.get("percent")
         return f"shop={shop} {metric}={usage}/{limit} ({pct}%)"
     if event_type == DomainEventType.SYSTEM_ERROR.value:
-        return str(payload.get("summary") or payload.get("error") or payload.get("title") or "System error")
+        return str(payload.get("summary") or payload.get("error") or payload.get("title") or 'Системная ошибка')
     if event_type == DomainEventType.WORKFLOW_FAILED.value:
         return f"shop={shop} error={payload.get('error', 'workflow failed')}"
     return f"shop={shop}"

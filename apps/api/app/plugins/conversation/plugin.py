@@ -37,15 +37,14 @@ class ConversationPlugin:
         return "conversation"
 
     def plugin_name(self) -> str:
-        return "Conversation Plugin"
+        return 'Плагин диалогов'
 
     def plugin_version(self) -> str:
         return "1.0.0"
 
     def plugin_description(self) -> str:
         return (
-            "Unified Conversation domain across Phone, SMS, Email, Facebook, "
-            "Website Chat, Walk-in, and future messaging channels."
+            'Единая система диалогов: телефон, SMS, почта, Facebook, чат сайта, живая очередь и будущие каналы связи.'
         )
 
     def supported_capabilities(self) -> list[str]:
@@ -212,13 +211,13 @@ class ConversationPlugin:
         if capability == Capability.FIND_CONVERSATION:
             cid = kwargs.get("conversation_id")
             if cid is None:
-                raise ValueError("conversation_id required")
+                raise ValueError('Требуется conversation_id')
             return await self._sessions.find(shop_id, cid)
 
         if capability == Capability.UPDATE_CONVERSATION:
             cid = kwargs.get("conversation_id")
             if cid is None:
-                raise ValueError("conversation_id required")
+                raise ValueError('Требуется conversation_id')
             return await self._sessions.update(
                 shop_id,
                 cid,
@@ -238,14 +237,14 @@ class ConversationPlugin:
         if capability == Capability.CLOSE_CONVERSATION:
             cid = kwargs.get("conversation_id")
             if cid is None:
-                raise ValueError("conversation_id required")
+                raise ValueError('Требуется conversation_id')
             return await self._sessions.close(shop_id, cid)
 
         if capability == Capability.MERGE_CONVERSATION:
             primary = kwargs.get("primary_id") or kwargs.get("conversation_id")
             duplicates = list(kwargs.get("duplicate_ids") or [])
             if primary is None:
-                raise ValueError("primary_id required")
+                raise ValueError('Требуется primary_id')
             return await self._sessions.merge(shop_id, primary, duplicates)
 
         if capability == Capability.SEARCH_CONVERSATION:
@@ -261,16 +260,16 @@ class ConversationPlugin:
         if capability == Capability.CONVERSATION_HISTORY:
             cid = kwargs.get("conversation_id")
             if cid is None:
-                raise ValueError("conversation_id required")
+                raise ValueError('Требуется conversation_id')
             return await self._messages.history(shop_id, cid)
 
         if capability == Capability.CONVERSATION_SUMMARY:
             cid = kwargs.get("conversation_id")
             if cid is None:
-                raise ValueError("conversation_id required")
+                raise ValueError('Требуется conversation_id')
             conv = await self._sessions.find(shop_id, cid)
             if conv is None:
-                raise LookupError(f"Conversation not found: {cid}")
+                raise LookupError(f'Диалог не найден: {cid}')
             if kwargs.get("enrich"):
                 ai = self._intelligence.enrich(
                     conv,
@@ -292,4 +291,4 @@ class ConversationPlugin:
                     conv = await self._sessions.update(shop_id, cid, ai=ai)
             return self._intelligence.summarize(conv)
 
-        raise ValueError(f"Unknown conversation capability: {capability}")
+        raise ValueError(f'Неизвестная возможность диалога: {capability}')

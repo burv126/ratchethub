@@ -46,4 +46,4 @@ async def test_skip_without_customer(context):
     result = await agent.update(CrmUpdateRequest(customer_id=None, message="hi", channel="sms"), context)
     assert result.success
     assert result.data.customer_id is None
-    assert "skipped" in (result.data.customer_summary or "").lower()
+    assert 'пропущено' in (result.data.customer_summary or "").lower()

@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { AdminShell, LiveBadge, Stat } from "@/components/admin/AdminShell";
@@ -63,7 +67,7 @@ function DashboardBody({
       } catch (err) {
         if (!quiet) {
           setLive(false);
-          setError(err instanceof Error ? err.message : "Failed to load dashboard");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить панель");
         }
       } finally {
         if (!quiet) setBusy(false);
@@ -113,10 +117,10 @@ function DashboardBody({
 
   const greeting = greetingFor(now);
   const timeLabel = now
-    ? now.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+    ? now.toLocaleTimeString("ru-RU", { hour: "numeric", minute: "2-digit" })
     : null;
   const dateLabel = now
-    ? now.toLocaleDateString(undefined, {
+    ? now.toLocaleDateString("ru-RU", {
         weekday: "long",
         month: "short",
         day: "numeric",
@@ -126,16 +130,16 @@ function DashboardBody({
   if (error && !data) {
     return (
       <p className="rounded-xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-sm text-red-700 shadow-[var(--shadow-soft)]">
-        {error}
+        {ruError(error)}
       </p>
     );
   }
 
   if (!data) {
-    return busy ? <DashboardSkeleton /> : <p className="text-sm text-[var(--muted)]">No data</p>;
+    return busy ? <DashboardSkeleton /> : <p className="text-sm text-[var(--muted)]">Нет данных</p>;
   }
 
-  const updatedLabel = new Date(updatedAt ?? data.generated_at).toLocaleString();
+  const updatedLabel = new Date(updatedAt ?? data.generated_at).toLocaleString("ru-RU");
   const systemOk = (data.system.status || "").toLowerCase() === "ok" ||
     (data.system.status || "").toLowerCase() === "healthy";
 
@@ -169,13 +173,13 @@ function DashboardBody({
           </p>
           <div className="mt-2 flex items-center justify-between gap-3">
             <h1 className="font-display min-w-0 flex-1 truncate text-[1.75rem] font-semibold leading-[1.05] tracking-tight text-[var(--foreground)] sm:text-[2.05rem]">
-              Platform pulse
+              Состояние платформы
             </h1>
             <div className="flex shrink-0 items-center gap-3 sm:gap-4">
               {timeLabel ? (
                 <div className="hidden text-right sm:block">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                    Local time
+                    Местное время
                   </p>
                   <p className="font-display mt-0.5 text-xl font-semibold tabular-nums tracking-tight text-[var(--foreground)] sm:text-2xl">
                     {timeLabel}
@@ -186,12 +190,12 @@ function DashboardBody({
             </div>
           </div>
           <p className="mt-2.5 text-sm leading-relaxed text-[var(--muted)]">
-            Shops, billing, AI usage, and system health — updated {updatedLabel}.
+            Автосервисы, оплата, использование ИИ и состояние системы — обновлено {updatedLabel}.
           </p>
           <div className="mt-3.5 flex flex-wrap items-center gap-2 text-sm text-[var(--muted)]">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white/70 px-2.5 py-1 text-xs font-medium text-[var(--foreground)]/80">
               <IconUser className="h-3.5 w-3.5 text-[var(--muted)]" />
-              {username || "Platform admin"}
+              {username || "Администратор платформы"}
             </span>
             {dateLabel ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white/70 px-2.5 py-1 text-xs font-medium">
@@ -203,7 +207,7 @@ function DashboardBody({
               <span
                 className={`h-1.5 w-1.5 rounded-full ${systemOk ? "bg-emerald-500" : "bg-amber-500"}`}
               />
-              {data.environment || "env"} · {data.system.status}
+              {data.environment || "env"} · {ruLabel(data.system.status)}
             </span>
           </div>
         </div>
@@ -211,7 +215,7 @@ function DashboardBody({
 
       {error ? (
         <p className="relative rounded-xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-sm text-red-700 shadow-[var(--shadow-soft)]">
-          {error}
+          {ruError(error)}
         </p>
       ) : null}
 
@@ -222,17 +226,17 @@ function DashboardBody({
         />
         <div className="relative grid sm:grid-cols-[1.25fr_1fr]">
           <SpotlightMetric
-            label="Monthly recurring revenue"
+            label="Ежемесячная регулярная выручка"
             value={formatCents(data.payments.mrr_cents)}
-            detail={`${data.payments.with_stripe} Stripe-linked shops`}
+            detail={`${data.payments.with_stripe} автосервисов со Stripe`}
             icon={<IconRevenue className="h-4 w-4" />}
             featured
           />
           <div className="border-t border-[var(--line)] sm:border-l sm:border-t-0">
             <SpotlightMetric
-              label="Open incidents"
+              label="Открытые инциденты"
               value={String(data.incidents.open)}
-              detail={data.incidents.open > 0 ? "Needs attention" : "All clear"}
+              detail={data.incidents.open > 0 ? "Требует внимания" : "Всё в порядке"}
               tone={data.incidents.open > 0 ? "warning" : "positive"}
               icon={<IconPulse className="h-4 w-4" />}
             />
@@ -243,33 +247,33 @@ function DashboardBody({
       <section className="hero-motion-late relative">
         <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           <Stat
-            label="Shops"
+            label="Автосервисы"
             value={String(data.shops.total)}
-            hint={`${data.shops.suspended} suspended`}
+            hint={`${data.shops.suspended} приостановлено`}
             icon={<IconBuilding className="h-3.5 w-3.5" />}
           />
           <Stat
-            label="Users"
+            label="Пользователи"
             value={String(data.users.total)}
-            hint={`${data.users.active} active · ${data.users.memberships} memberships`}
+            hint={`${data.users.active} активно · ${data.users.memberships} участников`}
             icon={<IconUsers className="h-3.5 w-3.5" />}
           />
           <Stat
-            label="AI tokens (calls)"
+            label="Токены ИИ (звонки)"
             value={String(data.tokens.ai_calls)}
-            hint={`Period ${data.tokens.period}`}
+            hint={`Период ${data.tokens.period}`}
             icon={<IconSpark className="h-3.5 w-3.5" />}
           />
         </div>
       </section>
 
       <section className="relative">
-        <SectionHeading title="Messaging & voice" icon={<IconPhone className="h-3.5 w-3.5" />} />
+        <SectionHeading title="Сообщения и звонки" icon={<IconPhone className="h-3.5 w-3.5" />} />
         <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="SMS inbound" value={String(data.sms.inbound_received ?? 0)} />
-          <Stat label="SMS outbound" value={String(data.sms.outbound_sent ?? 0)} />
-          <Stat label="Voice calls started" value={String(data.voice.calls_started ?? 0)} />
-          <Stat label="Live voice calls" value={String(data.voice.live_calls ?? 0)} />
+          <Stat label="Входящие SMS" value={String(data.sms.inbound_received ?? 0)} />
+          <Stat label="Исходящие SMS" value={String(data.sms.outbound_sent ?? 0)} />
+          <Stat label="Начатые звонки" value={String(data.voice.calls_started ?? 0)} />
+          <Stat label="Текущие звонки" value={String(data.voice.live_calls ?? 0)} />
         </div>
       </section>
     </div>
@@ -277,11 +281,11 @@ function DashboardBody({
 }
 
 function greetingFor(now: Date | null) {
-  if (!now) return "Welcome back";
+  if (!now) return "С возвращением";
   const hour = now.getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return "Доброе утро";
+  if (hour < 17) return "Добрый день";
+  return "Добрый вечер";
 }
 
 function DashboardSkeleton() {

@@ -45,5 +45,5 @@ async def test_upsells_and_prediction(context):
     assert result.data.lost_customer_risk > 0
     assert result.data.predicted_revenue > Decimal("0")
     assert any(u.service == "oil_change" for u in result.data.upsell_opportunities)
-    assert any("declined" in u.reason.lower() for u in result.data.upsell_opportunities)
+    assert any("отклон" in u.reason.lower() for u in result.data.upsell_opportunities)
     assert result.data.notes

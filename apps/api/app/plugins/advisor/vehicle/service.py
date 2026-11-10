@@ -9,11 +9,11 @@ from app.agents.decisions.types import RepairRecommendationDecision
 from app.plugins.advisor.models import AdvisorContext
 
 _KEYWORDS = {
-    "brake": ("brakes", "Brake inspection / service", Decimal("349.00"), "high"),
+    "brake": ("brakes", 'Осмотр / обслуживание тормозов', Decimal("349.00"), "high"),
     "oil": ("oil_change", "Oil change", Decimal("79.99"), "normal"),
-    "tire": ("tires", "Tire evaluation", Decimal("199.00"), "normal"),
-    "battery": ("battery", "Battery test / replacement", Decimal("189.00"), "high"),
-    "noise": ("diagnostic", "Diagnostic inspection", Decimal("129.00"), "high"),
+    "tire": ("tires", 'Оценка состояния шин', Decimal("199.00"), "normal"),
+    "battery": ("battery", 'Проверка / замена аккумулятора', Decimal("189.00"), "high"),
+    "noise": ("diagnostic", 'Диагностический осмотр', Decimal("129.00"), "high"),
     "ac": ("ac_service", "A/C performance check", Decimal("159.00"), "normal"),
 }
 
@@ -33,16 +33,15 @@ class AdvisorVehicleService:
                         vehicle_id=ctx.vehicle_id,
                         service_type=service,
                         title=title,
-                        description=f"Based on customer description for {label}",
+                        description=f'На основе описания клиента для {label}',
                         estimated_cost=cost,
                         urgency=urgency,  # type: ignore[arg-type]
                         plain_language=(
-                            f"We recommend {title.lower()} for your {label}. "
-                            f"Estimated starting around ${cost}."
+                            f'Рекомендуем {title.lower()} для вашего {label}. Ориентировочная стоимость от ${cost}.'
                         ),
-                        advisor_notes=f"Triggered by keyword '{key}' in inbound message",
+                        advisor_notes=f"По ключевому слову '{key}' во входящем сообщении",
                         confidence=0.72,
-                        rationale=f"Vehicle condition signal: {key}",
+                        rationale=f'Признак состояния автомобиля: {key}',
                     )
                 )
                 break
@@ -53,15 +52,14 @@ class AdvisorVehicleService:
                     customer_id=ctx.customer_id,
                     vehicle_id=ctx.vehicle_id,
                     service_type="inspection",
-                    title="Mileage-based multi-point inspection",
-                    description=f"Vehicle at ~{mileage} miles",
+                    title='Комплексный осмотр по пробегу',
+                    description=f'Пробег автомобиля около {mileage} миль',
                     estimated_cost=Decimal("99.00"),
                     urgency="normal",
                     plain_language=(
-                        f"Your {label} is around {mileage} miles — a multi-point inspection "
-                        "helps catch wear items before they become costly repairs."
+                        f'Пробег вашего {label} — около {mileage} миль. Комплексный осмотр поможет выявить износ до дорогостоящего ремонта.'
                     ),
-                    advisor_notes="Mileage threshold recommendation",
+                    advisor_notes='Рекомендация по порогу пробега',
                     confidence=0.65,
                     rationale="Mileage-based preventive maintenance",
                 )

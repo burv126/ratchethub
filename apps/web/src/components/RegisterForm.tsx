@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import Link from "next/link";
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
@@ -248,27 +250,27 @@ export function RegisterForm({
     setError(null);
     const name = shopName.trim();
     if (name.length < 2) {
-      setError("Shop name must be at least 2 characters.");
+      setError("Название автосервиса должно содержать не менее 2 символов.");
       return;
     }
     if (!ownerFullName.trim()) {
-      setError("Owner full name is required.");
+      setError("Укажите полное имя владельца.");
       return;
     }
     if (authMethod === "phone" && ownerPhone.replace(/\D/g, "").length < 10) {
-      setError("Enter a valid phone number (10 digits).");
+      setError("Введите корректный номер телефона (10 цифр).");
       return;
     }
     if (authMethod === "email" && !ownerEmail.trim()) {
-      setError("Owner email is required.");
+      setError("Укажите почту владельца.");
       return;
     }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError("Пароль должен содержать не менее 8 символов.");
       return;
     }
     if (password !== confirmPassword) {
-      setError("Password and confirmation do not match.");
+      setError("Пароль и подтверждение не совпадают.");
       return;
     }
     setSubmitting(true);
@@ -297,7 +299,7 @@ export function RegisterForm({
       setDraftStore(null);
       router.replace("/dashboard/setup");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(err instanceof Error ? err.message : "Не удалось зарегистрироваться");
     } finally {
       setSubmitting(false);
     }
@@ -312,14 +314,14 @@ export function RegisterForm({
         onClick={onSwitchToLogin}
         className="font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
       >
-        Sign in
+        Войти
       </button>
     ) : (
       <Link
         href="/?login=1"
         className="font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
       >
-        Sign in
+        Войти
       </Link>
     );
 
@@ -330,7 +332,7 @@ export function RegisterForm({
           type="button"
           onClick={onClose}
           className="absolute right-0 top-0 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--muted)] transition-colors hover:bg-black/5 hover:text-[var(--ink)]"
-          aria-label="Close register"
+          aria-label="Закрыть регистрацию"
         >
           <span aria-hidden className="text-xl leading-none">
             ×
@@ -339,21 +341,21 @@ export function RegisterForm({
 
         <div className="min-w-0 shrink-0">
           <div className="pr-10">
-            <p className="section-label">Get started</p>
+            <p className="section-label">Начать</p>
             <h1
               id="home-register-title"
               className="mt-1.5 inline-flex items-center gap-2.5 font-display text-[1.5rem] font-extrabold tracking-tight sm:text-[1.75rem]"
             >
               <IconBuilding className="h-6 w-6 shrink-0 text-[var(--accent)] sm:h-7 sm:w-7" />
-              Register your shop
+              Зарегистрируйте автосервис
             </h1>
           </div>
 
-          <div className="auth-segment mt-5" role="tablist" aria-label="Registration method">
+          <div className="auth-segment mt-5" role="tablist" aria-label="Способ регистрации">
             {(
               [
-                ["phone", "Phone", IconPhone],
-                ["email", "Email", IconMail],
+                ["phone", "Телефон", IconPhone],
+                ["email", "Эл. почта", IconMail],
               ] as const
             ).map(([id, label, Icon]) => (
               <button
@@ -386,7 +388,7 @@ export function RegisterForm({
             </div>
 
             <Field
-              label="Shop name"
+              label="Название автосервиса"
               icon={<IconBuilding />}
               name="asa-reg-shop-name"
               autoComplete="off"
@@ -395,18 +397,18 @@ export function RegisterForm({
                 userEditedShopName.current = true;
                 setShopName(v);
               }}
-              placeholder="Your shop name"
+              placeholder="Название вашего автосервиса"
               required
               guardAutofill
             />
             <Field
-              label="Owner full name"
+              label="Полное имя владельца"
               icon={<IconUser />}
               name={`asa-reg-owner-name-${authMethod}-${fieldEpoch}`}
               autoComplete="off"
               value={ownerFullName}
               onChange={setOwnerFullName}
-              placeholder="Full name"
+              placeholder="Полное имя"
               required
               guardAutofill
             />
@@ -414,7 +416,7 @@ export function RegisterForm({
               <div key={`contact-${authMethod}-${fieldEpoch}`}>
                 {authMethod === "phone" ? (
                   <Field
-                    label="Owner phone"
+                    label="Телефон владельца"
                     icon={<IconPhone />}
                     name={`asa-reg-owner-phone-${fieldEpoch}`}
                     type="tel"
@@ -427,7 +429,7 @@ export function RegisterForm({
                   />
                 ) : (
                   <Field
-                    label="Owner email"
+                    label="Почта владельца"
                     icon={<IconMail />}
                     name={`asa-reg-owner-email-${fieldEpoch}`}
                     type="email"
@@ -444,7 +446,7 @@ export function RegisterForm({
 
             <div key={`password-${authMethod}-${fieldEpoch}`}>
               <PasswordField
-                label="Password"
+                label="Пароль"
                 icon={<IconLock />}
                 name={`asa-reg-new-password-${authMethod}-${fieldEpoch}`}
                 value={password}
@@ -455,12 +457,12 @@ export function RegisterForm({
                 required
                 minLength={8}
                 autoComplete="new-password"
-                hint="At least 8 characters"
+                hint="Не менее 8 символов"
               />
             </div>
             <div key={`confirm-${authMethod}-${fieldEpoch}`}>
               <PasswordField
-                label="Confirm password"
+                label="Подтвердите пароль"
                 icon={<IconLock />}
                 name={`asa-reg-confirm-password-${authMethod}-${fieldEpoch}`}
                 value={confirmPassword}
@@ -473,7 +475,7 @@ export function RegisterForm({
                 autoComplete="new-password"
               />
               {confirmPassword && password !== confirmPassword ? (
-                <p className="mt-1.5 text-xs text-red-600">Passwords do not match.</p>
+                <p className="mt-1.5 text-xs text-red-600">Пароли не совпадают.</p>
               ) : null}
             </div>
 
@@ -492,7 +494,7 @@ export function RegisterForm({
                   }}
                   className="h-4 w-4 rounded border-[var(--line)] accent-[var(--accent)]"
                 />
-                <span>Remember signup info</span>
+                <span>Запомнить данные регистрации</span>
               </label>
               <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
                 <input
@@ -517,7 +519,7 @@ export function RegisterForm({
                   }}
                   className="h-4 w-4 rounded border-[var(--line)] accent-[var(--accent)]"
                 />
-                <span>Remember password</span>
+                <span>Запомнить пароль</span>
               </label>
             </div>
           </div>
@@ -528,7 +530,7 @@ export function RegisterForm({
                 className="rounded-xl border border-red-200/80 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                 role="alert"
               >
-                {error}
+                {ruError(error)}
               </p>
             )}
 
@@ -538,17 +540,17 @@ export function RegisterForm({
               className="btn-primary mt-1 w-full gap-2 py-3 text-base disabled:opacity-60"
             >
               {submitting ? (
-                "Creating shop…"
+                "Создание автосервиса…"
               ) : (
                 <>
                   <IconRocket className="h-4 w-4" />
-                  Create shop
+                  Создать автосервис
                 </>
               )}
             </button>
 
             <p className="text-center text-sm text-[var(--muted)]">
-              Already registered? {signInLink}
+              Уже зарегистрированы? {signInLink}
             </p>
           </div>
         </form>
@@ -569,20 +571,20 @@ export function RegisterForm({
           className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
         >
           <span aria-hidden="true">←</span>
-          Back to home
+          На главную
         </Link>
 
-        <p className="section-label mt-4">Get started</p>
+        <p className="section-label mt-4">Начать</p>
         <h1 className="mt-1.5 inline-flex items-center gap-2.5 font-display text-[1.5rem] font-extrabold tracking-tight sm:text-[1.75rem]">
           <IconBuilding className="h-6 w-6 shrink-0 text-[var(--accent)] sm:h-7 sm:w-7" />
-          Register your shop
+          Зарегистрируйте автосервис
         </h1>
 
-        <div className="auth-segment mt-5" role="tablist" aria-label="Registration method">
+        <div className="auth-segment mt-5" role="tablist" aria-label="Способ регистрации">
           {(
             [
-              ["phone", "Phone", IconPhone],
-              ["email", "Email", IconMail],
+              ["phone", "Телефон", IconPhone],
+              ["email", "Эл. почта", IconMail],
             ] as const
           ).map(([id, label, Icon]) => (
             <button
@@ -609,7 +611,7 @@ export function RegisterForm({
         </div>
 
         <Field
-          label="Shop name"
+          label="Название автосервиса"
           icon={<IconBuilding />}
           name="asa-reg-shop-name"
           autoComplete="off"
@@ -618,18 +620,18 @@ export function RegisterForm({
             userEditedShopName.current = true;
             setShopName(v);
           }}
-          placeholder="Your shop name"
+          placeholder="Название вашего автосервиса"
           required
           guardAutofill
         />
         <Field
-          label="Owner full name"
+          label="Полное имя владельца"
           icon={<IconUser />}
           name={`asa-reg-owner-name-${authMethod}-${fieldEpoch}`}
           autoComplete="off"
           value={ownerFullName}
           onChange={setOwnerFullName}
-          placeholder="Full name"
+          placeholder="Полное имя"
           required
           guardAutofill
         />
@@ -637,7 +639,7 @@ export function RegisterForm({
           <div key={`contact-${authMethod}-${fieldEpoch}`}>
             {authMethod === "phone" ? (
               <Field
-                label="Owner phone"
+                label="Телефон владельца"
                 icon={<IconPhone />}
                 name={`asa-reg-owner-phone-${fieldEpoch}`}
                 type="tel"
@@ -650,7 +652,7 @@ export function RegisterForm({
               />
             ) : (
               <Field
-                label="Owner email"
+                label="Почта владельца"
                 icon={<IconMail />}
                 name={`asa-reg-owner-email-${fieldEpoch}`}
                 type="email"
@@ -667,7 +669,7 @@ export function RegisterForm({
 
         <div key={`password-${authMethod}-${fieldEpoch}`}>
           <PasswordField
-            label="Password"
+            label="Пароль"
             icon={<IconLock />}
             name={`asa-reg-new-password-${authMethod}-${fieldEpoch}`}
             value={password}
@@ -678,12 +680,12 @@ export function RegisterForm({
             required
             minLength={8}
             autoComplete="new-password"
-            hint="At least 8 characters"
+            hint="Не менее 8 символов"
           />
         </div>
         <div key={`confirm-${authMethod}-${fieldEpoch}`}>
           <PasswordField
-            label="Confirm password"
+            label="Подтвердите пароль"
             icon={<IconLock />}
             name={`asa-reg-confirm-password-${authMethod}-${fieldEpoch}`}
             value={confirmPassword}
@@ -696,7 +698,7 @@ export function RegisterForm({
             autoComplete="new-password"
           />
           {confirmPassword && password !== confirmPassword ? (
-            <p className="mt-1.5 text-xs text-red-600">Passwords do not match.</p>
+            <p className="mt-1.5 text-xs text-red-600">Пароли не совпадают.</p>
           ) : null}
         </div>
 
@@ -715,7 +717,7 @@ export function RegisterForm({
               }}
               className="h-4 w-4 rounded border-[var(--line)] accent-[var(--accent)]"
             />
-            <span>Remember signup info</span>
+            <span>Запомнить данные регистрации</span>
           </label>
           <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
             <input
@@ -736,7 +738,7 @@ export function RegisterForm({
               }}
               className="h-4 w-4 rounded border-[var(--line)] accent-[var(--accent)]"
             />
-            <span>Remember password</span>
+            <span>Запомнить пароль</span>
           </label>
         </div>
       </div>
@@ -747,7 +749,7 @@ export function RegisterForm({
             className="rounded-xl border border-red-200/80 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
             role="alert"
           >
-            {error}
+            {ruError(error)}
           </p>
         )}
 
@@ -757,17 +759,17 @@ export function RegisterForm({
           className="btn-primary mt-1 w-full gap-2 py-3 text-base disabled:opacity-60"
         >
           {submitting ? (
-            "Creating shop…"
+            "Создание автосервиса…"
           ) : (
             <>
               <IconRocket className="h-4 w-4" />
-              Create shop
+              Создать автосервис
             </>
           )}
         </button>
 
         <p className="text-center text-sm text-[var(--muted)]">
-          Already registered? {signInLink}
+          Уже зарегистрированы? {signInLink}
         </p>
       </div>
     </form>

@@ -85,7 +85,7 @@ class ValidationEngine:
                     ValidationIssue(
                         severity=ValidationSeverity.ERROR,
                         code="invalid_vin",
-                        message=err or "Invalid VIN",
+                        message=err or 'Некорректный VIN',
                         entity_kind=EntityKind.VEHICLE,
                         entity_ref=_vehicle_ref(v, i),
                         details={"vin": v.vin},
@@ -101,7 +101,7 @@ class ValidationEngine:
                         ValidationIssue(
                             severity=ValidationSeverity.WARNING,
                             code="repair_invalid_vin",
-                            message=err or "Repair references invalid VIN",
+                            message=err or 'Ремонт ссылается на некорректный VIN',
                             entity_kind=EntityKind.REPAIR_HISTORY,
                             entity_ref=r.row_ref or f"repair:{i}",
                             details={"vin": r.vehicle_vin},
@@ -121,7 +121,7 @@ class ValidationEngine:
                     ValidationIssue(
                         severity=ValidationSeverity.ERROR,
                         code="negative_mileage",
-                        message="Mileage cannot be negative",
+                        message='Пробег не может быть отрицательным',
                         entity_kind=EntityKind.VEHICLE,
                         entity_ref=_vehicle_ref(v, i),
                     )
@@ -147,7 +147,7 @@ class ValidationEngine:
                         ValidationIssue(
                             severity=ValidationSeverity.WARNING,
                             code="inconsistent_mileage",
-                            message=f"Mileage decreased for VIN {vin} ({mileage} < {max_seen})",
+                            message=f'Пробег уменьшился для VIN {vin} ({mileage} < {max_seen})',
                             entity_kind=EntityKind.VEHICLE,
                             entity_ref=ref,
                             details={"vin": vin, "mileage": mileage, "previous_max": max_seen},
@@ -169,7 +169,7 @@ class ValidationEngine:
                     ValidationIssue(
                         severity=ValidationSeverity.INFO,
                         code="mileage_ahead_of_vehicle",
-                        message=f"Repair mileage exceeds vehicle odometer for VIN {vin}",
+                        message=f'Пробег ремонта превышает показания одометра для VIN {vin}',
                         entity_kind=EntityKind.VEHICLE,
                         entity_ref=vin,
                         details={"vehicle_mileage": max(vehicle_miles), "repair_mileage": max(repair_miles)},

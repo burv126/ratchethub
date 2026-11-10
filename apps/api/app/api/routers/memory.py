@@ -202,7 +202,7 @@ async def get_memory(
 ) -> MemoryOut:
     rec = rt.service.get(user.shop_id, memory_id)
     if rec is None:
-        raise HTTPException(status_code=404, detail="Memory not found")
+        raise HTTPException(status_code=404, detail='Память не найдена')
     return _memory_out(rec)
 
 
@@ -213,7 +213,7 @@ async def delete_memory(
     rt: MemoryRuntime = Depends(_runtime),
 ) -> dict[str, bool]:
     if not rt.service.delete(user.shop_id, memory_id):
-        raise HTTPException(status_code=404, detail="Memory not found")
+        raise HTTPException(status_code=404, detail='Память не найдена')
     return {"deleted": True}
 
 

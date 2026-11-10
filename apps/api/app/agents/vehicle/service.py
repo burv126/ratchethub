@@ -66,7 +66,7 @@ class InMemoryVehicleDirectory:
 
     async def add_repair(self, shop_id: UUID, repair: RepairRecord) -> RepairRecord:
         if await self.find_by_id(shop_id, repair.vehicle_id) is None:
-            raise AgentValidationError("Vehicle not found", agent="vehicle")
+            raise AgentValidationError('Автомобиль не найден', agent="vehicle")
         self._repairs.setdefault(repair.vehicle_id, []).append(repair)
         return repair
 
@@ -111,7 +111,7 @@ class VehicleAgent(Agent[VehicleResolveRequest, VehicleResolveResult]):
         if vehicle is None and request.create_if_missing:
             if not request.vin or not request.year or not request.make or not request.model:
                 raise AgentValidationError(
-                    "VIN, year, make, and model required to create vehicle",
+                    'Для создания автомобиля нужны VIN, год, марка и модель',
                     agent=self.name,
                     correlation_id=context.correlation_id,
                 )
@@ -123,7 +123,7 @@ class VehicleAgent(Agent[VehicleResolveRequest, VehicleResolveResult]):
                 model=request.model,
                 mileage=request.mileage or 0,
                 customer_id=request.customer_id or context.customer_id,
-                rationale="No match — recommend create vehicle",
+                rationale='Совпадений нет — рекомендуется создать автомобиль',
             )
             provisional = VehicleRecord(
                 id=uuid4(),
@@ -155,7 +155,7 @@ class VehicleAgent(Agent[VehicleResolveRequest, VehicleResolveResult]):
                 vehicle_id=vehicle.id,
                 mileage=request.mileage,
                 customer_id=vehicle.customer_id,
-                rationale="Recommend mileage update",
+                rationale='Рекомендуется обновить пробег',
             )
             # Preview updated mileage for AI without persisting
             vehicle = VehicleRecord(
@@ -198,13 +198,13 @@ class VehicleAgent(Agent[VehicleResolveRequest, VehicleResolveResult]):
     ) -> VehicleRecord:
         """Propose mileage update — returns preview; Workflow persists."""
         if mileage < 0:
-            raise AgentValidationError("Mileage cannot be negative", agent=self.name)
+            raise AgentValidationError('Пробег не может быть отрицательным', agent=self.name)
         vehicle = await self._directory.find_by_id(context.shop_id, vehicle_id)
         if vehicle is None:
-            raise AgentValidationError("Vehicle not found", agent=self.name)
+            raise AgentValidationError('Автомобиль не найден', agent=self.name)
         if mileage < vehicle.mileage:
             raise AgentValidationError(
-                "New mileage cannot be less than current mileage",
+                'Новый пробег не может быть меньше текущего',
                 agent=self.name,
             )
         return VehicleRecord(
@@ -240,7 +240,7 @@ class VehicleAgent(Agent[VehicleResolveRequest, VehicleResolveResult]):
                     due_mileage=due,
                     due_date=now,
                     status=status,
-                    notes=f"Every {interval} miles",
+                    notes=f'Каждые {interval} миль',
                 )
             )
         return items

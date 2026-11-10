@@ -72,7 +72,7 @@ async def twilio_voice_answer(
     runtime: VoiceRuntime = Depends(_runtime),
 ) -> PlainTextResponse:
     if not settings.voice_enabled:
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Voice disabled")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail='Звонки отключены')
 
     form = await request.form()
     params = parse_twilio_form(form)
@@ -89,18 +89,18 @@ async def twilio_voice_answer(
             request.url.path,
             bool(signature),
         )
-        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Invalid Twilio signature")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail='Недействительная подпись Twilio')
 
     call_sid = params.get("CallSid", "")
     from_number = params.get("From", "")
     to_number = params.get("To", "")
     if not call_sid or not from_number:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Missing CallSid/From")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail='Отсутствует CallSid/From')
 
     shop_id = await runtime.service.resolve_shop_id(to_number)
     if shop_id is None:
         # Dev fallback: if only one mapped shop isn't set, reject
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Shop not mapped for this number")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Автосервис не привязан к этому номеру')
 
     result = await runtime.service.answer_call(
         shop_id=shop_id,
@@ -139,7 +139,7 @@ async def twilio_voice_gather(
         return PlainTextResponse(
             content=_fallback_gather_twiml(
                 runtime,
-                say_text="Sorry, I hit a snag. Could you say that again?",
+                say_text='Произошла ошибка. Повторите, пожалуйста.',
             ),
             media_type="application/xml",
         )
@@ -167,7 +167,7 @@ async def twilio_voice_gather(
             return PlainTextResponse(
                 content=_fallback_gather_twiml(
                     runtime,
-                    say_text="Sorry, I lost the connection for a moment. How can I help?",
+                    say_text='Связь на мгновение прервалась. Чем могу помочь?',
                 ),
                 media_type="application/xml",
             )
@@ -202,7 +202,7 @@ async def twilio_voice_gather(
         return PlainTextResponse(
             content=_fallback_gather_twiml(
                 runtime,
-                say_text="Sorry, that took a second longer than expected. Could you repeat that?",
+                say_text='Ответ занял чуть больше времени. Повторите, пожалуйста.',
             ),
             media_type="application/xml",
         )
@@ -211,7 +211,7 @@ async def twilio_voice_gather(
         return PlainTextResponse(
             content=_fallback_gather_twiml(
                 runtime,
-                say_text="Sorry, I didn't catch that. Could you say it again?",
+                say_text='Не удалось расслышать. Повторите, пожалуйста.',
             ),
             media_type="application/xml",
         )

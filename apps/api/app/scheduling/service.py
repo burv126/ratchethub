@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from app.localization import status_label
+
 import logging
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
@@ -199,7 +201,7 @@ class AppointmentIntelligenceService:
             if preferred.astimezone(timezone.utc) < now:
                 return BookingResult(
                     success=False,
-                    message="Preferred start cannot be in the past. Pick a current or future time.",
+                    message='Время начала не может быть в прошлом. Выберите текущее или будущее время.',
                 )
 
         # Prefer exact start when free. If that minute is at capacity / conflicted,
@@ -222,10 +224,10 @@ class AppointmentIntelligenceService:
                             success=False,
                             recommended_slot=alternatives[0] if alternatives else None,
                             alternatives=alternatives[:5],
-                            message="Requested teammate has no available slots",
+                            message='У выбранного сотрудника нет свободного времени',
                             conflicts=ConflictReport(
                                 has_conflict=True,
-                                conflicts=["Requested teammate has no available slots"],
+                                conflicts=['У выбранного сотрудника нет свободного времени'],
                                 overbooked=False,
                                 severity="medium",
                             ),
@@ -234,10 +236,10 @@ class AppointmentIntelligenceService:
                 if not alternatives:
                     return BookingResult(
                         success=False,
-                        message=exact_reason or "No optimized slots available",
+                        message=exact_reason or 'Нет подходящего свободного времени',
                         conflicts=ConflictReport(
                             has_conflict=True,
-                            conflicts=[exact_reason or "Preferred start unavailable"],
+                            conflicts=[exact_reason or 'Желаемое время начала недоступно'],
                             overbooked=False,
                             severity="medium",
                         ),
@@ -248,12 +250,11 @@ class AppointmentIntelligenceService:
                     alternatives=alternatives[:5],
                     message=exact_reason
                     or (
-                        "Requested start time is unavailable. "
-                        "Pick another time or try a suggested alternative."
+                        'Запрошенное время начала недоступно. Выберите другое время или предложенный вариант.'
                     ),
                     conflicts=ConflictReport(
                         has_conflict=True,
-                        conflicts=[exact_reason or "Preferred start unavailable"],
+                        conflicts=[exact_reason or 'Желаемое время начала недоступно'],
                         overbooked=False,
                         severity="medium",
                     ),
@@ -263,7 +264,7 @@ class AppointmentIntelligenceService:
             if not slots:
                 return BookingResult(
                     success=False,
-                    message="No optimized slots available",
+                    message='Нет подходящего свободного времени',
                     conflicts=self._conflict.check_appointment(
                         start=preferred or datetime.now(timezone.utc),
                         end=(preferred or datetime.now(timezone.utc))
@@ -279,11 +280,11 @@ class AppointmentIntelligenceService:
             if request.mechanic_id and chosen.mechanic_id != request.mechanic_id:
                 return BookingResult(
                     success=False,
-                    message="Requested teammate has no available slots",
+                    message='У выбранного сотрудника нет свободного времени',
                     alternatives=slots[:5],
                     conflicts=ConflictReport(
                         has_conflict=True,
-                        conflicts=["Requested teammate has no available slots"],
+                        conflicts=['У выбранного сотрудника нет свободного времени'],
                         overbooked=False,
                         severity="medium",
                     ),
@@ -291,11 +292,11 @@ class AppointmentIntelligenceService:
             if request.bay_id and chosen.bay_id != request.bay_id:
                 return BookingResult(
                     success=False,
-                    message="Requested bay has no available slots",
+                    message='На выбранном посту нет свободного времени',
                     alternatives=slots[:5],
                     conflicts=ConflictReport(
                         has_conflict=True,
-                        conflicts=["Requested bay has no available slots"],
+                        conflicts=['На выбранном посту нет свободного времени'],
                         overbooked=False,
                         severity="medium",
                     ),
@@ -319,10 +320,10 @@ class AppointmentIntelligenceService:
                 success=False,
                 recommended_slot=chosen,
                 alternatives=slots[1:5],
-                message="Appointment falls outside business hours",
+                message='Запись вне рабочих часов',
                 conflicts=ConflictReport(
                     has_conflict=True,
-                    conflicts=["Outside business hours"],
+                    conflicts=['Вне рабочих часов'],
                     overbooked=False,
                     severity="high",
                 ),
@@ -379,7 +380,7 @@ class AppointmentIntelligenceService:
                 recommended_slot=chosen,
                 alternatives=slots[1:5],
                 conflicts=report,
-                message="Conflict detected — see alternatives",
+                message='Найден конфликт — посмотрите альтернативы',
             )
 
         revenue = await self._resolve_booking_revenue(
@@ -470,7 +471,7 @@ class AppointmentIntelligenceService:
             recommended_slot=chosen,
             alternatives=slots[1:5],
             conflicts=report,
-            message="Appointment booked",
+            message='Запись создана',
             ai_decisions={
                 "preferred_start": preferred.isoformat() if preferred else None,
                 "optimized_away_from_preferred": optimized_away_from_preferred,
@@ -518,10 +519,10 @@ class AppointmentIntelligenceService:
         if window is None:
             return BookingResult(
                 success=False,
-                message="Shop is closed today — walk-in service cannot start outside business hours.",
+                message='Автосервис сегодня закрыт — обслуживание вне рабочих часов невозможно.',
                 conflicts=ConflictReport(
                     has_conflict=True,
-                    conflicts=["Shop is closed"],
+                    conflicts=['Автосервис закрыт'],
                     overbooked=False,
                     severity="high",
                 ),
@@ -529,10 +530,10 @@ class AppointmentIntelligenceService:
         if preferred < window[0] or end > window[1]:
             return BookingResult(
                 success=False,
-                message="Walk-in service can only start during business hours.",
+                message='Обслуживание без записи можно начать только в рабочие часы.',
                 conflicts=ConflictReport(
                     has_conflict=True,
-                    conflicts=["Outside business hours"],
+                    conflicts=['Вне рабочих часов'],
                     overbooked=False,
                     severity="high",
                 ),
@@ -678,7 +679,7 @@ class AppointmentIntelligenceService:
             success=True,
             appointment=saved,
             recommended_slot=slot,
-            message="Walk-in service started",
+            message='Обслуживание без записи начато',
             ai_decisions={
                 "preferred_start": preferred.isoformat(),
                 "walk_in_start": True,
@@ -710,11 +711,11 @@ class AppointmentIntelligenceService:
     ) -> BookingResult:
         existing = await self._store.get_appointment(shop_id, appointment_id)
         if existing is None:
-            return BookingResult(success=False, message="Appointment not found")
+            return BookingResult(success=False, message='Запись не найдена')
         if existing.status not in self._ACTIVE_STATUSES:
             return BookingResult(
                 success=False,
-                message=f"Cannot reschedule {existing.status} appointment",
+                message=f'Нельзя перенести запись со статусом {status_label(existing.status)}',
             )
 
         # Free the current slot only while we attempt rebook; restore on failure.
@@ -768,7 +769,7 @@ class AppointmentIntelligenceService:
             estimated_duration_min=next_duration,
             # Never re-enter walk-in start path (forces "now" + in_progress).
             source="dashboard" if existing.source == "walk_in" else existing.source,
-            notes=f"Rescheduled from {existing.id}",
+            notes=f'Перенесено из {existing.id}',
             walk_in_id=existing.walk_in_id,
             estimated_revenue=next_revenue,
             mechanic_id=next_mechanic,
@@ -806,12 +807,12 @@ class AppointmentIntelligenceService:
         """Update catalog service on an active appointment (same start time)."""
         existing = await self._store.get_appointment(shop_id, appointment_id)
         if existing is None:
-            return BookingResult(success=False, message="Appointment not found")
+            return BookingResult(success=False, message='Запись не найдена')
 
         if existing.status not in self._ACTIVE_STATUSES:
             return BookingResult(
                 success=False,
-                message=f"Cannot change service on {existing.status} appointment",
+                message=f'Нельзя изменить услугу записи со статусом {status_label(existing.status)}',
             )
 
         duration = max(1, int(estimated_duration_min))
@@ -824,10 +825,10 @@ class AppointmentIntelligenceService:
         if window is None or existing.start < window[0] or new_end > window[1]:
             return BookingResult(
                 success=False,
-                message="New service duration falls outside business hours. Reschedule instead.",
+                message='Новая длительность выходит за рабочие часы. Перенесите запись.',
                 conflicts=ConflictReport(
                     has_conflict=True,
-                    conflicts=["Outside business hours"],
+                    conflicts=['Вне рабочих часов'],
                     overbooked=False,
                     severity="high",
                 ),
@@ -846,7 +847,7 @@ class AppointmentIntelligenceService:
         if report.has_conflict and existing.priority != "emergency":
             return BookingResult(
                 success=False,
-                message="New service duration conflicts with another appointment. Reschedule instead.",
+                message='Новая длительность пересекается с другой записью. Перенесите запись.',
                 conflicts=report,
             )
 
@@ -877,7 +878,7 @@ class AppointmentIntelligenceService:
         return BookingResult(
             success=True,
             appointment=saved,
-            message="Service updated",
+            message='Услуга обновлена',
             ai_decisions={
                 "service_id": str(service_id),
                 "service_name": service_name,
@@ -895,7 +896,7 @@ class AppointmentIntelligenceService:
             return None
         if appt.status not in self._ACTIVE_STATUSES:
             raise ValidationError(
-                f"Cannot cancel appointment with status '{appt.status}'"
+                f"Нельзя отменить запись со статусом '{status_label(appt.status)}'"
             )
         appt.status = AppointmentStatus.CANCELLED.value
         if reason:
@@ -936,7 +937,7 @@ class AppointmentIntelligenceService:
             AppointmentStatus.NO_SHOW.value,
         }:
             raise ValidationError(
-                f"Cannot complete appointment with status '{appt.status}'"
+                f"Нельзя завершить запись со статусом '{status_label(appt.status)}'"
             )
         appt.status = AppointmentStatus.COMPLETED.value
         if notes:
@@ -1086,22 +1087,22 @@ class AppointmentIntelligenceService:
         conflicts: list[str] = []
         mechanic = next((m for m in mechanics if m.id == mechanic_id), None)
         if mechanic is None:
-            conflicts.append("No mechanic assigned for appointment")
+            conflicts.append('Для записи не назначен механик')
         else:
             if enforce_skill and not self._availability.mechanic_meets_skill(
                 mechanic, request.repair_type
             ):
                 conflicts.append(
-                    f"Mechanic lacks required skill '{request.repair_type}'"
+                    f"У механика нет нужной квалификации '{request.repair_type}'"
                 )
             elif not self._availability.mechanic_available(
                 mechanic, start=start, end=end, existing=existing
             ):
-                conflicts.append("Mechanic is not available for this time window")
+                conflicts.append('Механик недоступен в этом интервале')
 
         bay = next((b for b in bays if b.id == bay_id), None)
         if bay is None:
-            conflicts.append("No bay assigned for appointment")
+            conflicts.append('Для записи не назначен пост')
         else:
             # Bay type is a soft preference — only occupancy/vehicle matter here.
             if not self._availability.bay_available(
@@ -1112,7 +1113,7 @@ class AppointmentIntelligenceService:
                 existing=existing,
                 required_bay=None,
             ):
-                conflicts.append("Bay is not available for this time window")
+                conflicts.append('Пост недоступен в этом интервале')
         return conflicts
 
     async def _build_slot_at(
@@ -1137,15 +1138,15 @@ class AppointmentIntelligenceService:
 
         window = self._availability.day_window(hours, self._availability.local_date(start))
         if window is None:
-            return None, "Shop is closed on the selected day"
+            return None, 'Автосервис закрыт в выбранный день'
         if start < window[0] or end > window[1]:
-            return None, "Appointment falls outside business hours"
+            return None, 'Запись вне рабочих часов'
 
         pool = mechanics
         if request.mechanic_id:
             pool = [m for m in mechanics if m.id == request.mechanic_id]
             if not pool:
-                return None, "Requested mechanic was not found"
+                return None, 'Запрошенный механик не найден'
 
         mechanic, m_reasons = self._optimization.recommend_mechanic(
             mechanics=pool,
@@ -1169,10 +1170,10 @@ class AppointmentIntelligenceService:
             )
         if mechanic is None:
             if request.mechanic_id:
-                return None, "Requested mechanic is not available for this time"
-            reason = m_reasons[0] if m_reasons else "No available staff for this time"
+                return None, 'Запрошенный механик недоступен в это время'
+            reason = m_reasons[0] if m_reasons else 'Нет свободных сотрудников на это время'
             if "required skill" in reason.lower():
-                reason = "No available staff for this time"
+                reason = 'Нет свободных сотрудников на это время'
             return None, reason
 
         bay: Bay | None = None
@@ -1180,7 +1181,7 @@ class AppointmentIntelligenceService:
         if request.bay_id:
             bay = next((b for b in bays if b.id == request.bay_id), None)
             if bay is None:
-                return None, "Requested bay was not found"
+                return None, 'Запрошенный пост не найден'
             if not self._availability.bay_available(
                 bay,
                 start=start,
@@ -1189,8 +1190,8 @@ class AppointmentIntelligenceService:
                 existing=existing,
                 required_bay=None,
             ):
-                return None, "Requested bay is not available for this time"
-            b_reasons = [f"Requested bay {bay.name}"]
+                return None, 'Запрошенный пост недоступен в это время'
+            b_reasons = [f'Запрошенный пост {bay.name}']
         else:
             bay, b_reasons = self._optimization.recommend_bay(
                 bays=bays,
@@ -1213,7 +1214,7 @@ class AppointmentIntelligenceService:
                     required_bay=None,
                 )
         if bay is None:
-            return None, b_reasons[0] if b_reasons else "No available bay for this time"
+            return None, b_reasons[0] if b_reasons else 'Нет свободного поста на это время'
 
         report = self._conflict.check_appointment(
             start=start,
@@ -1225,7 +1226,7 @@ class AppointmentIntelligenceService:
             ignore_id=ignore_appointment_id,
         )
         if report.has_conflict and request.priority != "emergency":
-            return None, report.conflicts[0] if report.conflicts else "Conflict at preferred start"
+            return None, report.conflicts[0] if report.conflicts else 'Конфликт желаемого времени начала'
 
         wait = self._optimization.predict_wait_minutes(existing, start)
         return (
@@ -1235,7 +1236,7 @@ class AppointmentIntelligenceService:
                 mechanic_id=mechanic.id,
                 bay_id=bay.id,
                 score=100.0,
-                reasons=list(m_reasons) + list(b_reasons) + ["Exact preferred start"],
+                reasons=list(m_reasons) + list(b_reasons) + ['Точное желаемое время начала'],
                 estimated_wait_min=wait,
                 estimated_completion=end,
             ),

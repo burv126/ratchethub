@@ -32,11 +32,11 @@ class ConflictEngine:
             if not overlaps:
                 continue
             if mechanic_id and a.mechanic_id == mechanic_id:
-                conflicts.append(f"Mechanic double-booked with appointment {a.id}")
+                conflicts.append(f'Механик назначен дважды: запись {a.id}')
             if bay_id and a.bay_id == bay_id:
-                conflicts.append(f"Bay double-booked with appointment {a.id}")
+                conflicts.append(f'Пост назначен дважды: запись {a.id}')
             if not mechanic_id and not bay_id:
-                conflicts.append(f"Time overlap with appointment {a.id}")
+                conflicts.append(f'Пересечение по времени с записью {a.id}')
 
         overbooked = len(conflicts) > 0
         severity = "none"
@@ -44,7 +44,7 @@ class ConflictEngine:
             severity = "high" if priority == "emergency" else "medium"
         elif self._near_capacity(existing, start):
             severity = "low"
-            conflicts.append("Day approaching capacity — consider spreading load")
+            conflicts.append('День почти заполнен — распределите нагрузку')
 
         return ConflictReport(
             has_conflict=overbooked,
@@ -63,9 +63,9 @@ class ConflictEngine:
                 if not (a.start < b.end and b.start < a.end):
                     continue
                 if a.mechanic_id and a.mechanic_id == b.mechanic_id:
-                    issues.append(f"Mechanic conflict: {a.id} vs {b.id}")
+                    issues.append(f'Конфликт механика: {a.id} и {b.id}')
                 if a.bay_id and a.bay_id == b.bay_id:
-                    issues.append(f"Bay conflict: {a.id} vs {b.id}")
+                    issues.append(f'Конфликт поста: {a.id} и {b.id}')
         return issues
 
     def _near_capacity(self, existing: list[Appointment], day_anchor: datetime) -> bool:

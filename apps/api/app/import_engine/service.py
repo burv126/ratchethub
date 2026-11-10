@@ -95,7 +95,7 @@ class ImportEngineService:
         inferred = self._infer_source_from_upload(filename, payload)
         if inferred is not None and job.source in (ImportSource.CSV, ImportSource.EXCEL):
             job.source = inferred
-        await self._set_progress(job, ImportJobStatus.UPLOADING, 10, "File uploaded")
+        await self._set_progress(job, ImportJobStatus.UPLOADING, 10, 'Файл загружен')
         return await self._store.save_job(job)
 
     @staticmethod
@@ -142,9 +142,9 @@ class ImportEngineService:
         job.started_at = datetime.now(timezone.utc)
         job.error = None
         try:
-            await self._set_progress(job, ImportJobStatus.PARSING, 20, "Extracting source data")
+            await self._set_progress(job, ImportJobStatus.PARSING, 20, 'Извлечение исходных данных')
             batch = await self._extract(job)
-            await self._set_progress(job, ImportJobStatus.NORMALIZING, 40, "Normalizing entities")
+            await self._set_progress(job, ImportJobStatus.NORMALIZING, 40, 'Нормализация записей')
             job.batch = batch
 
             await self._set_progress(job, ImportJobStatus.VALIDATING, 60, "AI validation")
@@ -219,14 +219,14 @@ class ImportEngineService:
     async def apply(self, *, shop_id: UUID, job_id: UUID) -> ImportJob:
         job = await self._require_job(shop_id, job_id)
         if job.batch is None:
-            raise ValueError("Job has no normalized batch; run import first")
+            raise ValueError('Нет нормализованного пакета; сначала запустите импорт')
 
-        await self._set_progress(job, ImportJobStatus.APPLYING, 85, "Applying import")
+        await self._set_progress(job, ImportJobStatus.APPLYING, 85, 'Применение импорта')
         batch = self._apply_duplicate_resolutions(job)
         counts = await self._persist_batch(job, batch)
         job.completed_at = datetime.now(timezone.utc)
         job.report = self._build_report(job, applied=True, counts=counts)
-        await self._set_progress(job, ImportJobStatus.COMPLETED, 100, "Import completed")
+        await self._set_progress(job, ImportJobStatus.COMPLETED, 100, 'Импорт завершён')
         return await self._store.save_job(job)
 
     async def get_job(self, shop_id: UUID, job_id: UUID) -> ImportJob:
@@ -409,7 +409,7 @@ class ImportEngineService:
                         result = type(result)(success=True, data=applied.customer_result)
                 customer = result.data.customer if result.data else None
                 if customer is None:
-                    raise RuntimeError("Customer resolve returned no profile")
+                    raise RuntimeError('Поиск клиента не вернул профиль')
                 if c.external_id:
                     customer_by_ext[c.external_id] = customer.id
                 if customer.phone:
@@ -461,7 +461,7 @@ class ImportEngineService:
                         result = AgentResult.ok(applied.vehicle_result)
                 vehicle = result.data.vehicle if result.data else None
                 if vehicle is None:
-                    raise RuntimeError("Vehicle resolve returned no record")
+                    raise RuntimeError('Поиск автомобиля не вернул запись')
                 vehicle_by_vin[vehicle.vin.upper()] = vehicle.id
                 if v.external_id:
                     vehicle_by_ext[v.external_id] = vehicle.id
@@ -490,14 +490,14 @@ class ImportEngineService:
                 _record_issue(
                     EntityKind.REPAIR_HISTORY,
                     ref,
-                    "Repair history could not be stored: vehicle directory unavailable",
+                    'История ремонта не сохранена: справочник автомобилей недоступен',
                 )
                 continue
             if vehicle_id is None:
                 _record_issue(
                     EntityKind.REPAIR_HISTORY,
                     ref,
-                    "Repair history skipped: no matching vehicle (VIN or vehicle_external_id required)",
+                    'История ремонта пропущена: нет автомобиля (укажите VIN или vehicle_external_id)',
                 )
                 continue
             try:
@@ -507,7 +507,7 @@ class ImportEngineService:
                         id=uuid4(),
                         vehicle_id=vehicle_id,
                         service_type=r.service_type or "general",
-                        description=r.description or r.service_type or "Imported repair",
+                        description=r.description or r.service_type or 'Импортированный ремонт',
                         cost=float(r.cost or 0),
                         performed_at=r.performed_at,
                         recommendation=r.recommendation,
@@ -595,7 +595,7 @@ class ImportEngineService:
             if direction_raw in {"outbound", "outgoing", "out"}
             else CommunicationDirection.INCOMING
         )
-        message = (getattr(com, "message", None) or "").strip() or "Imported communication"
+        message = (getattr(com, "message", None) or "").strip() or 'Импортированное сообщение'
         async with SessionLocal() as session:
             uow = SqlAlchemyUnitOfWork(session)
             service = CrmService(uow)
@@ -643,7 +643,7 @@ class ImportEngineService:
     async def _require_job(self, shop_id: UUID, job_id: UUID) -> ImportJob:
         job = await self._store.get_job(shop_id, job_id)
         if job is None:
-            raise LookupError("Import job not found")
+            raise LookupError('Задание импорта не найдено')
         return job
 
     async def _set_progress(

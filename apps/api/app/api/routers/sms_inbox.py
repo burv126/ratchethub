@@ -130,7 +130,7 @@ async def get_conversation(
 ) -> ConversationDetailOut:
     conv = await runtime.store.get_conversation(user.shop_id, conversation_id)
     if conv is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Переписка не найдена')
     if include_timeline:
         messages, memory = await asyncio.gather(
             runtime.store.list_messages(user.shop_id, conversation_id),
@@ -236,7 +236,7 @@ async def simulate_inbound(
 ) -> ConversationDetailOut:
     """Authenticated simulate endpoint for local/dev without Twilio."""
     if settings.environment == "production" and settings.twilio_provider == "twilio":
-        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Simulate disabled in production")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail='Симуляция отключена в рабочей среде')
 
     to_number = body.to_number or settings.twilio_from_number or "+15550001111"
 

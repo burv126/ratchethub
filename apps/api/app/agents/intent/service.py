@@ -7,6 +7,8 @@ use real service names (not only hardcoded phrases). LLM-swappable via port.
 from __future__ import annotations
 
 import re
+
+from app.agents.intent.ru_input import normalize_command_input, normalize_service_input
 from typing import Any
 
 from app.agents.base.agent import Agent, AgentContext, AgentResult
@@ -37,10 +39,10 @@ from app.agents.scheduling.catalog_port import ServiceCatalogPort
 # Affirmative reply after summary confirmation / offered slot.
 # Voice STT often appends "please" / "go ahead" — keep those as yes.
 _AFFIRM_CORE = (
-    r"(?:yes|yeah|yep|yup|ok|okay|sure|confirm|book\s+it|that\s+works|"
+    r"(?:да|конечно|подтверждаю|подтвердить|хорошо|согласен|согласна|yes|yeah|yep|yup|ok|okay|sure|confirm|book\s+it|that\s+works|"
     r"sounds\s+good|go\s+ahead(?:\s+and\s+(?:book|cancel|do\s+it))?|"
     r"do\s+it|(?:the\s+)?first\s+one)"
-    r"(?:\s+(?:please|thanks|thank\s+you|cancel(?:\s+it)?|do\s+it|go\s+ahead))*"
+    r"(?:[,\s]+(?:пожалуйста|спасибо|please|thanks|thank\s+you|cancel(?:\s+it)?|do\s+it|go\s+ahead))*"
 )
 _AFFIRM_BOOK = re.compile(rf"^\s*{_AFFIRM_CORE}\s*[.!?]?\s*$", re.I)
 
@@ -79,7 +81,7 @@ _LATEST_PREF = re.compile(
 
 # Explicit cancel confirmation ("confirm cancel" / "yes cancel it")
 _AFFIRM_CANCEL = re.compile(
-    r"\b(confirm\s+cancel|yes[,.]?\s*(cancel|do\s+it)|cancel\s+it|"
+    r"\b(да[, ]+отмените|подтверждаю\s+отмену|confirm\s+cancel|yes[,.]?\s*(cancel|do\s+it)|cancel\s+it|"
     r"go\s+ahead\s+and\s+cancel)\b",
     re.I,
 )
@@ -94,16 +96,21 @@ _VAGUE_TIME = re.compile(
 # Explicit name introductions ("my name is Alex", "I'm Sam Rivera").
 # Do not treat "I'm going / I'm gonna …" as a name intro.
 _NAME_EXPLICIT = re.compile(
-    r"(?:my\s+name\s+is|call\s+me|"
+    r"(?:меня\s+зовут|мо[её]\s+имя|my\s+name\s+is|call\s+me|"
     r"i(?:\s+am|'m)(?!\s+(?:going|gonna)\b))\s+"
-    r"([A-Za-z][A-Za-z'’\-]{1,30}(?:\s+[A-Za-z][A-Za-z'’\-]{1,30}){0,2})",
+    r"([A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё'’\-]{1,30}(?:\s+[A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё'’\-]{1,30}){0,2})",
     re.I,
 )
 _BARE_NAME = re.compile(
-    r"^\s*([A-Za-z][A-Za-z'’\-]{1,30}(?:\s+[A-Za-z][A-Za-z'’\-]{1,30}){0,2})\s*[.!?]?\s*$"
+    r"^\s*([A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё'’\-]{1,30}(?:\s+[A-Za-zА-Яа-яЁё][A-Za-zА-Яа-яЁё'’\-]{1,30}){0,2})\s*[.!?]?\s*$"
 )
 _NAME_STOPWORDS = frozenset(
     {
+        "да", "нет", "конечно", "хорошо", "спасибо", "пожалуйста",
+        "здравствуйте", "привет", "завтра", "сегодня", "утром", "вечером",
+        "отмените", "отменить", "перенесите", "перенести", "запишите", "записаться", "время", "свободно",
+        "запись", "отмена", "перенос", "не", "нужно", "хочу",
+        "понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье",
         "yes",
         "yeah",
         "yep",
@@ -341,19 +348,20 @@ class IntentAgent(Agent[NormalizedMessage, IntentResult]):
     ) -> AgentResult[IntentResult]:
         if not message.body.strip():
             raise AgentValidationError(
-                "Cannot detect intent from empty message",
+                'Нельзя определить намерение по пустому сообщению',
                 agent=self.name,
                 correlation_id=context.correlation_id,
             )
 
         text = message.body
+        match_text = normalize_service_input(normalize_command_input(text))
         catalog_match, service_price, service_candidates = await self._match_catalog_service(
             text, context
         )
 
         matches: list[tuple[CustomerIntent, float]] = []
         for intent, pattern, confidence in _PATTERNS:
-            if pattern.search(text):
+            if pattern.search(match_text):
                 matches.append((intent, confidence))
 
         # Shop-specific service names (e.g. "Euro Oil Service") may not hit
@@ -375,13 +383,13 @@ class IntentAgent(Agent[NormalizedMessage, IntentResult]):
                 CustomerIntent.OTHER, 0.4, [], entities, context
             )
             primary, confidence, secondary = _refine_earliest_booking(
-                primary, confidence, secondary, text, entities
+                primary, confidence, secondary, match_text, entities
             )
             primary, confidence, secondary = _refine_cancel_confirmation(
-                primary, confidence, secondary, text, context
+                primary, confidence, secondary, match_text, context
             )
             primary, confidence, secondary = _refine_reschedule_desire(
-                primary, confidence, secondary, text, context
+                primary, confidence, secondary, match_text, context
             )
             primary, confidence, secondary = _refine_with_name_answer(
                 primary, confidence, secondary, entities, context
@@ -400,7 +408,7 @@ class IntentAgent(Agent[NormalizedMessage, IntentResult]):
         secondary = [m[0] for m in matches[1:4] if m[0] != primary]
 
         primary, confidence, secondary = _refine_with_catalog(
-            primary, confidence, secondary, text, catalog_match
+            primary, confidence, secondary, match_text, catalog_match
         )
         # Reschedule/cancel must not attach a weak catalog hit from words like
         # "change" in "Oil Change". Keep only strong name matches.
@@ -426,13 +434,13 @@ class IntentAgent(Agent[NormalizedMessage, IntentResult]):
             primary, confidence, secondary, entities, context
         )
         primary, confidence, secondary = _refine_earliest_booking(
-            primary, confidence, secondary, text, entities
+            primary, confidence, secondary, match_text, entities
         )
         primary, confidence, secondary = _refine_cancel_confirmation(
-            primary, confidence, secondary, text, context
+            primary, confidence, secondary, match_text, context
         )
         primary, confidence, secondary = _refine_reschedule_desire(
-            primary, confidence, secondary, text, context
+            primary, confidence, secondary, match_text, context
         )
         primary, confidence, secondary = _refine_with_name_answer(
             primary, confidence, secondary, entities, context
@@ -920,7 +928,7 @@ def _extract_entities(
             entities["service_price"] = service_price
     else:
         for pattern, label in _SERVICE_PHRASES:
-            if pattern.search(text):
+            if pattern.search(normalize_service_input(text)):
                 entities["service"] = label
                 entities["requested_service"] = label
                 break

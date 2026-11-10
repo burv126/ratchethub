@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const apiUpstream = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000").replace(
   /\/$/,
@@ -7,6 +8,15 @@ const apiUpstream = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000")
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingRoot: path.join(process.cwd(), "."),
+  outputFileTracingIncludes: {
+    '/*': [
+      '../../node_modules/next/**/*',
+      '../../node_modules/react/**/*',
+      '../../node_modules/react-dom/**/*',
+    ],
+  },
+
   poweredByHeader: false,
   async redirects() {
     return [
@@ -18,7 +28,6 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    // Browser → same-origin /api-backend/* → local API (avoids VPN/LAN :8000 blocks).
     return [
       {
         source: "/api-backend/:path*",

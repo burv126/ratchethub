@@ -7,6 +7,7 @@ from datetime import date, timedelta
 from app.analytics.enums import KpiId
 from app.analytics.models import ForecastPoint, ForecastResult, ShopMetricFact
 from app.analytics.monitoring import AnalyticsMonitor
+from app.localization import kpi_label
 
 
 class ForecastEngine:
@@ -67,7 +68,7 @@ class ForecastEngine:
                 horizon_days=horizon_days,
                 method="constant",
                 points=points,
-                summary=f"Insufficient history; holding {unit_label or kpi.value} flat.",
+                summary=f'Недостаточно истории; прогноз {unit_label or kpi_label(kpi.value)} остаётся неизменным.',
             )
 
         # Linear regression on last N points
@@ -100,11 +101,11 @@ class ForecastEngine:
                 )
             )
 
-        trend = "rising" if slope > 0 else "softening" if slope < 0 else "stable"
+        trend = "рост" if slope > 0 else "снижение" if slope < 0 else "без изменений"
         return ForecastResult(
             kpi=kpi,
             horizon_days=horizon_days,
             method="linear_trend_weekend",
             points=points,
-            summary=f"{kpi.value} outlook {trend} over {horizon_days} days (slope={slope:.2f}/day).",
+            summary=f'Прогноз {kpi_label(kpi.value)}: {trend} за {horizon_days} дн. (изменение={slope:.2f}/день).',
         )

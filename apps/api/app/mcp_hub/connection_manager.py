@@ -60,7 +60,7 @@ class ConnectionManager:
         self._logger.log(
             shop_id,
             event="connection.created",
-            message=f"Created {provider.value} connection",
+            message=f'Создано подключение {provider.value}',
             provider=provider,
             connection_id=saved.id,
         )
@@ -103,7 +103,7 @@ class ConnectionManager:
         self._logger.log(
             shop_id,
             event="connection.connected",
-            message=f"Connected {conn.provider.value}",
+            message=f'Подключено {conn.provider.value}',
             provider=conn.provider,
             connection_id=conn.id,
         )
@@ -121,7 +121,7 @@ class ConnectionManager:
         self._logger.log(
             shop_id,
             event="connection.disconnected",
-            message=f"Disconnected {conn.provider.value}",
+            message=f'Отключено {conn.provider.value}',
             provider=conn.provider,
             connection_id=conn.id,
         )
@@ -143,7 +143,7 @@ class ConnectionManager:
         self._logger.log(
             shop_id,
             event="connection.tested",
-            message="Connection test completed",
+            message='Проверка подключения завершена',
             provider=conn.provider,
             connection_id=conn.id,
             details=result,
@@ -156,7 +156,7 @@ class ConnectionManager:
             self._logger.log(
                 shop_id,
                 event="connection.deleted",
-                message="Connection deleted",
+                message='Подключение удалено',
                 connection_id=connection_id,
             )
         return ok
@@ -164,5 +164,5 @@ class ConnectionManager:
     def _require(self, shop_id: UUID, connection_id: UUID) -> IntegrationConnection:
         conn = self._store.get_connection(shop_id, connection_id)
         if conn is None:
-            raise KeyError(f"Connection not found: {connection_id}")
+            raise KeyError(f'Подключение не найдено: {connection_id}')
         return conn

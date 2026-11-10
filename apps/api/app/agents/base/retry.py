@@ -51,7 +51,7 @@ async def with_retry(
             await asyncio.sleep(policy.delay_seconds(attempt))
 
     raise AgentRetryExhaustedError(
-        f"Operation failed after {policy.max_attempts} attempts",
+        f'Операция не выполнена после {policy.max_attempts} попыток',
         agent=agent,
         correlation_id=correlation_id,
         attempts=policy.max_attempts,

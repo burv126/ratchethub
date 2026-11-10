@@ -92,14 +92,14 @@ class CrmAgent(Agent[CrmUpdateRequest, CrmUpdateResult]):
             intent=request.intent,
             vehicle_id=request.vehicle_id or context.vehicle_id,
             repair_note=request.repair_note,
-            rationale="Recommend CRM timeline update from conversation",
+            rationale='Рекомендуется обновить историю CRM по диалогу',
         )
 
         if customer_id is None:
             return AgentResult.ok(
                 CrmUpdateResult(
                     customer_id=None,
-                    customer_summary="No customer linked; CRM update skipped.",
+                    customer_summary='Клиент не привязан; обновление CRM пропущено.',
                     decision=decision,
                 )
             )
@@ -125,10 +125,10 @@ class CrmAgent(Agent[CrmUpdateRequest, CrmUpdateResult]):
         timeline: list[TimelineEntry],
         intent: str | None,
     ) -> str:
-        parts = [f"Customer {customer_id}: {len(timeline)} timeline events."]
+        parts = [f'Клиент {customer_id}: событий в истории — {len(timeline)}.']
         if intent:
-            parts.append(f"Latest intent: {intent}.")
+            parts.append(f'Последнее намерение: {intent}.')
         if timeline:
             last = timeline[-1]
-            parts.append(f"Last activity ({last.kind}): {last.summary}")
+            parts.append(f'Последняя активность ({last.kind}): {last.summary}')
         return " ".join(parts)

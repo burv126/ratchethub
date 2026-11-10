@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -36,7 +40,7 @@ export default function StatusPage() {
         if (!res.ok) throw new Error(res.statusText);
         setData(await res.json());
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Unable to load status");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить состояние");
       }
     })();
   }, []);
@@ -53,49 +57,49 @@ export default function StatusPage() {
       <header className="flex items-center justify-between gap-3">
         <BrandLogo size={40} wordmarkClassName="text-2xl font-semibold tracking-tight" />
         <Link href="/?login=1" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
-          Sign in
+          Войти
         </Link>
       </header>
       <h1 className="font-display mt-10 text-3xl font-semibold tracking-tight sm:text-4xl">
-        System status
+        Состояние системы
       </h1>
-      <p className="mt-3 text-sm text-[var(--muted)]">Live dependency health and incident timeline.</p>
+      <p className="mt-3 text-sm text-[var(--muted)]">Состояние зависимостей и история инцидентов в реальном времени.</p>
 
-      {error && <p className="mt-6 text-sm text-red-700">{error}</p>}
+      {error && <p className="mt-6 text-sm text-red-700">{ruError(error)}</p>}
       {data && (
         <div className="mt-8 space-y-8">
           <div>
             <p className={`font-display text-xl font-semibold capitalize ${tone}`}>
               {data.status.replace("_", " ")}
             </p>
-            <p className="mt-1 text-xs text-[var(--muted)]">Updated {data.updated_at}</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">Обновлено {data.updated_at}</p>
             <div className="surface-panel mt-4 divide-y divide-[var(--line)] overflow-hidden">
               {Object.entries(data.components).map(([name, c]) => (
                 <div key={name} className="flex items-center justify-between px-4 py-3.5 text-sm">
                   <span className="capitalize">{name}</span>
-                  <span className="capitalize text-[var(--muted)]">{c.status}</span>
+                  <span className="capitalize text-[var(--muted)]">{ruLabel(c.status)}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <section>
-            <h2 className="font-display text-sm font-semibold tracking-tight">Incident timeline</h2>
+            <h2 className="font-display text-sm font-semibold tracking-tight">История инцидентов</h2>
             {(data.incidents || []).length === 0 ? (
-              <p className="mt-2 text-sm text-[var(--muted)]">No recent incidents.</p>
+              <p className="mt-2 text-sm text-[var(--muted)]">Недавних инцидентов нет.</p>
             ) : (
               <ol className="mt-3 space-y-3">
                 {(data.incidents || []).map((inc) => (
                   <li key={inc.id} className="surface-panel p-4">
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       <span className="font-medium">{inc.title}</span>
-                      <span className="text-xs uppercase text-[var(--muted)]">{inc.severity}</span>
-                      <span className="text-xs uppercase text-[var(--muted)]">{inc.status}</span>
+                      <span className="text-xs uppercase text-[var(--muted)]">{ruLabel(inc.severity)}</span>
+                      <span className="text-xs uppercase text-[var(--muted)]">{ruLabel(inc.status)}</span>
                     </div>
                     {inc.summary ? <p className="mt-2 text-sm text-[var(--muted)]">{inc.summary}</p> : null}
                     <p className="mt-2 text-xs text-[var(--muted)]">
-                      Started {inc.started_at || "—"}
-                      {inc.resolved_at ? ` · Resolved ${inc.resolved_at}` : ""}
+                      Начало {inc.started_at || "—"}
+                      {inc.resolved_at ? ` · Решено ${inc.resolved_at}` : ""}
                     </p>
                   </li>
                 ))}

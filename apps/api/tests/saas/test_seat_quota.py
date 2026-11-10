@@ -25,7 +25,7 @@ async def test_ensure_seat_available_blocks_when_at_limit(monkeypatch: pytest.Mo
     monkeypatch.setattr(svc._billing, "get_subscription", _sub)
     monkeypatch.setattr(svc, "_seat_count", _count)
 
-    with pytest.raises(ValidationError, match="seats quota exceeded"):
+    with pytest.raises(ValidationError, match="Превышена квота мест"):
         await svc.ensure_seat_available(shop_id)
 
 

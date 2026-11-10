@@ -2,7 +2,7 @@ import Link from "next/link";
 
 type BrandLogoProps = {
   href?: string;
-  /** Hex mark edge length in px (icon-only or embedded “a”) */
+  /** Hex mark edge length in px (icon-only or embedded “о”) */
   size?: number;
   /** Show full wordmark; false = orange hex mark only */
   wordmark?: boolean;
@@ -14,7 +14,7 @@ type BrandLogoProps = {
   priority?: boolean;
 };
 
-/** Brand hexagon + center dot — doubles as the letter “a”. */
+/** Brand hexagon + center dot — doubles as the letter “о”. */
 export function BrandHexMark({
   size,
   className = "",
@@ -49,12 +49,14 @@ export function BrandHexMark({
 export function BrandWordmark({ className = "" }: { className?: string }) {
   return (
     <span
-      className={`inline-flex items-center font-display font-extrabold lowercase tracking-tight ${className}`}
+      className={`inline-flex items-center font-display font-extrabold tracking-tight ${className}`}
+      role="img"
+      aria-label="АвтоЦентр"
     >
-      <span className="text-inherit">r</span>
+      <span className="text-inherit">Авт</span>
+      <span className="sr-only">о</span>
       <BrandHexMark className="mx-[0.04em] h-[0.78em] w-[0.78em] shrink-0 text-[var(--accent)]" />
-      <span className="text-inherit">tchet</span>
-      <span className="text-[var(--accent)]">hub</span>
+      <span className="text-[var(--accent)]">Центр</span>
     </span>
   );
 }
@@ -63,7 +65,7 @@ export function BrandLogo({
   href = "/",
   size = 40,
   wordmark = true,
-  label = "RatchetHub",
+  label = "АвтоЦентр",
   className = "",
   wordmarkClassName = "",
 }: BrandLogoProps) {

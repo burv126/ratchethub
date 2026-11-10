@@ -45,11 +45,11 @@ class SupervisorAgent(Agent[SupervisorReviewRequest, SupervisorDecision]):
 
         if request.is_emergency and agent_settings.escalate_on_emergency:
             escalate = True
-            reasons.append("Emergency intent detected")
+            reasons.append('Обнаружено экстренное обращение')
 
         if request.is_complaint and agent_settings.escalate_on_complaint:
             escalate = True
-            reasons.append("Complaint intent detected")
+            reasons.append('Обнаружена жалоба')
 
         status = "escalated" if escalate else ("degraded" if errors else "ok")
         owner_summary = self.generate_owner_summary(request, status, reasons)
@@ -76,13 +76,13 @@ class SupervisorAgent(Agent[SupervisorReviewRequest, SupervisorDecision]):
         successful = [s.agent for s in request.stages if s.success]
         failed = [s.agent for s in request.stages if not s.success]
         parts = [
-            f"Pipeline status: {status}.",
-            f"Completed agents: {', '.join(successful) or 'none'}.",
+            f'Статус конвейера: {status}.',
+            f"Завершённые агенты: {', '.join(successful) or 'none'}.",
         ]
         if request.intent:
-            parts.append(f"Customer intent: {request.intent}.")
+            parts.append(f'Намерение клиента: {request.intent}.')
         if failed:
-            parts.append(f"Failed agents: {', '.join(failed)}.")
+            parts.append(f"Агенты с ошибкой: {', '.join(failed)}.")
         if reasons:
             parts.append(f"Attention: {'; '.join(reasons)}.")
         return " ".join(parts)
@@ -104,7 +104,7 @@ class SupervisorAgent(Agent[SupervisorReviewRequest, SupervisorDecision]):
         ):
             cust_data = customer.data
             if isinstance(cust_data, dict) and cust_data.get("customer") is None:
-                conflicts.append("Booked appointment without resolved customer")
+                conflicts.append('Создана запись без определённого клиента')
 
         intent = by_name.get("intent")
         if intent and intent.success and scheduling and scheduling.success:
@@ -119,7 +119,7 @@ class SupervisorAgent(Agent[SupervisorReviewRequest, SupervisorDecision]):
             elif isinstance(scheduling.data, dict):
                 sched_action = scheduling.data.get("action")
             if intent_val == "cancel_appointment" and sched_action == "book":
-                conflicts.append("Intent was cancel but scheduling booked an appointment")
+                conflicts.append('Клиент хотел отменить запись, но была создана новая')
 
         return conflicts
 
@@ -128,10 +128,10 @@ class SupervisorAgent(Agent[SupervisorReviewRequest, SupervisorDecision]):
     ) -> list[str]:
         items: list[str] = []
         if escalate:
-            items.append("Human takeover required")
+            items.append('Требуется участие сотрудника')
             items.extend(f"Resolve: {r}" for r in reasons[:5])
         if request.is_emergency:
-            items.append("Contact customer immediately regarding emergency")
+            items.append('Немедленно свяжитесь с клиентом по экстренному обращению')
         if request.is_complaint:
             items.append("Owner/manager follow-up on complaint")
         return items

@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -17,13 +19,13 @@ import { getLocalTimezone } from "@/lib/timezone";
 type WizardStep = "shop" | "hours" | "services";
 
 const WEEKDAY_NAMES = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
+  "Понедельник",
+  "Вторник",
+  "Среда",
+  "Четверг",
+  "Пятница",
+  "Суббота",
+  "Воскресенье",
 ];
 
 type DraftService = ServiceInput & { key: string };
@@ -330,9 +332,9 @@ const DISPLAY_STEPS: {
   hint: string;
   Icon: (props: { className?: string }) => ReactNode;
 }[] = [
-  { id: "shop", label: "Shop info", hint: "Identity & contact", Icon: IconShop },
-  { id: "hours", label: "Hours", hint: "Weekly schedule", Icon: IconClock },
-  { id: "services", label: "Services", hint: "Bookable work", Icon: IconWrench },
+  { id: "shop", label: "Об автосервисе", hint: "Данные и контакты", Icon: IconShop },
+  { id: "hours", label: "Часы", hint: "Расписание на неделю", Icon: IconClock },
+  { id: "services", label: "Услуги", hint: "Доступные работы", Icon: IconWrench },
 ];
 
 function stepIndex(step: WizardStep): number {
@@ -421,7 +423,7 @@ export default function ShopSetupWizardPage() {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load setup");
+        if (!cancelled) setError(err instanceof Error ? err.message : "Не удалось загрузить настройки");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -468,11 +470,11 @@ export default function ShopSetupWizardPage() {
   async function onFinish(e: FormEvent) {
     e.preventDefault();
     if (!isOwner) {
-      setError("Only the shop owner can complete setup.");
+      setError("Только владелец может завершить настройку.");
       return;
     }
     if (!shopInfoValid || !hoursValid || !servicesValid) {
-      setError("Complete shop info, hours, and at least one active service.");
+      setError("Заполните сведения, часы работы и добавьте хотя бы одну активную услугу.");
       return;
     }
     setSaving(true);
@@ -512,7 +514,7 @@ export default function ShopSetupWizardPage() {
       });
       router.replace("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to complete setup");
+      setError(err instanceof Error ? err.message : "Не удалось завершить настройку");
     } finally {
       setSaving(false);
     }
@@ -542,16 +544,16 @@ export default function ShopSetupWizardPage() {
                 <IconShop className="h-5 w-5" />
               </span>
               <div>
-                <h1 className="page-title">Shop setup</h1>
+                <h1 className="page-title">Настройка автосервиса</h1>
                 <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted)]">
-                  Ask the shop owner to finish setup before using the workspace.
+                  Попросите владельца завершить настройку перед использованием.
                 </p>
               </div>
             </div>
           </div>
           <div className="px-5 py-5 sm:px-7">
             <p className="rounded-xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              Only the owner can configure shop identity, hours, and bookable services.
+              Только владелец может настроить сведения, часы работы и доступные для записи услуги.
             </p>
           </div>
         </div>
@@ -569,11 +571,11 @@ export default function ShopSetupWizardPage() {
                 <IconShop className="h-[1.15rem] w-[1.15rem]" />
               </span>
               <div className="min-w-0">
-                <h1 className="page-title">Shop setup</h1>
+                <h1 className="page-title">Настройка автосервиса</h1>
               </div>
             </div>
             <div className="rounded-full border border-[var(--line)] bg-white/80 px-3 py-1.5 text-[11px] font-semibold tabular-nums text-[var(--muted)] shadow-[var(--shadow-soft)] backdrop-blur-sm">
-              Step {currentStepIdx + 1} of {DISPLAY_STEPS.length}
+              Шаг {currentStepIdx + 1} из {DISPLAY_STEPS.length}
             </div>
           </div>
 
@@ -585,12 +587,12 @@ export default function ShopSetupWizardPage() {
               aria-valuenow={currentStepIdx + 1}
               aria-valuemin={1}
               aria-valuemax={DISPLAY_STEPS.length}
-              aria-label="Setup progress"
+              aria-label="Ход настройки"
             />
           </div>
         </header>
 
-        <nav className="hero-motion-delay" aria-label="Setup steps">
+        <nav className="hero-motion-delay" aria-label="Шаги настройки">
           <ol className="grid grid-cols-3 gap-1.5 sm:gap-2">
             {DISPLAY_STEPS.map((item, idx) => {
               const done = idx < currentStepIdx;
@@ -655,7 +657,7 @@ export default function ShopSetupWizardPage() {
           className="hero-motion-delay shrink-0 rounded-xl border border-red-200/80 bg-red-50 px-4 py-3 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -672,10 +674,10 @@ export default function ShopSetupWizardPage() {
               </span>
               <div>
                 <h2 className="font-display text-base font-semibold tracking-tight text-[var(--ink)]">
-                  Shop identity
+                  Данные автосервиса
                 </h2>
                 <p className="mt-0.5 text-xs leading-relaxed text-[var(--muted)]">
-                  Provide a phone or email so customers and AI scheduling can reach the shop.
+                  Укажите телефон или почту для связи с клиентами и записи через ИИ.
                 </p>
               </div>
             </div>
@@ -684,17 +686,17 @@ export default function ShopSetupWizardPage() {
           <div className="space-y-5 px-5 py-5 sm:px-6">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <Field label="Shop name" icon={<IconBuilding />} required>
+                <Field label="Название автосервиса" icon={<IconBuilding />} required>
                   <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     minLength={2}
                     required
-                    placeholder="e.g. Precision Auto Care"
+                    placeholder="Например, АвтоМастер"
                     className={INPUT_CLASS}
                   />
                 </Field>
-                <Field label="Timezone" icon={<IconGlobe />}>
+                <Field label="Часовой пояс" icon={<IconGlobe />}>
                   <input
                     value={timezone}
                     readOnly
@@ -706,7 +708,7 @@ export default function ShopSetupWizardPage() {
                 </Field>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <Field label="Phone" icon={<IconPhone />}>
+                <Field label="Телефон" icon={<IconPhone />}>
                   <input
                     type="tel"
                     value={phone}
@@ -715,7 +717,7 @@ export default function ShopSetupWizardPage() {
                     className={INPUT_CLASS}
                   />
                 </Field>
-                <Field label="Email" icon={<IconMail />}>
+                <Field label="Эл. почта" icon={<IconMail />}>
                   <input
                     type="email"
                     value={email}
@@ -729,7 +731,7 @@ export default function ShopSetupWizardPage() {
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-4">
               <p className="text-xs text-[var(--muted)]">
-                {shopInfoValid ? "Ready for hours" : "Name and at least one contact required"}
+                {shopInfoValid ? "Можно настроить часы работы" : "Укажите название и хотя бы один контакт"}
               </p>
               <button
                 type="button"
@@ -737,7 +739,7 @@ export default function ShopSetupWizardPage() {
                 onClick={() => setStep("hours")}
                 className="btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-sm disabled:opacity-50"
               >
-                Continue
+                Продолжить
                 <IconArrow />
               </button>
             </div>
@@ -758,10 +760,10 @@ export default function ShopSetupWizardPage() {
               </span>
               <div>
                 <h2 className="font-display text-base font-semibold tracking-tight text-[var(--ink)]">
-                  Business hours
+                  Часы работы
                 </h2>
                 <p className="mt-0.5 text-xs leading-relaxed text-[var(--muted)]">
-                  Open days drive AI booking windows. Temporary all-closed is allowed.
+                  Рабочие дни определяют время записи ИИ. Можно временно закрыть все дни.
                 </p>
               </div>
             </div>
@@ -770,9 +772,9 @@ export default function ShopSetupWizardPage() {
           <div className="flex min-h-0 flex-1 flex-col gap-4 px-5 py-5 sm:px-6">
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--panel)] shadow-[var(--shadow-soft)]">
               <div className="hidden shrink-0 items-center gap-3 border-b border-[var(--line)] bg-[var(--background)]/60 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)] sm:grid sm:grid-cols-[8.5rem_1fr_auto]">
-                <span>Day</span>
-                <span>Hours</span>
-                <span className="text-right">Status</span>
+                <span>День</span>
+                <span>Часы</span>
+                <span className="text-right">Статус</span>
               </div>
               <div className="asa-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 {hours.map((h, idx) => {
@@ -795,14 +797,14 @@ export default function ShopSetupWizardPage() {
                       <div className="min-w-0">
                         {h.closed ? (
                           <span className="inline-flex items-center rounded-full bg-black/[0.04] px-2 py-1 text-[11px] font-medium text-[var(--muted)] ring-1 ring-inset ring-black/5 sm:px-2.5 sm:text-xs">
-                            Closed
+                            Закрыто
                           </span>
                         ) : (
                           <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 sm:gap-1.5">
                             <input
                               type="time"
                               value={h.open_time}
-                              aria-label={`${dayName} open`}
+                              aria-label={`${dayName} открытие`}
                               onChange={(e) =>
                                 updateHour(h.weekday, { open_time: e.target.value })
                               }
@@ -817,7 +819,7 @@ export default function ShopSetupWizardPage() {
                             <input
                               type="time"
                               value={h.close_time}
-                              aria-label={`${dayName} close`}
+                              aria-label={`${dayName} закрытие`}
                               onChange={(e) =>
                                 updateHour(h.weekday, { close_time: e.target.value })
                               }
@@ -831,7 +833,7 @@ export default function ShopSetupWizardPage() {
                         type="button"
                         role="switch"
                         aria-checked={open}
-                        aria-label={`${dayName} ${open ? "open" : "closed"}`}
+                        aria-label={`${dayName} ${open ? "открыто" : "закрыто"}`}
                         onClick={() => updateHour(h.weekday, { closed: open })}
                         className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-0.5 py-1 transition hover:opacity-90 sm:gap-2 sm:px-1"
                       >
@@ -853,7 +855,7 @@ export default function ShopSetupWizardPage() {
                             open ? "text-[var(--ink)]" : "text-[var(--muted)]"
                           }`}
                         >
-                          {open ? "Open" : "Closed"}
+                          {open ? "Открыть" : "Закрыто"}
                         </span>
                       </button>
                     </div>
@@ -869,7 +871,7 @@ export default function ShopSetupWizardPage() {
                 className="btn-ghost inline-flex items-center gap-1.5 px-4 py-2 text-sm"
               >
                 <IconArrowLeft />
-                Back
+                Назад
               </button>
               <button
                 type="button"
@@ -877,7 +879,7 @@ export default function ShopSetupWizardPage() {
                 onClick={() => setStep("services")}
                 className="btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-sm disabled:opacity-50"
               >
-                Continue
+                Продолжить
                 <IconArrow />
               </button>
             </div>
@@ -902,14 +904,14 @@ export default function ShopSetupWizardPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="min-w-0 font-display text-base font-semibold tracking-tight text-[var(--ink)]">
-                    Bookable services
+                    Услуги для записи
                   </h2>
                   <span className="shrink-0 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)] ring-1 ring-[var(--line)]">
-                    {activeServices} active
+                    {activeServices} активно
                   </span>
                 </div>
                 <p className="mt-0.5 text-xs leading-relaxed text-[var(--muted)]">
-                  At least one active service is required for phone booking.
+                  Для записи по телефону нужна хотя бы одна активная услуга.
                 </p>
               </div>
             </div>
@@ -936,7 +938,7 @@ export default function ShopSetupWizardPage() {
                         {index + 1}
                       </span>
                       <span className="text-sm font-semibold text-[var(--ink)]">
-                        {svc.name.trim() || "New service"}
+                        {svc.name.trim() || "Новая услуга"}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -947,7 +949,7 @@ export default function ShopSetupWizardPage() {
                           onChange={(e) => updateService(svc.key, { active: e.target.checked })}
                           className="h-4 w-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)]"
                         />
-                        Active
+                        Активно
                       </label>
                       <button
                         type="button"
@@ -955,13 +957,13 @@ export default function ShopSetupWizardPage() {
                         className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
                       >
                         <IconTrash />
-                        Remove
+                        Удалить
                       </button>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-                    <Field label="Name" icon={<IconWrench className="h-3.5 w-3.5" />}>
+                    <Field label="Имя" icon={<IconWrench className="h-3.5 w-3.5" />}>
                       <input
                         value={svc.name}
                         onChange={(e) => updateService(svc.key, { name: e.target.value })}
@@ -969,7 +971,7 @@ export default function ShopSetupWizardPage() {
                         required
                       />
                     </Field>
-                    <Field label="Category" icon={<IconTag />}>
+                    <Field label="Категория" icon={<IconTag />}>
                       <select
                         value={svc.category}
                         onChange={(e) => updateService(svc.key, { category: e.target.value })}
@@ -982,7 +984,7 @@ export default function ShopSetupWizardPage() {
                         ))}
                       </select>
                     </Field>
-                    <Field label="Duration (min)" icon={<IconClock className="h-3.5 w-3.5" />}>
+                    <Field label="Длительность (мин)" icon={<IconClock className="h-3.5 w-3.5" />}>
                       <input
                         type="number"
                         min={5}
@@ -993,7 +995,7 @@ export default function ShopSetupWizardPage() {
                         className={INPUT_CLASS}
                       />
                     </Field>
-                    <Field label="Price" icon={<IconDollar />}>
+                    <Field label="Цена" icon={<IconDollar />}>
                       <input
                         type="number"
                         min={0}
@@ -1003,7 +1005,7 @@ export default function ShopSetupWizardPage() {
                         className={INPUT_CLASS}
                       />
                     </Field>
-                    <Field label="Skill" icon={<IconSpark />}>
+                    <Field label="Квалификация" icon={<IconSpark />}>
                       <select
                         value={svc.skill}
                         onChange={(e) => updateService(svc.key, { skill: e.target.value })}
@@ -1016,7 +1018,7 @@ export default function ShopSetupWizardPage() {
                         ))}
                       </select>
                     </Field>
-                    <Field label="Bay" icon={<IconBay />}>
+                    <Field label="Пост" icon={<IconBay />}>
                       <select
                         value={svc.bay}
                         onChange={(e) => updateService(svc.key, { bay: e.target.value })}
@@ -1040,7 +1042,7 @@ export default function ShopSetupWizardPage() {
               className="btn-ghost inline-flex w-full shrink-0 items-center justify-center gap-1.5 border-dashed py-2.5 text-sm sm:w-auto"
             >
               <IconPlus />
-              Add service
+              Добавить услугу
             </button>
 
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-[var(--line)] pt-4">
@@ -1050,14 +1052,14 @@ export default function ShopSetupWizardPage() {
                 className="btn-ghost inline-flex items-center gap-1.5 px-4 py-2 text-sm"
               >
                 <IconArrowLeft />
-                Back
+                Назад
               </button>
               <button
                 type="submit"
                 disabled={saving || !servicesValid}
                 className="btn-primary inline-flex items-center gap-1.5 px-5 py-2 text-sm disabled:opacity-50"
               >
-                {saving ? "Saving…" : "Finish setup"}
+                {saving ? "Сохранение…" : "Завершить настройку"}
                 {!saving && <IconCheck className="h-3.5 w-3.5" />}
               </button>
             </div>

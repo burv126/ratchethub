@@ -37,16 +37,16 @@ class AdvisorEstimateService:
                 line_items.append(
                     {
                         "service": opp.get("kind") or opp.get("service") or "service",
-                        "title": opp.get("reason") or opp.get("title") or "Recommended service",
+                        "title": opp.get("reason") or opp.get("title") or 'Рекомендуемая услуга',
                         "amount": str(amt),
                     }
                 )
                 total += amt
 
         plain = (
-            "Here's a clear summary of recommended work: "
+            'Рекомендуемые работы: '
             + "; ".join(f"{i['title']} (~${i['amount']})" for i in line_items)
-            + f". Estimated total around ${total}."
+            + f'. Ориентировочная сумма: ${total}.'
         )
         return [
             EstimateExplanationDecision(
@@ -54,11 +54,11 @@ class AdvisorEstimateService:
                 vehicle_id=ctx.vehicle_id,
                 amount=total,
                 line_items=line_items,
-                summary=f"Estimate summary totaling ${total}",
+                summary=f'Итог сметы: ${total}',
                 plain_language=plain,
                 channel=ctx.channel or "sms",
                 confidence=0.7,
-                rationale="Advisor estimate explanation from recommendations",
+                rationale='Объяснение сметы по рекомендациям консультанта',
             )
         ]
 
@@ -75,10 +75,10 @@ class AdvisorEstimateService:
         if not svcs and not amt:
             return []
         body = (
-            f"We need your approval to proceed"
+            f'Для продолжения требуется ваше согласие'
             + (f" with: {', '.join(svcs)}" if svcs else "")
-            + (f" (about ${amt})" if amt else "")
-            + ". Reply YES to approve or call the shop with questions."
+            + (f' (около ${amt})' if amt else "")
+            + '. Ответьте YES для согласования или позвоните в автосервис, если есть вопросы.'
         )
         return [
             ApprovalRequestDecision(
@@ -90,6 +90,6 @@ class AdvisorEstimateService:
                 channel=ctx.channel or "sms",
                 priority="high",
                 confidence=0.68,
-                rationale="Customer approval assistance",
+                rationale='Помощь с согласованием клиентом',
             )
         ]

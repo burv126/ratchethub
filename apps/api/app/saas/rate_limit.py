@@ -8,8 +8,8 @@ from collections import defaultdict, deque
 
 from fastapi import HTTPException, Request, status
 
-ADMIN_LOGIN_FAIL_DETAIL = "Login failed"
-ADMIN_LOGIN_LOCKOUT_DETAIL = "Too many failed attempts. Try again later."
+ADMIN_LOGIN_FAIL_DETAIL = 'Не удалось войти'
+ADMIN_LOGIN_LOCKOUT_DETAIL = 'Слишком много неудачных попыток. Повторите позже.'
 
 
 class SlidingWindowRateLimiter:
@@ -26,7 +26,7 @@ class SlidingWindowRateLimiter:
         if len(q) >= self.limit:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Too many requests. Please try again later.",
+                detail='Слишком много запросов. Повторите позже.',
             )
         q.append(now)
 

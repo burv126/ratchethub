@@ -51,8 +51,8 @@ class AccessReviewService:
                 "entry_count": len(entries),
                 "entries": entries,
                 "instructions": [
-                    "Review each row and set review_decision to keep|revoke|change_role",
-                    "Attach this JSON (or CSV export) to the SOC2 evidence folder",
-                    "Record reviewer name and date in change management notes",
+                    'Проверьте строки и задайте review_decision: keep|revoke|change_role',
+                    'Добавьте JSON (или экспорт CSV) в папку доказательств SOC2',
+                    'Укажите имя проверяющего и дату в журнале изменений',
                 ],
             }

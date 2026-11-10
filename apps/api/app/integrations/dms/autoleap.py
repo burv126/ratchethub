@@ -15,7 +15,7 @@ class AutoLeapAdapter(BaseAdapter):
     provider = IntegrationProvider.AUTOLEAP
     category = IntegrationCategory.DMS
     display_name = "AutoLeap"
-    description = "Automotive shop software — CRM, RO history, scheduling."
+    description = 'ПО автосервиса — CRM, история заказ-нарядов и расписание.'
     auth_method = AuthMethod.API_KEY
     docs_url = "https://www.autoleap.com"
     credential_fields = ["api_key"]

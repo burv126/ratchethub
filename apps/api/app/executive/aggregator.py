@@ -147,7 +147,7 @@ class ExecutiveAggregator:
         return [
             DashboardCard(
                 "todays_revenue",
-                "Today's Revenue",
+                'Выручка за сегодня',
                 f"${live.todays_revenue:,.2f}",
                 None,
                 "USD",
@@ -155,7 +155,7 @@ class ExecutiveAggregator:
             ),
             DashboardCard(
                 "expected_revenue",
-                "Expected Revenue",
+                'Ожидаемая выручка',
                 f"${live.expected_revenue:,.2f}",
                 None,
                 "USD",
@@ -163,7 +163,7 @@ class ExecutiveAggregator:
             ),
             DashboardCard(
                 "appointments",
-                "Appointments",
+                'Записи',
                 str(live.appointments_today),
                 None,
                 None,
@@ -171,16 +171,16 @@ class ExecutiveAggregator:
             ),
             DashboardCard(
                 "missed_calls",
-                "Missed Calls",
+                'Пропущенные звонки',
                 str(live.missed_calls),
                 None,
                 None,
                 "warning" if live.missed_calls else "positive",
             ),
-            DashboardCard("walk_ins", "Walk-ins", str(live.walk_ins_today), None, None, "neutral"),
+            DashboardCard("walk_ins", 'Живая очередь', str(live.walk_ins_today), None, None, "neutral"),
             DashboardCard(
                 "ai_conversations",
-                "AI Conversations",
+                'Диалоги ИИ',
                 str(live.ai_conversations),
                 None,
                 None,
@@ -188,7 +188,7 @@ class ExecutiveAggregator:
             ),
             DashboardCard(
                 "human_escalations",
-                "Human Escalations",
+                'Передачи сотруднику',
                 str(live.human_escalations),
                 None,
                 None,
@@ -196,7 +196,7 @@ class ExecutiveAggregator:
             ),
             DashboardCard(
                 "revenue_opportunities",
-                "Follow-up Customers",
+                'Повторные обращения',
                 str(live.revenue_opportunities),
                 None,
                 None,
@@ -204,7 +204,7 @@ class ExecutiveAggregator:
             ),
             DashboardCard(
                 "marketing_roi",
-                "Marketing ROI",
+                'Окупаемость маркетинга',
                 f"{live.marketing_roi:.1f}x",
                 None,
                 None,
@@ -212,7 +212,7 @@ class ExecutiveAggregator:
             ),
             DashboardCard(
                 "customer_satisfaction",
-                "Customer Satisfaction",
+                'Удовлетворённость клиентов',
                 f"{live.customer_satisfaction:.1f}" if live.customer_satisfaction else "—",
                 None,
                 "/100" if live.customer_satisfaction else None,
@@ -220,7 +220,7 @@ class ExecutiveAggregator:
             ),
             DashboardCard(
                 "mechanic_productivity",
-                "Mechanic Productivity",
+                'Производительность механиков',
                 f"{live.mechanic_productivity:.1f}%" if live.mechanic_productivity else "—",
                 None,
                 None,
@@ -268,12 +268,12 @@ class ExecutiveAggregator:
             else (sms.get("appointments_booked") or 0)
         )
         ai_perf = [
-            ChartPoint("SMS handled", sms_handled),
-            ChartPoint("Voice turns", voice_calls),
-            ChartPoint("Escalations", float(live.human_escalations)),
-            ChartPoint("Appts booked", appts_booked),
+            ChartPoint('Обработано SMS', sms_handled),
+            ChartPoint('Реплики голосового ИИ', voice_calls),
+            ChartPoint('Передачи сотруднику', float(live.human_escalations)),
+            ChartPoint('Создано записей', appts_booked),
             ChartPoint(
-                "Containment %",
+                'Решено без сотрудника, %',
                 round(100 - live.human_escalations * 5, 1)
                 if (sms_handled or voice_calls or live.human_escalations)
                 else 0.0,
@@ -289,13 +289,13 @@ class ExecutiveAggregator:
         ]
 
         return [
-            ChartSeries("revenue", "Revenue", rev_points, "USD"),
-            ChartSeries("appointments", "Appointments", appt_points),
-            ChartSeries("retention", "Retention", retention, "%"),
-            ChartSeries("vehicle_types", "Vehicle Types", [], "%"),
-            ChartSeries("services", "Services", [], "%"),
-            ChartSeries("customer_sources", "Customer Sources", [], "%"),
-            ChartSeries("ai_performance", "AI Performance", ai_perf),
+            ChartSeries("revenue", 'Выручка', rev_points, "USD"),
+            ChartSeries("appointments", 'Записи', appt_points),
+            ChartSeries("retention", 'Удержание', retention, "%"),
+            ChartSeries("vehicle_types", 'Типы автомобилей', [], "%"),
+            ChartSeries("services", 'Услуги', [], "%"),
+            ChartSeries("customer_sources", 'Источники клиентов', [], "%"),
+            ChartSeries("ai_performance", 'Эффективность ИИ', ai_perf),
         ]
 
     def _build_widgets(
@@ -306,8 +306,8 @@ class ExecutiveAggregator:
             task_items.append(
                 WidgetItem(
                     "t_escalations",
-                    "Review AI escalations",
-                    f"{live.human_escalations} waiting",
+                    'Проверить передачи от ИИ',
+                    f'Ожидает: {live.human_escalations}',
                     "open",
                     "high",
                     "/dashboard/ai-inbox",
@@ -317,8 +317,8 @@ class ExecutiveAggregator:
             task_items.append(
                 WidgetItem(
                     "t_appointments",
-                    "Confirm today's appointments",
-                    f"{live.appointments_today} total",
+                    'Подтвердить сегодняшние записи',
+                    f'Всего: {live.appointments_today}',
                     "open",
                     "high",
                     "/dashboard/appointments",
@@ -328,14 +328,14 @@ class ExecutiveAggregator:
             task_items.append(
                 WidgetItem(
                     "t_opportunities",
-                    "Follow up marketing customers",
-                    f"{live.revenue_opportunities} ready",
+                    'Связаться с клиентами по маркетингу',
+                    f'Готово: {live.revenue_opportunities}',
                     "open",
                     "normal",
                     "/dashboard/marketing",
                 )
             )
-        tasks = Widget(id="todays_tasks", title="Today's Tasks", items=task_items)
+        tasks = Widget(id="todays_tasks", title='Задачи на сегодня', items=task_items)
 
         contact_items: list[WidgetItem] = []
         rev = sources.get("revenue") or {}
@@ -344,7 +344,7 @@ class ExecutiveAggregator:
             contact_items.append(
                 WidgetItem(
                     id=str(o.id),
-                    title=o.customer_name or "Customer",
+                    title=o.customer_name or 'Клиент',
                     subtitle=o.title,
                     status=o.recommended_channel.value if hasattr(o.recommended_channel, "value") else str(o.recommended_channel),
                     priority="high" if o.probability >= 0.5 else "normal",
@@ -381,7 +381,7 @@ class ExecutiveAggregator:
             approval_items.append(
                 WidgetItem(
                     id=str(item.get("conversation_id") or item.get("customer_id") or len(approval_items)),
-                    title=item.get("notes") or "Advisor suggestion",
+                    title=item.get("notes") or 'Рекомендация консультанта',
                     subtitle=", ".join(kinds[:3]) or "advisor",
                     status="pending",
                     priority=str(item.get("priority") or "normal"),
@@ -390,7 +390,7 @@ class ExecutiveAggregator:
             )
         approvals = Widget(
             id="pending_approvals",
-            title="Pending Approvals",
+            title='Ожидают согласования',
             items=approval_items,
         )
 
@@ -480,10 +480,10 @@ class ExecutiveAggregator:
 
         return [
             tasks,
-            Widget("customers_to_contact", "Customers To Contact", contact_items[:8]),
-            Widget("declined_estimates", "Declined Estimates", declined[:8]),
+            Widget("customers_to_contact", 'Клиенты для связи', contact_items[:8]),
+            Widget("declined_estimates", 'Отклонённые сметы', declined[:8]),
             approvals,
-            Widget("repair_status", "Repair Status", repair_items[:40]),
+            Widget("repair_status", 'Статус ремонта', repair_items[:40]),
         ]
 
 

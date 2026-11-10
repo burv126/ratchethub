@@ -486,7 +486,7 @@ def test_ai_performance_appts_booked_uses_scheduling_created_count(runtime, shop
     )
     by_id = {c.id: c for c in charts}
     points = {p.label: p.value for p in by_id["ai_performance"].points}
-    assert points["Appts booked"] == 3.0
+    assert points["Создано записей"] == 3.0
 
 
 def test_ai_conversations_prefer_durable_voice_calls(runtime, shop_id):
@@ -516,8 +516,8 @@ def test_ai_conversations_prefer_durable_voice_calls(runtime, shop_id):
         now=datetime.now(timezone.utc),
     )
     points = {p.label: p.value for p in next(c for c in charts if c.id == "ai_performance").points}
-    assert points["SMS handled"] == 4.0
-    assert points["Voice turns"] == 7.0
+    assert points["Обработано SMS"] == 4.0
+    assert points["Реплики голосового ИИ"] == 7.0
 
 
 def test_ai_appointment_created_helpers():

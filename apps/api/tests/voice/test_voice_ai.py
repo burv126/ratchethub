@@ -86,8 +86,8 @@ async def test_answer_and_book_appointment(runtime, shop_id):
     assert turn.pipeline.stages["scheduling"].data.action == "list_slots"
     assert turn.pipeline.stages["scheduling"].data.message == "ask_preferred_time"
     assert turn.spoken_text
-    assert "time" in turn.spoken_text.lower()
-    assert "i've got" not in turn.spoken_text.lower()
+    assert 'время' in turn.spoken_text.lower()
+    assert "есть несколько свободных" not in turn.spoken_text.lower()
     assert "Gather" in turn.twiml or "Dial" in turn.twiml
 
     completed = await runtime.service.complete_call(shop_id=shop_id, call_id=answered.call.id)
@@ -119,10 +119,10 @@ async def test_voice_day_then_time_pinpoint_before_confirm(runtime, shop_id):
     )
     assert day_turn.spoken_text
     spoken_day = day_turn.spoken_text.lower()
-    assert "time" in spoken_day
-    assert "i've got" not in spoken_day
+    assert "время" in spoken_day
+    assert "есть несколько свободных" not in spoken_day
     # Should acknowledge the day and only ask for time
-    assert "day and time" not in spoken_day
+    assert 'день и время' not in spoken_day
     intent1 = day_turn.pipeline.stages["intent"].data.entities
     assert intent1.get("needs_time") is True
 
@@ -190,8 +190,8 @@ async def test_voice_time_then_day_pinpoint_before_confirm(runtime, shop_id):
         ),
     )
     spoken_time = (time_turn.spoken_text or "").lower()
-    assert "day" in spoken_time
-    assert "day and time" not in spoken_time
+    assert "день" in spoken_time
+    assert 'день и время' not in spoken_time
     intent1 = time_turn.pipeline.stages["intent"].data.entities
     assert intent1.get("needs_date") is True
 
@@ -440,7 +440,7 @@ async def test_empty_speech_keeps_line_open_silently(runtime, shop_id):
         speech=SpeechInput(call_sid="CAsilent1", speech_result=""),
     )
     assert "Gather" in second.twiml
-    assert "still here" in second.spoken_text.lower()
+    assert 'на линии' in second.spoken_text.lower()
 
     third = await runtime.service.handle_speech(
         shop_id=shop_id,
@@ -449,7 +449,7 @@ async def test_empty_speech_keeps_line_open_silently(runtime, shop_id):
     assert "Hangup" in third.twiml
     assert "Gather" not in third.twiml
     assert third.reply.end_call is True
-    assert "call back" in third.spoken_text.lower()
+    assert "перезвонить" in third.spoken_text.lower()
 
 
 @pytest.mark.asyncio
@@ -523,8 +523,8 @@ async def test_soft_no_after_anything_else_ends_call(runtime, shop_id):
     )
     assert result.reply.end_call is True
     assert "Hangup" in result.twiml
-    assert "anything else" not in result.spoken_text.lower()
-    assert "take care" in result.spoken_text.lower()
+    assert 'ещё с чем-нибудь' not in result.spoken_text.lower()
+    assert 'всего доброго' in result.spoken_text.lower()
     done = await runtime.store.get_call_by_sid("CAbye2")
     assert done is not None
     assert done.status == "completed"
@@ -549,8 +549,8 @@ async def test_off_topic_speech_redirects_to_vehicle_service(runtime, shop_id):
         ),
     )
     text = (result.spoken_text or "").lower()
-    assert "vehicle" in text or "shop" in text or "service" in text
-    assert "book" in text or "cancel" in text
+    assert 'автомобил' in text or 'автосервис' in text or 'услуг' in text
+    assert 'запис' in text or "cancel" in text
     assert "joke" not in text
     assert "weather" not in text
     assert result.reply.end_call is not True
@@ -624,19 +624,19 @@ def test_voice_reply_unavailable_asks_only_broken_half():
         )
 
     date_draft = _draft("date")
-    assert "other day" in date_draft.text.lower()
-    assert "day or time" not in date_draft.text.lower()
-    assert "day" in (date_draft.follow_up_question or "").lower()
+    assert 'другой день' in date_draft.text.lower()
+    assert 'день или время' not in date_draft.text.lower()
+    assert 'день' in (date_draft.follow_up_question or "").lower()
 
     time_draft = _draft("time")
-    assert "other time" in time_draft.text.lower()
-    assert "day or time" not in time_draft.text.lower()
-    assert "time" in (time_draft.follow_up_question or "").lower()
+    assert 'другое время' in time_draft.text.lower()
+    assert 'день или время' not in time_draft.text.lower()
+    assert 'время' in (time_draft.follow_up_question or "").lower()
 
     # Soft day on closed shop day: refuse immediately even when intent needs time.
     closed = _draft("date", time_precision="day", closed_day=True)
-    assert "isn't available" in closed.text.lower()
-    assert "other day" in closed.text.lower()
+    assert 'недоступ' in closed.text.lower()
+    assert 'другой день' in closed.text.lower()
     assert "what time" not in closed.text.lower()
     assert "3:00" not in closed.text  # day-only copy omits invented clock
 
@@ -687,7 +687,7 @@ async def test_voice_cancel_confirms_with_yes_please(runtime, shop_id):
         speech=SpeechInput(call_sid=call_sid, speech_result="Cancel my appointment"),
     )
     assert ask.pipeline.stages["scheduling"].data.message == "awaiting_cancel_confirmation"
-    assert "confirm" in (ask.spoken_text or "").lower()
+    assert 'подтверд' in (ask.spoken_text or "").lower()
     assert ask.pipeline.escalate is False
 
     done = await runtime.service.handle_speech(
@@ -698,7 +698,7 @@ async def test_voice_cancel_confirms_with_yes_please(runtime, shop_id):
     assert sched.success is True
     assert sched.appointment is not None
     assert sched.appointment.status == "cancelled"
-    assert "cancelled" in (done.spoken_text or "").lower()
+    assert 'отмен' in (done.spoken_text or "").lower()
     assert done.pipeline.escalate is False
 
     stored = await runtime.agents.scheduling.store.get(shop_id, appt.id)
@@ -728,7 +728,7 @@ async def test_voice_cancel_without_appointment_does_not_escalate(runtime, shop_
     sched = result.pipeline.stages["scheduling"].data
     assert sched.message == "no_appointment_to_cancel"
     text = (result.spoken_text or "").lower()
-    assert "not seeing" in text or "no" in text
+    assert 'не вижу' in text or "no" in text
     assert "grabbing someone" not in text
 
 
@@ -782,7 +782,7 @@ async def test_voice_reschedule_confirms_without_service_name(runtime, shop_id):
         ),
     )
     assert ask.pipeline.stages["scheduling"].data.message == "ask_preferred_time"
-    assert "day" in (ask.spoken_text or "").lower() or "time" in (
+    assert 'день' in (ask.spoken_text or "").lower() or 'время' in (
         ask.spoken_text or ""
     ).lower()
 
@@ -798,7 +798,7 @@ async def test_voice_reschedule_confirms_without_service_name(runtime, shop_id):
     )
     # Must ask to confirm the move — not re-list random openings.
     spoken = (hold.spoken_text or "").lower()
-    assert "shall i" in spoken or "move" in spoken or "confirm" in spoken
+    assert 'подтверждаете' in spoken or 'перен' in spoken or 'подтверд' in spoken
     assert "i've got a few openings" not in spoken
 
     done = await runtime.service.handle_speech(
@@ -808,7 +808,7 @@ async def test_voice_reschedule_confirms_without_service_name(runtime, shop_id):
     sched = done.pipeline.stages["scheduling"].data
     assert sched.success is True
     assert sched.appointment is not None
-    assert "moved" in (done.spoken_text or "").lower() or "all set" in (
+    assert "перенесена" in (done.spoken_text or "").lower() or "готово" in (
         done.spoken_text or ""
     ).lower()
     old = await runtime.agents.scheduling.store.get(shop_id, appt.id)
@@ -840,5 +840,5 @@ async def test_voice_reschedule_without_appointment_is_soft(runtime, shop_id):
         == "no_appointment_to_reschedule"
     )
     text = (result.spoken_text or "").lower()
-    assert "not seeing" in text
+    assert 'не вижу' in text
     assert "grabbing someone" not in text

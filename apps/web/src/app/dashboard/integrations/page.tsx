@@ -1,4 +1,8 @@
 "use client";
+import { ruError, ruIntegrationLog } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -71,7 +75,7 @@ export default function McpHubPage() {
       try {
         await refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load MCP hub");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить центр MCP");
       }
     })();
   }, [authLoading, session, refresh]);
@@ -94,7 +98,7 @@ export default function McpHubPage() {
       await createConnection({ provider, demo: true, connect: true });
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Connect failed");
+      setError(err instanceof Error ? err.message : "Не удалось подключить");
     } finally {
       setBusy(false);
     }
@@ -110,7 +114,7 @@ export default function McpHubPage() {
       if (action === "delete") await deleteConnection(id);
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Action failed");
+      setError(err instanceof Error ? err.message : "Не удалось выполнить действие");
     } finally {
       setBusy(false);
     }
@@ -131,7 +135,7 @@ export default function McpHubPage() {
       setInvokeResult(JSON.stringify(result, null, 2));
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invoke failed");
+      setError(err instanceof Error ? err.message : "Не удалось вызвать");
     } finally {
       setBusy(false);
     }
@@ -140,23 +144,23 @@ export default function McpHubPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="page-title">MCP Integration Hub</h1>
+        <h1 className="page-title">Центр интеграций MCP</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Authenticate, permission, connect, retry, monitor, and version external systems for AI agents.
+          Авторизация, разрешения, подключение, повторы, мониторинг и версии внешних систем для ИИ-агентов.
         </p>
       </div>
 
       {error && (
-        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{ruError(error)}</p>
       )}
 
       {metrics && (
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["Connections", metrics.connections_created],
-            ["Connected", metrics.connections_connected],
-            ["Invokes", metrics.invokes],
-            ["Retries", metrics.retries],
+            ["Подключения", metrics.connections_created],
+            ["Подключено", metrics.connections_connected],
+            ["Вызовы", metrics.invokes],
+            ["Повторы", metrics.retries],
           ].map(([label, value]) => (
             <div key={String(label)} className="rounded-md border border-[var(--line)] px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-[var(--muted)]">{label}</p>
@@ -169,7 +173,7 @@ export default function McpHubPage() {
       <section className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
         <div className="space-y-3">
           <h2 className="text-sm font-medium uppercase tracking-wide text-[var(--muted)]">
-            Supported integrations
+            Поддерживаемые интеграции
           </h2>
           <div className="grid gap-2 sm:grid-cols-2">
             {integrations.map((item) => {
@@ -191,13 +195,13 @@ export default function McpHubPage() {
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium">{item.display_name}</p>
                     <span className="text-[10px] uppercase text-[var(--muted)]">
-                      {item.future ? "future" : item.category}
+                      {ruLabel(item.future ? "future" : item.category)}
                     </span>
                   </div>
                   <p className="mt-1 line-clamp-2 text-xs text-[var(--muted)]">{item.description}</p>
                   <p className="mt-2 text-[11px] text-[var(--muted)]">
                     {item.auth_method} · {item.api_version}
-                    {connected ? " · connected" : ""}
+                    {connected ? " · подключено" : ""}
                   </p>
                 </button>
               );
@@ -214,15 +218,15 @@ export default function McpHubPage() {
               </div>
               <dl className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <dt className="text-[var(--muted)]">Auth</dt>
+                  <dt className="text-[var(--muted)]">Авторизация</dt>
                   <dd>{selectedManifest.auth_method}</dd>
                 </div>
                 <div>
-                  <dt className="text-[var(--muted)]">API version</dt>
+                  <dt className="text-[var(--muted)]">Версия API</dt>
                   <dd>{selectedManifest.api_version}</dd>
                 </div>
                 <div className="col-span-2">
-                  <dt className="text-[var(--muted)]">Capabilities</dt>
+                  <dt className="text-[var(--muted)]">Возможности</dt>
                   <dd>{selectedManifest.capabilities.join(", ") || "—"}</dd>
                 </div>
               </dl>
@@ -232,11 +236,11 @@ export default function McpHubPage() {
                 onClick={() => void onConnect(selectedManifest.provider)}
                 className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
               >
-                {selectedManifest.future ? "Reserved for future" : busy ? "Working…" : "Connect (demo)"}
+                {selectedManifest.future ? "Зарезервировано" : busy ? "Обработка…" : "Подключить (демо)"}
               </button>
 
               <div>
-                <h3 className="text-sm font-medium">MCP tools</h3>
+                <h3 className="text-sm font-medium">Инструменты MCP</h3>
                 <ul className="mt-2 space-y-2">
                   {tools.map((tool) => (
                     <li
@@ -253,11 +257,11 @@ export default function McpHubPage() {
                         onClick={() => void onInvoke(tool.name)}
                         className="shrink-0 rounded border border-[var(--line)] px-2 py-1 text-xs"
                       >
-                        Invoke
+                        Вызвать
                       </button>
                     </li>
                   ))}
-                  {!tools.length && <li className="text-xs text-[var(--muted)]">No tools</li>}
+                  {!tools.length && <li className="text-xs text-[var(--muted)]">Нет инструментов</li>}
                 </ul>
               </div>
               {invokeResult && (
@@ -267,24 +271,24 @@ export default function McpHubPage() {
               )}
             </>
           ) : (
-            <p className="text-sm text-[var(--muted)]">Select an integration</p>
+            <p className="text-sm text-[var(--muted)]">Выберите интеграцию</p>
           )}
         </div>
       </section>
 
       <section className="space-y-3">
         <h2 className="text-sm font-medium uppercase tracking-wide text-[var(--muted)]">
-          Connection manager
+          Управление подключениями
         </h2>
         <div className="overflow-x-auto rounded-md border border-[var(--line)]">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-[var(--line)] text-xs uppercase text-[var(--muted)]">
               <tr>
-                <th className="px-3 py-2">Name</th>
-                <th className="px-3 py-2">Provider</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Version</th>
-                <th className="px-3 py-2">Actions</th>
+                <th className="px-3 py-2">Имя</th>
+                <th className="px-3 py-2">Провайдер</th>
+                <th className="px-3 py-2">Статус</th>
+                <th className="px-3 py-2">Версия</th>
+                <th className="px-3 py-2">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -292,7 +296,7 @@ export default function McpHubPage() {
                 <tr key={c.id} className="border-b border-[var(--line)] last:border-0">
                   <td className="px-3 py-2">{c.name}</td>
                   <td className="px-3 py-2">{c.provider}</td>
-                  <td className="px-3 py-2">{c.status}</td>
+                  <td className="px-3 py-2">{ruLabel(c.status)}</td>
                   <td className="px-3 py-2">{c.api_version}</td>
                   <td className="px-3 py-2">
                     <div className="flex flex-wrap gap-1">
@@ -302,7 +306,7 @@ export default function McpHubPage() {
                         className="rounded border border-[var(--line)] px-2 py-0.5 text-xs"
                         onClick={() => void onAction(c.id, "test")}
                       >
-                        Test
+                        Проверить
                       </button>
                       {c.status === "connected" ? (
                         <button
@@ -311,7 +315,7 @@ export default function McpHubPage() {
                           className="rounded border border-[var(--line)] px-2 py-0.5 text-xs"
                           onClick={() => void onAction(c.id, "disconnect")}
                         >
-                          Disconnect
+                          Отключить
                         </button>
                       ) : (
                         <button
@@ -320,7 +324,7 @@ export default function McpHubPage() {
                           className="rounded border border-[var(--line)] px-2 py-0.5 text-xs"
                           onClick={() => void onAction(c.id, "reconnect")}
                         >
-                          Reconnect
+                          Переподключить
                         </button>
                       )}
                       <button
@@ -329,7 +333,7 @@ export default function McpHubPage() {
                         className="rounded border border-[var(--line)] px-2 py-0.5 text-xs text-red-600"
                         onClick={() => void onAction(c.id, "delete")}
                       >
-                        Delete
+                        Удалить
                       </button>
                     </div>
                   </td>
@@ -338,7 +342,7 @@ export default function McpHubPage() {
               {!connections.length && (
                 <tr>
                   <td colSpan={5} className="px-3 py-4 text-sm text-[var(--muted)]">
-                    No connections yet — connect an integration above.
+                    Подключений пока нет — подключите интеграцию выше.
                   </td>
                 </tr>
               )}
@@ -349,40 +353,40 @@ export default function McpHubPage() {
 
       <section className="space-y-3">
         <h2 className="text-sm font-medium uppercase tracking-wide text-[var(--muted)]">
-          Monitoring & logging
+          Мониторинг и журнал
         </h2>
         <ul className="space-y-2 rounded-md border border-[var(--line)] p-3">
           {logs.map((log) => (
             <li key={log.id} className="border-b border-[var(--line)] pb-2 text-xs last:border-0 last:pb-0">
               <span className="font-medium uppercase text-[var(--muted)]">{log.level}</span>
               <span className="mx-2 text-[var(--muted)]">{log.event}</span>
-              <span>{log.message}</span>
+              <span>{ruIntegrationLog(log)}</span>
               {log.created_at && (
                 <span className="ml-2 text-[var(--muted)]">
-                  {new Date(log.created_at).toLocaleTimeString()}
+                  {new Date(log.created_at).toLocaleTimeString("ru-RU")}
                 </span>
               )}
             </li>
           ))}
-          {!logs.length && <li className="text-sm text-[var(--muted)]">No log entries yet</li>}
+          {!logs.length && <li className="text-sm text-[var(--muted)]">Записей в журнале пока нет</li>}
         </ul>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-2 rounded-md border border-[var(--line)] p-4">
-          <h2 className="text-sm font-medium">Recent invokes</h2>
+          <h2 className="text-sm font-medium">Последние вызовы</h2>
           <ul className="max-h-64 space-y-2 overflow-auto text-xs">
             {invokes.map((inv) => (
               <li key={inv.id} className="rounded border border-[var(--line)] px-2 py-1.5">
-                <span className="font-medium">{inv.provider}</span> · {inv.tool} · {inv.status}
-                <span className="text-[var(--muted)]"> · {inv.duration_ms}ms</span>
+                <span className="font-medium">{inv.provider}</span> · {inv.tool} · {ruLabel(inv.status)}
+                <span className="text-[var(--muted)]"> · {inv.duration_ms}мс</span>
               </li>
             ))}
-            {!invokes.length && <li className="text-[var(--muted)]">No invokes yet</li>}
+            {!invokes.length && <li className="text-[var(--muted)]">Вызовов пока нет</li>}
           </ul>
         </div>
         <div className="space-y-3 rounded-md border border-[var(--line)] p-4">
-          <h2 className="text-sm font-medium">Permissions</h2>
+          <h2 className="text-sm font-medium">Разрешения</h2>
           <form
             className="flex flex-wrap gap-2"
             onSubmit={(e) => {
@@ -399,7 +403,7 @@ export default function McpHubPage() {
                   });
                   await refresh();
                 } catch (err) {
-                  setError(err instanceof Error ? err.message : "Create permission failed");
+                  setError(err instanceof Error ? err.message : "Не удалось создать разрешение");
                 } finally {
                   setBusy(false);
                 }
@@ -410,20 +414,20 @@ export default function McpHubPage() {
               className="rounded-md border border-[var(--line)] bg-transparent px-2 py-1.5 text-xs"
               value={permPrincipal}
               onChange={(e) => setPermPrincipal(e.target.value)}
-              placeholder="principal"
+              placeholder="субъект"
             />
             <input
               className="rounded-md border border-[var(--line)] bg-transparent px-2 py-1.5 text-xs"
               value={permActions}
               onChange={(e) => setPermActions(e.target.value)}
-              placeholder="actions"
+              placeholder="действия"
             />
             <button
               type="submit"
               disabled={busy || !selected}
               className="rounded-md bg-[var(--accent)] px-2.5 py-1.5 text-xs font-medium text-white disabled:opacity-60"
             >
-              Grant
+              Предоставить
             </button>
           </form>
           <ul className="max-h-48 space-y-1 overflow-auto text-xs">
@@ -432,7 +436,7 @@ export default function McpHubPage() {
                 {p.principal} · {p.provider} · {p.actions.join(", ")}
               </li>
             ))}
-            {!permissions.length && <li className="text-[var(--muted)]">No permissions yet</li>}
+            {!permissions.length && <li className="text-[var(--muted)]">Разрешений пока нет</li>}
           </ul>
         </div>
       </section>

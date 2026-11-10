@@ -53,7 +53,7 @@ async def test_create_checkout_requires_stripe(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr("app.saas.billing.SessionLocal", lambda: _Session())
     monkeypatch.setattr("app.saas.billing.settings.stripe_secret_key", "")
 
-    with pytest.raises(ValidationError, match="Paid plan upgrades require a successful checkout"):
+    with pytest.raises(ValidationError, match="Для платного тарифа требуется успешная оплата"):
         await svc.create_checkout(
             shop_id=shop_id,
             plan_id="pro",

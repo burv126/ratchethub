@@ -94,7 +94,7 @@ class SmsAiService:
         if shop_id is None:
             shop_id = await self.resolve_shop_id(str(job.payload.get("to", "")))
         if shop_id is None:
-            raise ValueError("Unable to resolve shop for inbound SMS")
+            raise ValueError('Не удалось определить автосервис для входящего SMS')
         inbound = InboundSms(
             from_number=str(job.payload["from"]),
             to_number=str(job.payload["to"]),
@@ -139,7 +139,7 @@ class SmsAiService:
                     outbound=None,
                     reply=draft,
                     pipeline=empty_pipeline,
-                    owner_summary=conversation.owner_summary or "Duplicate webhook ignored.",
+                    owner_summary=conversation.owner_summary or 'Повторный вебхук проигнорирован.',
                 )
 
         conversation = await self._store.get_or_create_conversation(
@@ -164,13 +164,13 @@ class SmsAiService:
             if shop_ai_paused and not conversation.human_takeover:
                 conversation.owner_summary = (
                     conversation.owner_summary
-                    or "Shop AI paused — inbound recorded, no auto-reply."
+                    or 'ИИ автосервиса приостановлен — входящее сообщение записано без автоответа.'
                 )
                 reason = "ai_paused"
             else:
                 conversation.owner_summary = (
                     conversation.owner_summary
-                    or "Human takeover active — AI replies paused."
+                    or 'Общение ведёт сотрудник — ответы ИИ приостановлены.'
                 )
                 reason = "human_takeover"
             await self._store.update_conversation(conversation)
@@ -671,7 +671,7 @@ class SmsAiService:
     ) -> SmsConversation:
         conv = await self._store.get_conversation(shop_id, conversation_id)
         if conv is None:
-            raise ValueError("Conversation not found")
+            raise ValueError('Переписка не найдена')
         conv.human_takeover = enabled
         conv.status = (
             SmsConversationStatus.WAITING_HUMAN.value
@@ -679,16 +679,16 @@ class SmsAiService:
             else SmsConversationStatus.ACTIVE.value
         )
         if enabled:
-            conv.owner_summary = (conv.owner_summary or "") + " | Human takeover enabled"
+            conv.owner_summary = (conv.owner_summary or "") + ' | Участие сотрудника включено'
         return await self._store.update_conversation(conv)
 
     async def delete_conversation(self, *, shop_id: UUID, conversation_id: UUID) -> None:
         conv = await self._store.get_conversation(shop_id, conversation_id)
         if conv is None:
-            raise ValueError("Conversation not found")
+            raise ValueError('Переписка не найдена')
         deleted = await self._store.delete_conversation(shop_id, conversation_id)
         if not deleted:
-            raise ValueError("Conversation not found")
+            raise ValueError('Переписка не найдена')
         await self._memory.clear(shop_id=shop_id, customer_phone=conv.customer_phone)
 
     async def mirror_outbound(
@@ -756,7 +756,7 @@ class SmsAiService:
     ) -> SmsMessage:
         conv = await self._store.get_conversation(shop_id, conversation_id)
         if conv is None:
-            raise ValueError("Conversation not found")
+            raise ValueError('Переписка не найдена')
         from app.saas.quotas import QuotaService
 
         await QuotaService().consume(shop_id, "sms", 1)

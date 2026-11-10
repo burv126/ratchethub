@@ -19,9 +19,9 @@ class AdvisorCustomerService:
                     customer_id=None,
                     conversation_id=_conv_uuid(ctx),
                     channel=ctx.channel or "sms",
-                    body=f"Hi {name}, thanks for contacting us. A service advisor is reviewing your request.",
+                    body=f'Здравствуйте, {name}! Спасибо за обращение. Консультант рассматривает ваш запрос.',
                     intent=ctx.intent,
-                    rationale="Customer reception — no profile linked yet",
+                    rationale='Приём клиента — профиль пока не привязан',
                 )
             )
         risk = float((ctx.metadata or {}).get("lost_customer_risk") or 0.0)
@@ -32,9 +32,9 @@ class AdvisorCustomerService:
                     risk_score=risk,
                     plan="Win-back outreach with complimentary inspection offer",
                     actions=["send_retention_message", "flag_high_value" if risk >= 0.7 else "follow_up"],
-                    suggested_offer="Complimentary multi-point inspection",
+                    suggested_offer='Бесплатный комплексный осмотр',
                     priority="urgent" if risk >= 0.75 else "high",
-                    rationale="Elevated churn / lost-customer risk",
+                    rationale='Повышенный риск ухода клиента',
                 )
             )
         return decisions

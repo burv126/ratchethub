@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -63,7 +65,7 @@ export function SmsInboxPanel() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [simFrom, setSimFrom] = useState(PHONE_PLACEHOLDER);
-  const [simBody, setSimBody] = useState("I need to book an appointment for an oil change");
+  const [simBody, setSimBody] = useState("Хочу записаться на замену масла");
   const [deleting, setDeleting] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
@@ -104,7 +106,7 @@ export function SmsInboxPanel() {
       try {
         await refreshList();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load inbox");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить входящие");
       } finally {
         setLoading(false);
       }
@@ -118,7 +120,7 @@ export function SmsInboxPanel() {
     }
     setError(null);
     void loadDetail(selectedId).catch((err) =>
-      setError(err instanceof Error ? err.message : "Failed to load conversation"),
+      setError(err instanceof Error ? err.message : "Не удалось загрузить переписку"),
     );
   }, [selectedId, loadDetail]);
 
@@ -131,7 +133,7 @@ export function SmsInboxPanel() {
       selectConversation(result.conversation.id);
       setDetail(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Simulate failed");
+      setError(err instanceof Error ? err.message : "Не удалось выполнить симуляцию");
     }
   }
 
@@ -156,19 +158,19 @@ export function SmsInboxPanel() {
       setDetail(null);
       await refreshList();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete failed");
+      setError(err instanceof Error ? err.message : "Не удалось удалить");
     } finally {
       setDeleting(false);
     }
   }
 
   if (!session && !authLoading) {
-    return <p className="text-sm text-[var(--muted)]">Sign in to view SMS inbox.</p>;
+    return <p className="text-sm text-[var(--muted)]">Войдите для просмотра входящих SMS.</p>;
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
-      {error && <p className="shrink-0 text-sm text-red-700">{error}</p>}
+      {error && <p className="shrink-0 text-sm text-red-700">{ruError(error)}</p>}
 
       <form
         onSubmit={onSimulate}
@@ -180,20 +182,20 @@ export function SmsInboxPanel() {
           value={simFrom}
           onChange={(e) => setSimFrom(formatPhoneInput(e.target.value))}
           placeholder={PHONE_PLACEHOLDER}
-          aria-label="Simulate from number"
+          aria-label="Номер отправителя для симуляции"
         />
         <input
           className="rounded-md border border-[var(--line)] px-3 py-2 text-sm"
           value={simBody}
           onChange={(e) => setSimBody(e.target.value)}
-          placeholder="Inbound SMS body"
-          aria-label="Simulate message body"
+          placeholder="Текст входящего SMS"
+          aria-label="Текст сообщения для симуляции"
         />
         <button
           type="submit"
           className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white"
         >
-          Simulate SMS
+          Симулировать SMS
         </button>
       </form>
 
@@ -204,14 +206,14 @@ export function SmsInboxPanel() {
           }`}
         >
           <header className="shrink-0 border-b border-[var(--line)] px-4 py-3 text-sm font-medium">
-            History
+            История
           </header>
           <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {loading && (
-              <li className="px-4 py-8 text-sm text-[var(--muted)]">Loading history…</li>
+              <li className="px-4 py-8 text-sm text-[var(--muted)]">Загрузка истории…</li>
             )}
             {!loading && conversations.length === 0 && (
-              <li className="px-4 py-8 text-sm text-[var(--muted)]">No SMS yet.</li>
+              <li className="px-4 py-8 text-sm text-[var(--muted)]">SMS пока нет.</li>
             )}
             {conversations.map((c) => {
               const active = c.id === selectedId;
@@ -231,7 +233,7 @@ export function SmsInboxPanel() {
                       </span>
                       {c.escalate && (
                         <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-amber-800">
-                          Escalate
+                          Передать сотруднику
                         </span>
                       )}
                     </div>
@@ -260,11 +262,11 @@ export function SmsInboxPanel() {
                     onClick={() => selectConversation(null)}
                     className="mb-1 text-xs text-[var(--accent)] lg:hidden"
                   >
-                    ← History
+                    ← История
                   </button>
                 )}
                 <p className="truncate text-sm font-medium">
-                  {detail ? detail.conversation.customer_phone : "Select a conversation"}
+                  {detail ? detail.conversation.customer_phone : "Выберите переписку"}
                 </p>
               </div>
             </div>
@@ -276,7 +278,7 @@ export function SmsInboxPanel() {
                   disabled={deleting}
                   className="rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 disabled:opacity-50"
                 >
-                  {deleting ? "Deleting…" : "Delete"}
+                  {deleting ? "Удаление…" : "Удалить"}
                 </button>
               </div>
             )}
@@ -285,7 +287,7 @@ export function SmsInboxPanel() {
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4">
             {!detail && (
               <p className="text-sm text-[var(--muted)]">
-                Pick a thread or simulate an inbound SMS to start.
+                Выберите переписку или симулируйте входящее SMS.
               </p>
             )}
             {detail?.messages.map((m) => (
@@ -299,7 +301,7 @@ export function SmsInboxPanel() {
               >
                 <p className="break-words">{m.body}</p>
                 <p className="mt-1 text-[10px] uppercase tracking-wide opacity-70">
-                  {m.direction === "inbound" ? "customer" : "assistant"}
+                  {m.direction === "inbound" ? "клиент" : "помощник"}
                 </p>
               </div>
             ))}
@@ -321,10 +323,10 @@ export function SmsInboxPanel() {
           >
             <div>
               <h2 id="delete-sms-title" className="text-sm font-semibold text-red-700">
-                Delete this conversation?
+                Удалить эту переписку?
               </h2>
               <p className="mt-2 text-sm text-[var(--muted)]">
-                Messages cannot be recovered. This action cannot be undone.
+                Сообщения невозможно восстановить. Это действие нельзя отменить.
               </p>
             </div>
             <div className="flex flex-wrap justify-end gap-2">
@@ -334,7 +336,7 @@ export function SmsInboxPanel() {
                 disabled={deleting}
                 className="rounded-md border border-[var(--line)] px-4 py-2 text-sm disabled:opacity-60"
               >
-                No
+                Нет
               </button>
               <button
                 type="button"
@@ -342,7 +344,7 @@ export function SmsInboxPanel() {
                 disabled={deleting}
                 className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
               >
-                {deleting ? "Deleting…" : "Yes"}
+                {deleting ? "Удаление…" : "Да"}
               </button>
             </div>
           </div>

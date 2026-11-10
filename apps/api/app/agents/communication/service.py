@@ -27,7 +27,7 @@ class CommunicationAgent(Agent[RawInboundMessage, NormalizedMessage]):
         channel = (message.channel or "").strip().lower()
         if channel not in _SUPPORTED:
             raise AgentValidationError(
-                f"Unsupported channel: {message.channel}",
+                f'Неподдерживаемый канал: {message.channel}',
                 agent=self.name,
                 correlation_id=context.correlation_id,
             )
@@ -35,7 +35,7 @@ class CommunicationAgent(Agent[RawInboundMessage, NormalizedMessage]):
         body = _WHITESPACE_RE.sub(" ", (message.content or "").strip())
         if not body:
             raise AgentValidationError(
-                "Message content cannot be empty",
+                'Сообщение не может быть пустым',
                 agent=self.name,
                 correlation_id=context.correlation_id,
             )

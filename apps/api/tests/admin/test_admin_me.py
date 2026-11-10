@@ -118,7 +118,7 @@ async def test_admin_change_password_roundtrip(admin_username: str) -> None:
             json={"current_password": "wrong", "new_password": new_password},
         )
         assert bad.status_code == 400
-        assert bad.json()["detail"] == "Current password is incorrect"
+        assert bad.json()["detail"] == 'Текущий пароль неверен'
 
         same = await client.post(
             "/v1/admin/me/password",

@@ -20,12 +20,12 @@ class AdvisorRepairService:
             else:
                 return []
         messages = {
-            "received": "We've received your vehicle and started the intake process.",
-            "diagnosing": "Our technicians are diagnosing your vehicle now.",
-            "awaiting_parts": "We're waiting on parts and will update you when work resumes.",
-            "in_progress": "Repairs are in progress — we'll notify you when it's ready.",
-            "ready": "Great news — your vehicle is ready for pickup.",
-            "completed": "Your repair is complete. Thank you for choosing us.",
+            "received": 'Мы приняли автомобиль и начали оформление.',
+            "diagnosing": 'Наши специалисты проводят диагностику автомобиля.',
+            "awaiting_parts": 'Ожидаем запчасти и сообщим, когда работы возобновятся.',
+            "in_progress": 'Ремонт выполняется — сообщим, когда автомобиль будет готов.',
+            "ready": 'Хорошие новости — автомобиль готов к выдаче.',
+            "completed": 'Ремонт завершён. Спасибо, что выбрали нас.',
         }
         body = messages.get(st, messages["in_progress"])
         return [
@@ -35,8 +35,8 @@ class AdvisorRepairService:
                 status=st,  # type: ignore[arg-type]
                 message_body=body,
                 channel=ctx.channel or "sms",
-                advisor_notes=f"Status update decision: {st}",
+                advisor_notes=f'Решение об обновлении статуса: {st}',
                 confidence=0.75,
-                rationale="Repair status assistance",
+                rationale='Помощь со статусом ремонта',
             )
         ]

@@ -66,13 +66,13 @@ def score_customer(customer: CustomerSnapshot, *, now: datetime | None = None) -
         recency = 30.0
     elif inactive <= 180:
         recency = 20.0
-        notes.append("No visit in 4–6 months")
+        notes.append('Нет визитов 4–6 месяцев')
     elif inactive <= 365:
         recency = 10.0
-        notes.append("At risk of churn")
+        notes.append('Риск ухода')
     else:
         recency = 0.0
-        notes.append("Lost customer (>1 year)")
+        notes.append('Ушедший клиент (более года)')
     factors["recency"] = recency
 
     # Frequency (25)
@@ -116,7 +116,7 @@ def score_vehicle(vehicle: VehicleSnapshot, *, now: datetime | None = None) -> H
         age_score = 22.0
     elif age <= 12:
         age_score = 14.0
-        notes.append("Aging vehicle — maintenance opportunities")
+        notes.append('Возрастной автомобиль — возможности обслуживания')
     else:
         age_score = 8.0
         notes.append("High-age vehicle")
@@ -134,7 +134,7 @@ def score_vehicle(vehicle: VehicleSnapshot, *, now: datetime | None = None) -> H
         notes.append("Above-average mileage")
     else:
         mile_score = 6.0
-        notes.append("High mileage — overdue services likely")
+        notes.append('Большой пробег — вероятно просрочено обслуживание')
     factors["mileage"] = mile_score
 
     # Service recency (25)
@@ -145,7 +145,7 @@ def score_vehicle(vehicle: VehicleSnapshot, *, now: datetime | None = None) -> H
     inactive = days_since(last_repair, now=now)
     if inactive is None:
         svc = 10.0
-        notes.append("No repair history on file")
+        notes.append('Истории ремонта нет')
     elif inactive <= 90:
         svc = 25.0
     elif inactive <= 180:

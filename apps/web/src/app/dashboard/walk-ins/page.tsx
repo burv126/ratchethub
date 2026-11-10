@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -83,19 +87,19 @@ function buildAiRecommendations(complaint: string, repairs: RepairHistory[]): st
 
   const tips: string[] = [...unique];
   const c = complaint.toLowerCase();
-  if (/brake/.test(c)) tips.push("Inspect pads, rotors, and fluid — common follow-up after brake noise.");
-  if (/check engine|cel|diagnostic/.test(c)) tips.push("Scan codes first; compare to prior diagnostic visits.");
-  if (/oil|maintenance/.test(c)) tips.push("Confirm interval vs last oil service mileage.");
-  if (/battery|no-?start/.test(c)) tips.push("Test battery/alternator before parts — note prior electrical work.");
-  if (/tire|vibration/.test(c)) tips.push("Check tire wear pattern, balance, and alignment history.");
-  if (/ac|a\/c|cooling/.test(c)) tips.push("Verify blower and pressures; review past AC repairs.");
-  if (/noise|engine/.test(c) && !/brake/.test(c)) tips.push("Ask when noise occurs (cold/hot/accel) before road test.");
+  if (/brake/.test(c)) tips.push("Проверьте колодки, диски и жидкость — частая причина обращения при шуме тормозов.");
+  if (/check engine|cel|diagnostic/.test(c)) tips.push("Сначала считайте коды; сравните с предыдущей диагностикой.");
+  if (/oil|maintenance/.test(c)) tips.push("Сверьте интервал с пробегом при последней замене масла.");
+  if (/battery|no-?start/.test(c)) tips.push("Проверьте аккумулятор и генератор до замены деталей; учтите прошлые работы с электрикой.");
+  if (/tire|vibration/.test(c)) tips.push("Проверьте износ шин, балансировку и историю регулировки углов установки колёс.");
+  if (/ac|a\/c|cooling/.test(c)) tips.push("Проверьте вентилятор и давление; изучите прошлые ремонты кондиционера.");
+  if (/noise|engine/.test(c) && !/brake/.test(c)) tips.push("До пробной поездки уточните условия шума: холодный или горячий двигатель, разгон.");
 
   if (tips.length === 0 && repairs.length > 0) {
-    tips.push("Review prior services below before quoting — returning vehicle.");
+    tips.push("Перед оценкой изучите предыдущие работы ниже — автомобиль уже обслуживался.");
   }
   if (tips.length === 0) {
-    tips.push("New to shop or no history yet — confirm concern and mileage, then inspect.");
+    tips.push("Автомобиль новый для автосервиса или истории пока нет — уточните жалобу и пробег, затем проведите осмотр.");
   }
   return [...new Set(tips)].slice(0, 4);
 }
@@ -196,7 +200,7 @@ function WalkInsContent() {
       start.setHours(0, 0, 0, 0);
       setVisits(await listWalkIns(undefined, start.toISOString()));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load walk-ins");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить живую очередь");
     } finally {
       setLoading(false);
     }
@@ -283,7 +287,7 @@ function WalkInsContent() {
           if (seq !== assistSeq.current) return;
           setAutoFilled(false);
           setMatch(null);
-          setVinStatus(err instanceof Error ? err.message : "VIN lookup failed");
+          setVinStatus(err instanceof Error ? err.message : "Не удалось найти VIN");
         } finally {
           if (seq === assistSeq.current) {
             setVinLooking(false);
@@ -354,7 +358,7 @@ function WalkInsContent() {
           setVin("");
           setAutoFilled(false);
           setMatch(null);
-          setVinStatus(err instanceof Error ? err.message : "Vehicle lookup failed");
+          setVinStatus(err instanceof Error ? err.message : "Не удалось найти автомобиль");
         } finally {
           if (seq === assistSeq.current) {
             setVinLooking(false);
@@ -469,15 +473,15 @@ function WalkInsContent() {
               : cleanedVin;
 
       if (submitVin.length !== 17) {
-        throw new Error("Enter a 17-character VIN, or switch to manual vehicle entry");
+        throw new Error("Введите VIN из 17 символов или переключитесь на ручной ввод");
       }
 
       if (services.length === 0) {
-        throw new Error("Add at least one active service in Service Catalog first");
+        throw new Error("Сначала добавьте хотя бы одну активную услугу в каталог");
       }
 
       if (!complaintText) {
-        throw new Error("Select at least one service request");
+        throw new Error("Выберите хотя бы одну услугу");
       }
 
       let detail = await createWalkIn({
@@ -496,15 +500,15 @@ function WalkInsContent() {
         const vehicleLabel = [year, make, model].filter(Boolean).join(" ").trim();
         detail = await convertWalkIn(detail.visit.id, {
           name: vehicleLabel
-            ? `Unknown walk-in · ${vehicleLabel}`
-            : "Unknown walk-in",
+            ? `Неизвестный посетитель · ${vehicleLabel}`
+            : "Неизвестный посетитель",
         });
       }
 
       // Schedule from the visit page: Start now or Appointment
       router.push(`/dashboard/walk-ins/${detail.visit.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start service visit");
+      setError(err instanceof Error ? err.message : "Не удалось начать визит");
       setSaving(false);
     }
   }
@@ -521,12 +525,12 @@ function WalkInsContent() {
       <div className="flex shrink-0 flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-2">
           <IconDoorOpen className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-          <h1 className="page-title">Walk-ins</h1>
+          <h1 className="page-title">Живая очередь</h1>
         </div>
         {pageView === "todays" && !loading ? (
           <span className="rounded-full bg-[var(--background)] px-3 py-1 text-[11px] font-semibold tabular-nums text-[var(--muted)] ring-1 ring-[var(--line)]">
-            {visits.length} today
-            {waitingCount > 0 ? ` · ${waitingCount} waiting` : ""}
+            {visits.length} сегодня
+            {waitingCount > 0 ? ` · ${waitingCount} ожидает` : ""}
           </span>
         ) : null}
       </div>
@@ -536,7 +540,7 @@ function WalkInsContent() {
           className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -549,27 +553,27 @@ function WalkInsContent() {
         <div
           className="surface-panel flex shrink-0 gap-1 p-1.5"
           role="tablist"
-          aria-label="Walk-in mode"
+          aria-label="Режим живой очереди"
         >
           <ModeChip
             active={pageView === "intake" && entryMode === "vin"}
             onClick={() => selectView("vin")}
-            label="Scan VIN"
-            hint="Barcode or type"
+            label="Сканировать VIN"
+            hint="Штрихкод или ввод"
             icon={<IconScanVin />}
           />
           <ModeChip
             active={pageView === "intake" && entryMode === "manual"}
             onClick={() => selectView("manual")}
-            label="No VIN"
-            hint="Plate / YMM"
+            label="Без VIN"
+            hint="Госномер / год, марка, модель"
             icon={<IconNoVin />}
           />
           <ModeChip
             active={pageView === "todays"}
             onClick={() => selectView("todays")}
-            label="Today"
-            hint="Queue"
+            label="Сегодня"
+            hint="Очередь"
             icon={<IconQueue />}
           />
         </div>
@@ -580,7 +584,7 @@ function WalkInsContent() {
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--background)] text-[var(--muted)] ring-1 ring-[var(--line)]">
                 <IconQueue />
               </span>
-              <p className="text-sm font-semibold tracking-tight">List</p>
+              <p className="text-sm font-semibold tracking-tight">Список</p>
             </header>
 
             <div className="asa-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -601,16 +605,16 @@ function WalkInsContent() {
                   <span className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--background)] text-[var(--muted)] ring-1 ring-[var(--line)]">
                     <IconQueue />
                   </span>
-                  <p className="font-display text-lg font-semibold tracking-tight">No walk-ins yet</p>
+                  <p className="font-display text-lg font-semibold tracking-tight">Визитов пока нет</p>
                   <p className="mt-1 max-w-xs text-sm text-[var(--muted)]">
-                    Check-ins from today will appear here as a live queue.
+                    Здесь появится очередь сегодняшних посетителей.
                   </p>
                   <button
                     type="button"
                     onClick={() => selectView("vin")}
                     className="btn-primary mt-5 px-4 py-2 text-xs"
                   >
-                    Start first check-in
+                    Зарегистрировать первый визит
                   </button>
                 </div>
               ) : (
@@ -635,12 +639,12 @@ function WalkInsContent() {
                               <p className="truncate text-sm font-semibold tracking-tight group-hover:text-[var(--accent)]">
                                 {servicesLine}
                               </p>
-                              <StatusPill status={v.status} />
+                              <StatusPill status={ruLabel(v.status)} />
                             </div>
                             <p className="mt-1 text-xs text-[var(--muted)]">
-                              {v.customer_id ? "Customer linked" : "Unknown walk-in"}
+                              {v.customer_id ? "Клиент привязан" : "Неизвестный посетитель"}
                               {v.arrived_at
-                                ? ` · Arrived ${new Date(v.arrived_at).toLocaleString()}`
+                                ? ` · Прибытие ${new Date(v.arrived_at).toLocaleString("ru-RU")}`
                                 : ""}
                             </p>
                           </div>
@@ -665,12 +669,12 @@ function WalkInsContent() {
               className="asa-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-5"
             >
               <SectionHeader
-                title="Vehicle"
+                title="Автомобиль"
                 titleClassName="text-[var(--accent)]"
                 description={
                   entryMode === "vin"
-                    ? "Scan a barcode or enter the 17-character VIN to decode and match."
-                    : "Use plate and/or year, make, model. A temporary VIN is assigned only when no vehicle matches."
+                    ? "Отсканируйте штрихкод или введите VIN из 17 символов для расшифровки и поиска."
+                    : "Укажите госномер и/или год, марку, модель. Временный VIN назначается только при отсутствии совпадений."
                 }
               />
 
@@ -688,7 +692,7 @@ function WalkInsContent() {
                     {vinLooking ? (
                       <span className="inline-flex items-center gap-2">
                         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--accent)]" />
-                        Looking up vehicle…
+                        Поиск автомобиля…
                       </span>
                     ) : (
                       vinStatus
@@ -700,45 +704,45 @@ function WalkInsContent() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="grid grid-cols-2 gap-3 sm:contents">
                   <Field
-                    label={`Year${autoFilled ? " · auto" : ""}`}
+                    label={`Год${autoFilled ? " · авто" : ""}`}
                     value={year}
                     onChange={setYear}
                     required
-                    placeholder={entryMode === "vin" ? "Auto from VIN" : "e.g. 2018"}
+                    placeholder={entryMode === "vin" ? "Автоматически по VIN" : "Например, 2018"}
                   />
                   <Field
-                    label={`Make${autoFilled ? " · auto" : ""}`}
+                    label={`Марка${autoFilled ? " · авто" : ""}`}
                     value={make}
                     onChange={setMake}
                     required
-                    placeholder={entryMode === "vin" ? "Auto from VIN" : "e.g. Toyota"}
+                    placeholder={entryMode === "vin" ? "Автоматически по VIN" : "Например, Toyota"}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:contents">
                   <Field
-                    label={`Model${autoFilled ? " · auto" : ""}`}
+                    label={`Модель${autoFilled ? " · авто" : ""}`}
                     value={model}
                     onChange={setModel}
                     required
-                    placeholder={entryMode === "vin" ? "Auto from VIN" : "e.g. Camry"}
+                    placeholder={entryMode === "vin" ? "Автоматически по VIN" : "Например, Camry"}
                   />
                   <Field
-                    label="License plate"
+                    label="Госномер"
                     value={plate}
                     onChange={setPlate}
-                    placeholder="Optional"
+                    placeholder="Необязательно"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:contents">
                   <Field
-                    label="Mileage"
+                    label="Пробег"
                     value={mileage}
                     onChange={setMileage}
                     required
-                    placeholder="Current odometer"
+                    placeholder="Текущий пробег"
                   />
                   <Field
-                    label="Arrival time"
+                    label="Время прибытия"
                     type="datetime-local"
                     value={arrivedAt}
                     onChange={setArrivedAt}
@@ -749,9 +753,9 @@ function WalkInsContent() {
 
               <section className="rounded-xl border border-[var(--line)] bg-[var(--background)]/55 p-4">
                 <SectionHeader
-                  title="Customer"
+                  title="Клиент"
                   titleClassName="text-[var(--accent)]"
-                  description="Name and phone are never required. Unknown walk-ins still create a guest customer."
+                  description="Имя и телефон не обязательны. Для неизвестного посетителя создаётся гостевой клиент."
                   compact
                 />
 
@@ -759,26 +763,26 @@ function WalkInsContent() {
                   <MatchOption
                     active={customerMatchMode === "existing"}
                     disabled={!matchedExisting}
-                    label="Existing customer"
+                    label="Существующий клиент"
                     description={
                       match?.customer
                         ? match.customer.name
-                        : "Appears when plate or vehicle details match"
+                        : "Появляется при совпадении госномера или данных автомобиля"
                     }
                     onClick={() => undefined}
                   />
                   <MatchOption
                     active={customerMatchMode === "unknown"}
                     disabled={matchedExisting}
-                    label="Unknown walk-in"
-                    description="Creates a guest customer for this visit"
+                    label="Неизвестный посетитель"
+                    description="Создаёт гостевого клиента для этого визита"
                     onClick={() => undefined}
                   />
                 </div>
 
                 {match?.customer && (
                   <p className="mt-3 rounded-lg bg-[var(--panel)] px-3 py-2 text-sm ring-1 ring-[var(--line)]">
-                    Linked:{" "}
+                    Связано:{" "}
                     <Link
                       href={`/dashboard/customer/${match.customer.id}`}
                       className="font-semibold text-[var(--accent)]"
@@ -795,18 +799,18 @@ function WalkInsContent() {
               {(matchLoading || match) && (
                 <section className="rounded-xl border border-[var(--line)] bg-gradient-to-br from-[var(--panel)] to-[var(--background)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                   <SectionHeader
-                    eyebrow="Intelligence"
-                    title="Vehicle match"
-                    description="History and suggestions for this check-in."
+                    eyebrow="Аналитика"
+                    title="Совпадение автомобиля"
+                    description="История и рекомендации для этого визита."
                     compact
                   />
                   {matchLoading && !match ? (
-                    <p className="mt-3 text-sm text-[var(--muted)]">Loading vehicle history…</p>
+                    <p className="mt-3 text-sm text-[var(--muted)]">Загрузка истории автомобиля…</p>
                   ) : match ? (
                     <div className="mt-3 grid gap-3 lg:grid-cols-3">
                       <div className="rounded-xl bg-[var(--panel)] p-3 ring-1 ring-[var(--line)]">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                          Vehicle history
+                          История автомобиля
                         </p>
                         <ul className="mt-2 space-y-1 text-sm">
                           <li className="font-semibold tracking-tight">
@@ -816,27 +820,27 @@ function WalkInsContent() {
                             {match.vehicle.vin}
                           </li>
                           <li className="text-xs text-[var(--muted)]">
-                            Plate {match.vehicle.license_plate ?? "—"} ·{" "}
-                            {match.vehicle.mileage.toLocaleString()} mi on file
+                            Госномер {match.vehicle.license_plate ?? "—"} ·{" "}
+                            {match.vehicle.mileage.toLocaleString("ru-RU")} миль по данным
                           </li>
                           {match.customer ? (
                             <li className="text-xs text-[var(--muted)]">
-                              Owner: {match.customer.name}
+                              Владелец: {match.customer.name}
                               {match.customer.phone ? ` · ${match.customer.phone}` : ""}
                             </li>
                           ) : (
                             <li className="text-xs text-[var(--muted)]">
-                              No customer linked to this vehicle
+                              Клиент не привязан к автомобилю
                             </li>
                           )}
                         </ul>
                       </div>
                       <div className="rounded-xl bg-[var(--panel)] p-3 ring-1 ring-[var(--line)]">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                          Previous repairs
+                          Предыдущие ремонты
                         </p>
                         {match.repairs.length === 0 ? (
-                          <p className="mt-2 text-sm text-[var(--muted)]">No prior repairs</p>
+                          <p className="mt-2 text-sm text-[var(--muted)]">Предыдущих ремонтов нет</p>
                         ) : (
                           <ul className="asa-scroll mt-2 max-h-36 space-y-2 overflow-y-auto text-sm">
                             {match.repairs.slice(0, 5).map((r) => (
@@ -845,7 +849,7 @@ function WalkInsContent() {
                                 <span className="block text-xs text-[var(--muted)]">
                                   ${Number(r.cost).toFixed(0)}
                                   {r.created_at
-                                    ? ` · ${new Date(r.created_at).toLocaleDateString()}`
+                                    ? ` · ${new Date(r.created_at).toLocaleDateString("ru-RU")}`
                                     : ""}
                                 </span>
                               </li>
@@ -855,7 +859,7 @@ function WalkInsContent() {
                       </div>
                       <div className="rounded-xl bg-[var(--accent-soft)]/50 p-3 ring-1 ring-[var(--accent)]/20">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
-                          AI recommendation
+                          Рекомендация ИИ
                         </p>
                         <ul className="mt-2 space-y-2 text-sm text-[var(--muted)]">
                           {recommendations.map((tip) => (
@@ -873,19 +877,19 @@ function WalkInsContent() {
 
               <section className="space-y-3">
                 <SectionHeader
-                  title="Service"
+                  title="Услуга"
                   titleClassName="text-[var(--accent)]"
-                  description="Choose from your Service Catalog. Tap a service to add or remove it."
+                  description="Выберите услуги из каталога. Нажмите, чтобы добавить или удалить услугу."
                   compact
                 />
                 {services.length === 0 ? (
                   <p className="rounded-xl border border-[var(--line)] bg-[var(--background)]/60 px-3.5 py-3 text-sm text-[var(--muted)]">
-                    No active services yet.{" "}
+                    Активных услуг пока нет.{" "}
                     <Link
                       href="/dashboard/settings?tab=shop"
                       className="font-semibold text-[var(--accent)] hover:underline"
                     >
-                      Add services in Service Catalog
+                      Добавьте услуги в каталог
                     </Link>
                   </p>
                 ) : (
@@ -920,10 +924,10 @@ function WalkInsContent() {
                       >
                         <option value="" disabled>
                           {services.length === 0
-                            ? "No active services — add in Service Catalog"
+                            ? "Нет активных услуг — добавьте их в каталог"
                             : index === 0
-                              ? "Select a service…"
-                              : "Additional service…"}
+                              ? "Выберите услугу…"
+                              : "Дополнительная услуга…"}
                         </option>
                         {services.map((svc) => (
                           <option key={svc.id} value={svc.name}>
@@ -937,9 +941,9 @@ function WalkInsContent() {
                           type="button"
                           onClick={() => removeComplaint(index)}
                           className="shrink-0 rounded-full border border-[var(--line)] px-3 text-sm text-[var(--muted)] transition hover:border-red-300 hover:text-red-700"
-                          aria-label={`Remove service request ${index + 1}`}
+                          aria-label={`Удалить запрос услуги ${index + 1}`}
                         >
-                          Remove
+                          Удалить
                         </button>
                       ) : null}
                     </div>
@@ -951,7 +955,7 @@ function WalkInsContent() {
                   disabled={services.length === 0}
                   className="text-sm font-semibold text-[var(--accent)] hover:underline disabled:opacity-50"
                 >
-                  + Add another request
+                  + Добавить запрос
                 </button>
               </section>
             </div>
@@ -960,10 +964,10 @@ function WalkInsContent() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-xs text-[var(--muted)]">
                   {vinLooking
-                    ? "Finishing vehicle lookup…"
+                    ? "Завершение поиска автомобиля…"
                     : match?.customer
-                      ? `Ready · ${match.customer.name}`
-                      : "Ready to open a guest visit"}
+                      ? `Готово · ${match.customer.name}`
+                      : "Можно открыть гостевой визит"}
                 </p>
                 <button
                   type="submit"
@@ -971,7 +975,7 @@ function WalkInsContent() {
                   className="btn-primary inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-sm shadow-[0_10px_24px_-14px_rgba(240,90,36,0.8)] disabled:opacity-60"
                 >
                   {!saving ? <IconWrench className="h-3.5 w-3.5" /> : null}
-                  {saving ? "Starting…" : "Start"}
+                  {saving ? "Запуск…" : "Начать"}
                 </button>
               </div>
             </div>
@@ -1146,7 +1150,7 @@ function StatusPill({ status }: { status: string }) {
     <span
       className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ring-1 ${tone}`}
     >
-      {status.replace(/_/g, " ")}
+      {ruLabel(status)}
     </span>
   );
 }

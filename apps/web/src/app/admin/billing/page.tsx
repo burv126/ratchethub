@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { useCallback, useEffect, useState } from "react";
 import { AdminShell, LiveBadge, Panel, Stat } from "@/components/admin/AdminShell";
@@ -15,9 +19,9 @@ const POLL_MS = 3000;
 type BillingTab = "overview" | "failed" | "plans";
 
 const TABS: { id: BillingTab; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "failed", label: "Failed payments" },
-  { id: "plans", label: "Plans" },
+  { id: "overview", label: "Обзор" },
+  { id: "failed", label: "Неудачные платежи" },
+  { id: "plans", label: "Тарифы" },
 ];
 
 export default function AdminBillingPage() {
@@ -61,7 +65,7 @@ function BillingBody({ accessToken }: { accessToken: string }) {
       } catch (err) {
         if (!quiet) {
           setLive(false);
-          setError(err instanceof Error ? err.message : "Failed to load billing");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить оплату");
         }
       } finally {
         if (!quiet) setBusy(false);
@@ -99,8 +103,8 @@ function BillingBody({ accessToken }: { accessToken: string }) {
     return stop;
   }, [accessToken, applyData]);
 
-  if (error && !data) return <p className="text-sm text-red-700">{error}</p>;
-  if (!data) return <p className="text-sm text-[var(--muted)]">{busy ? "Loading…" : "No data"}</p>;
+  if (error && !data) return <p className="text-sm text-red-700">{ruError(error)}</p>;
+  if (!data) return <p className="text-sm text-[var(--muted)]">{busy ? "Загрузка…" : "Нет данных"}</p>;
 
   const revenue = data.revenue_summary ?? {
     subscriptions: data.summary.subscriptions,
@@ -129,14 +133,14 @@ function BillingBody({ accessToken }: { accessToken: string }) {
       }
     >
       <div className="flex shrink-0 flex-wrap items-start justify-between gap-3">
-        <h1 className="page-title">Billing</h1>
+        <h1 className="page-title">Оплата</h1>
         <LiveBadge live={live} />
       </div>
 
       <div
         className="inline-flex max-w-full shrink-0 flex-wrap gap-0.5 rounded-full border border-black/8 bg-white/80 p-0.5 shadow-[var(--shadow-soft)] backdrop-blur-sm"
         role="tablist"
-        aria-label="Billing sections"
+        aria-label="Разделы оплаты"
       >
         {TABS.map((t) => {
           const badge = t.id === "failed" && failedCount > 0 ? failedCount : null;
@@ -173,20 +177,20 @@ function BillingBody({ accessToken }: { accessToken: string }) {
           <section className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="MRR" value={formatCents(revenue.mrr_cents)} />
             <Stat label="ARR" value={formatCents(revenue.arr_cents)} />
-            <Stat label="Paid active" value={String(revenue.paid_active)} />
-            <Stat label="Failed payments" value={String(revenue.failed_payments)} />
+            <Stat label="Активные платные" value={String(revenue.paid_active)} />
+            <Stat label="Неудачные платежи" value={String(revenue.failed_payments)} />
           </section>
 
           <section className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat label="Subscriptions" value={String(revenue.subscriptions)} />
-            <Stat label="Active" value={String(revenue.active)} />
-            <Stat label="Trialing" value={String(revenue.trialing)} />
-            <Stat label="With Stripe" value={String(revenue.with_stripe)} />
+            <Stat label="Подписки" value={String(revenue.subscriptions)} />
+            <Stat label="Активно" value={String(revenue.active)} />
+            <Stat label="Пробный период" value={String(revenue.trialing)} />
+            <Stat label="Со Stripe" value={String(revenue.with_stripe)} />
           </section>
 
-          <Panel title="Payment status">
+          <Panel title="Статус оплаты">
             {statusEntries.length === 0 ? (
-              <p className="px-5 py-6 text-sm text-[var(--muted)]">No payment status data yet.</p>
+              <p className="px-5 py-6 text-sm text-[var(--muted)]">Данных о статусе оплаты пока нет.</p>
             ) : (
               <div className="flex flex-wrap gap-2 px-5 py-4">
                 {statusEntries.map(([status, count]) => (
@@ -194,7 +198,7 @@ function BillingBody({ accessToken }: { accessToken: string }) {
                     key={status}
                     className="rounded-md border border-[var(--line)] px-3 py-2 text-sm"
                   >
-                    <span className={`capitalize ${statusTone(status)}`}>{status}</span>
+                    <span className={`capitalize ${statusTone(status)}`}>{ruLabel(status)}</span>
                     <span className="ml-2 font-semibold tabular-nums">{count}</span>
                   </div>
                 ))}
@@ -202,17 +206,17 @@ function BillingBody({ accessToken }: { accessToken: string }) {
             )}
           </Panel>
 
-          <Panel title={`Subscriptions (${subscriptions.length})`}>
+          <Panel title={`Подписки (${subscriptions.length})`}>
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-[var(--line)] bg-[var(--background)] text-[var(--muted)]">
                   <tr>
-                    <th className="px-5 py-2 font-medium">Shop</th>
-                    <th className="px-5 py-2 font-medium">Plan</th>
-                    <th className="px-5 py-2 font-medium">Payment status</th>
-                    <th className="px-5 py-2 font-medium">Price</th>
+                    <th className="px-5 py-2 font-medium">Автосервис</th>
+                    <th className="px-5 py-2 font-medium">Тариф</th>
+                    <th className="px-5 py-2 font-medium">Статус оплаты</th>
+                    <th className="px-5 py-2 font-medium">Цена</th>
                     <th className="px-5 py-2 font-medium">Stripe</th>
-                    <th className="px-5 py-2 font-medium">Period end</th>
+                    <th className="px-5 py-2 font-medium">Конец периода</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -234,9 +238,9 @@ function BillingBody({ accessToken }: { accessToken: string }) {
                       </td>
                       <td className="px-5 py-3 text-[var(--muted)]">
                         {p.current_period_end
-                          ? new Date(p.current_period_end).toLocaleDateString()
+                          ? new Date(p.current_period_end).toLocaleDateString("ru-RU")
                           : p.trial_ends_at
-                            ? `trial ${new Date(p.trial_ends_at).toLocaleDateString()}`
+                            ? `пробный период ${new Date(p.trial_ends_at).toLocaleDateString("ru-RU")}`
                             : "—"}
                       </td>
                     </tr>
@@ -244,7 +248,7 @@ function BillingBody({ accessToken }: { accessToken: string }) {
                   {subscriptions.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-5 py-8 text-center text-[var(--muted)]">
-                        No subscriptions yet.
+                        Подписок пока нет.
                       </td>
                     </tr>
                   )}
@@ -258,17 +262,17 @@ function BillingBody({ accessToken }: { accessToken: string }) {
       {tab === "failed" && (
         <Panel
           className="flex min-h-0 flex-1 flex-col"
-          title={`Failed payments (${failed.length})`}
+          title={`Неудачные платежи (${failed.length})`}
         >
           <div className="asa-scroll min-h-0 flex-1 overflow-auto overscroll-contain">
             <table className="min-w-full text-left text-sm">
               <thead className="sticky top-0 z-10 border-b border-[var(--line)] bg-[var(--background)] text-[var(--muted)]">
                 <tr>
-                  <th className="px-5 py-2 font-medium">Shop</th>
-                  <th className="px-5 py-2 font-medium">Plan</th>
-                  <th className="px-5 py-2 font-medium">Status</th>
-                  <th className="px-5 py-2 font-medium">Price</th>
-                  <th className="px-5 py-2 font-medium">Updated</th>
+                  <th className="px-5 py-2 font-medium">Автосервис</th>
+                  <th className="px-5 py-2 font-medium">Тариф</th>
+                  <th className="px-5 py-2 font-medium">Статус</th>
+                  <th className="px-5 py-2 font-medium">Цена</th>
+                  <th className="px-5 py-2 font-medium">Обновлено</th>
                 </tr>
               </thead>
               <tbody>
@@ -279,17 +283,17 @@ function BillingBody({ accessToken }: { accessToken: string }) {
                       <div className="font-mono text-xs text-[var(--muted)]">{p.shop_slug}</div>
                     </td>
                     <td className="px-5 py-3">{p.plan_name ?? "—"}</td>
-                    <td className={`px-5 py-3 capitalize ${statusTone(p.status)}`}>{p.status}</td>
+                    <td className={`px-5 py-3 capitalize ${statusTone(p.status)}`}>{ruLabel(p.status)}</td>
                     <td className="px-5 py-3">{formatCents(p.price_cents_monthly)}</td>
                     <td className="px-5 py-3 text-[var(--muted)]">
-                      {p.updated_at ? new Date(p.updated_at).toLocaleString() : "—"}
+                      {p.updated_at ? new Date(p.updated_at).toLocaleString("ru-RU") : "—"}
                     </td>
                   </tr>
                 ))}
                 {failed.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-5 py-8 text-center text-[var(--muted)]">
-                      No failed payments.
+                      Неудачных платежей нет.
                     </td>
                   </tr>
                 )}
@@ -301,23 +305,23 @@ function BillingBody({ accessToken }: { accessToken: string }) {
 
       {tab === "plans" && (
         <div className="space-y-4" role="tabpanel">
-          <Panel title="Active plans">
+          <Panel title="Активные тарифы">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-[var(--line)] bg-[var(--background)] text-[var(--muted)]">
                   <tr>
-                    <th className="px-5 py-2 font-medium">Plan</th>
-                    <th className="px-5 py-2 font-medium">Price</th>
-                    <th className="px-5 py-2 font-medium">Active subscribers</th>
-                    <th className="px-5 py-2 font-medium">Plan MRR</th>
-                    <th className="px-5 py-2 font-medium">AI / mo</th>
-                    <th className="px-5 py-2 font-medium">SMS / mo</th>
+                    <th className="px-5 py-2 font-medium">Тариф</th>
+                    <th className="px-5 py-2 font-medium">Цена</th>
+                    <th className="px-5 py-2 font-medium">Активные подписчики</th>
+                    <th className="px-5 py-2 font-medium">Ежемесячная выручка по тарифу</th>
+                    <th className="px-5 py-2 font-medium">ИИ / мес.</th>
+                    <th className="px-5 py-2 font-medium">SMS / мес.</th>
                   </tr>
                 </thead>
                 <tbody>
                   {activePlans.map((p) => (
                     <tr key={p.id} className="border-b border-[var(--line)]">
-                      <td className="px-5 py-3 font-medium">{p.name}</td>
+                      <td className="px-5 py-3 font-medium">{ruLabel(p.name)}</td>
                       <td className="px-5 py-3">{formatCents(p.price_cents_monthly)}</td>
                       <td className="px-5 py-3">{p.active_subscribers}</td>
                       <td className="px-5 py-3">{formatCents(p.mrr_cents)}</td>
@@ -328,7 +332,7 @@ function BillingBody({ accessToken }: { accessToken: string }) {
                   {activePlans.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-5 py-8 text-center text-[var(--muted)]">
-                        No active plan subscriptions yet.
+                        Активных подписок пока нет.
                       </td>
                     </tr>
                   )}
@@ -337,22 +341,22 @@ function BillingBody({ accessToken }: { accessToken: string }) {
             </div>
           </Panel>
 
-          <Panel title="All plans">
+          <Panel title="Все тарифы">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-[var(--line)] bg-[var(--background)] text-[var(--muted)]">
                   <tr>
-                    <th className="px-5 py-2 font-medium">Plan</th>
-                    <th className="px-5 py-2 font-medium">Price</th>
-                    <th className="px-5 py-2 font-medium">AI / mo</th>
-                    <th className="px-5 py-2 font-medium">SMS / mo</th>
-                    <th className="px-5 py-2 font-medium">Seats</th>
+                    <th className="px-5 py-2 font-medium">Тариф</th>
+                    <th className="px-5 py-2 font-medium">Цена</th>
+                    <th className="px-5 py-2 font-medium">ИИ / мес.</th>
+                    <th className="px-5 py-2 font-medium">SMS / мес.</th>
+                    <th className="px-5 py-2 font-medium">Места</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.plans.map((p) => (
                     <tr key={p.id} className="border-b border-[var(--line)]">
-                      <td className="px-5 py-3 font-medium">{p.name}</td>
+                      <td className="px-5 py-3 font-medium">{ruLabel(p.name)}</td>
                       <td className="px-5 py-3">{formatCents(p.price_cents_monthly)}</td>
                       <td className="px-5 py-3">{p.ai_calls_monthly}</td>
                       <td className="px-5 py-3">{p.sms_monthly}</td>

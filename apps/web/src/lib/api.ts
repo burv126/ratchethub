@@ -1,3 +1,5 @@
+
+import { readApiError } from "@/lib/ru-errors";
 import { getLocalTimezone } from "@/lib/timezone";
 
 export type UserRole = "owner" | "staff" | "ai_agent";
@@ -421,43 +423,7 @@ function mapTokenResponse(data: Record<string, unknown>): AuthSession {
 }
 
 async function parseError(res: Response): Promise<string> {
-  try {
-    const body = await res.json();
-    if (typeof body.detail === "string") return body.detail;
-    if (body.detail && typeof body.detail === "object" && !Array.isArray(body.detail)) {
-      const message = (body.detail as { message?: unknown }).message;
-      if (typeof message === "string" && message) return message;
-    }
-    if (Array.isArray(body.detail)) {
-      return (
-        body.detail
-          .map((d: { loc?: unknown[]; msg?: string; type?: string }) => {
-            const field = Array.isArray(d.loc) ? String(d.loc[d.loc.length - 1] ?? "") : "";
-            if (field === "shop_name") {
-              return "Enter your shop name.";
-            }
-            if (field === "shop_slug") {
-              return "Shop could not be identified. Check the shop name.";
-            }
-            if (field === "owner_phone") {
-              return "Enter a valid phone number.";
-            }
-            if (field === "owner_email") {
-              return "Enter a valid email address.";
-            }
-            if (field === "password") {
-              return "Password must be at least 8 characters.";
-            }
-            return d?.msg;
-          })
-          .filter(Boolean)
-          .join("; ") || res.statusText
-      );
-    }
-    return res.statusText || "Request failed";
-  } catch {
-    return res.statusText || "Request failed";
-  }
+  return readApiError(res);
 }
 
 async function parseAdminLoginError(res: Response): Promise<Error> {
@@ -468,7 +434,7 @@ async function parseAdminLoginError(res: Response): Promise<Error> {
     body = {};
   }
   const detail = body.detail;
-  let message = res.statusText || "Login failed";
+  let message = res.statusText || "Не удалось войти";
   let retryAfter: number | null = null;
   if (typeof detail === "string") {
     message = detail;
@@ -486,7 +452,7 @@ async function parseAdminLoginError(res: Response): Promise<Error> {
   if (res.status === 429 || (retryAfter != null && retryAfter > 0)) {
     return new AdminLoginLockoutError(message, retryAfter ?? 600);
   }
-  return new Error(message || "Login failed");
+  return new Error(message || "Не удалось войти");
 }
 
 export async function sendOtp(input: {
@@ -569,7 +535,7 @@ export async function registerShop(input: {
       });
     } catch {
       throw new Error(
-        `Cannot reach API at ${apiUrl}. Start the API (port 8000), then try again.`,
+        `Нет связи с API по адресу ${apiUrl}. Запустите API (порт 8000) и повторите попытку.`,
       );
     }
   }
@@ -585,7 +551,7 @@ export async function registerShop(input: {
 export class MfaRequiredError extends Error {
   mfaToken: string;
   constructor(mfaToken: string) {
-    super("MFA required");
+    super("Требуется двухфакторная аутентификация");
     this.name = "MfaRequiredError";
     this.mfaToken = mfaToken;
   }
@@ -620,7 +586,7 @@ export async function login(input: {
       }),
     });
   } catch {
-    throw new Error(`Cannot reach API at ${apiUrl}. Start the API (port 8000), then try again.`);
+    throw new Error(`Нет связи с API по адресу ${apiUrl}. Запустите API (порт 8000) и повторите попытку.`);
   }
   if (!res.ok) throw new Error(await parseError(res));
   const data = await res.json();
@@ -646,7 +612,7 @@ export async function adminLogin(input: {
       }),
     });
   } catch {
-    throw new Error(`Cannot reach API at ${apiUrl}. Start the API (port 8000), then try again.`);
+    throw new Error(`Нет связи с API по адресу ${apiUrl}. Запустите API (порт 8000) и повторите попытку.`);
   }
   if (!res.ok) throw await parseAdminLoginError(res);
   const data = await res.json();
@@ -693,19 +659,19 @@ export async function fetchMe(accessToken: string): Promise<MeResponse> {
 }
 
 export const ROLE_LABELS: Record<SessionRole, string> = {
-  owner: "Owner",
-  staff: "Staff",
-  ai_agent: "AI Agent",
-  platform_admin: "Platform Admin",
+  owner: "Владелец",
+  staff: "Сотрудник",
+  ai_agent: "ИИ-агент",
+  platform_admin: "Администратор платформы",
 };
 
 export const CAPABILITY_LABELS: Record<StaffCapability, string> = {
-  customer_management: "Customer Records",
-  vehicle_management: "Vehicle Records",
-  appointment_management: "Appointments",
-  inspection_input: "Inspection",
-  estimate_creation: "Estimates",
-  repair_status_update: "Repair Updates",
-  customer_communication: "Calls & Messages",
-  payment_handling: "Payments",
+  customer_management: "Данные клиентов",
+  vehicle_management: "Данные автомобилей",
+  appointment_management: "Записи",
+  inspection_input: "Осмотр",
+  estimate_creation: "Сметы",
+  repair_status_update: "Обновления ремонта",
+  customer_communication: "Звонки и сообщения",
+  payment_handling: "Платежи",
 };

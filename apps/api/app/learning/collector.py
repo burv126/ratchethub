@@ -57,6 +57,6 @@ class LearningCollector:
             success=success,
             workflow_run_id=getattr(run, "id", None),
             correlation_id=getattr(run, "correlation_id", None),
-            notes=f"Workflow run status={status_val}",
+            notes=f'Статус запуска процесса: {status_val}',
             metadata={"workflow_name": getattr(run, "workflow_name", None)},
         )

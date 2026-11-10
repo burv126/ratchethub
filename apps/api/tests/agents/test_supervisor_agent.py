@@ -43,7 +43,7 @@ async def test_escalate_on_emergency_and_errors(context):
     )
     assert result.data.escalate
     assert result.data.status == "escalated"
-    assert "Human takeover" in result.data.action_items[0]
+    assert 'участие сотрудника' in result.data.action_items[0]
     assert result.data.escalation_reason
 
 

@@ -33,7 +33,7 @@ def _format_appt_when(iso_start: str | None) -> str | None:
         else:
             dt = dt.astimezone(shop_tz)
         # Keep a concrete calendar cue for SMS (weekday + month day).
-        return dt.strftime("%a %b %d at %I:%M %p").replace(" 0", " ")
+        return f"{dt:%d.%m.%Y} в {dt:%H:%M}"
     except (ValueError, TypeError):
         return None
 
@@ -137,15 +137,14 @@ def _service_type_or_time_reschedule_draft(
         if _mentions_time_change_with_service(last_customer):
             who = f"{address_name}, " if address_name and is_first_reply else ""
             cur = current_service or service_name
-            svc_bit = f" instead of {cur}" if cur else ""
+            svc_bit = f' вместо {cur}' if cur else ""
             ask = (
-                f"{who}sure — which service{svc_bit}, "
-                "and what day and time work for you?"
+                f'{who}конечно — какая услуга{svc_bit}, какие день и время вам удобны?'
             )
             body = f"{greeting}{ask}" if is_first_reply and greeting else ask
             return ReplyDraft(
                 body=body,
-                follow_up_question="Which service and new day/time?",
+                follow_up_question='Какая услуга и новые день и время вам нужны?',
             )
         ask = counselor.ask_replacement_service(
             customer_name=address_name if is_first_reply else None,
@@ -154,17 +153,16 @@ def _service_type_or_time_reschedule_draft(
         body = f"{greeting}{ask}" if is_first_reply and greeting else ask
         return ReplyDraft(
             body=body,
-            follow_up_question="Which service instead?",
+            follow_up_question='Какую услугу выбрать вместо текущей?',
         )
     if counselor.looks_like_reschedule_desire(last_customer):
         existing = (schedule_bit or "").strip()
         if existing:
             return ReplyDraft(
                 body=(
-                    f"{greeting}no problem, we can change it. "
-                    f"{existing} What new day/time works?"
+                    f'{greeting}конечно, перенесём запись. {existing} Какие новые день и время вам удобны?'
                 ),
-                follow_up_question="New preferred day/time?",
+                follow_up_question='Какие новые день и время вам удобны?',
             )
         return ReplyDraft(
             body=counselor.summarize_reschedule_confirm(
@@ -172,7 +170,7 @@ def _service_type_or_time_reschedule_draft(
                 service_name=service_name,
                 when=None,
             ),
-            follow_up_question="New preferred day/time?",
+            follow_up_question='Какие новые день и время вам удобны?',
         )
     return None
 
@@ -184,9 +182,9 @@ def _next_appointment_bit(upcoming: list[dict]) -> str:
     when = _format_appt_when(appt.get("start"))
     service = appt.get("service_name")
     if when and service:
-        return f" your {service} is on {when}."
+        return f' ваша запись на {service} — {when}.'
     if when:
-        return f" you've got an appointment on {when}."
+        return f' ваша запись — {when}.'
     return ""
 
 
@@ -223,12 +221,11 @@ class ContextualReplyGenerator:
             reason = (
                 pipeline.supervisor.escalation_reason
                 if pipeline.supervisor
-                else "needs human help"
+                else 'нужна помощь сотрудника'
             )
             return ReplyDraft(
                 body=(
-                    f"{greeting}thanks for reaching out — someone from the shop "
-                    "will text you back shortly."
+                    f'{greeting}спасибо за обращение — сотрудник автосервиса скоро вам ответит.'
                 ),
                 send=True,
                 reason=f"escalated: {reason}",
@@ -263,7 +260,7 @@ class ContextualReplyGenerator:
                 body=counselor.offer_service_candidates(
                     candidates, customer_name=address_name
                 ),
-                follow_up_question="Which service?",
+                follow_up_question='Какая услуга вам нужна?',
             )
 
         last_customer = next(
@@ -306,7 +303,7 @@ class ContextualReplyGenerator:
             body = f"{greeting}{ask}" if is_first_reply else ask
             return ReplyDraft(
                 body=body,
-                follow_up_question="What service do you need?",
+                follow_up_question='Какая услуга вам нужна?',
             )
 
         # Misclassified BOOK that is actually a reschedule desire.
@@ -354,7 +351,7 @@ class ContextualReplyGenerator:
             body = f"{greeting}{ask}" if is_first_reply else ask
             return ReplyDraft(
                 body=body,
-                follow_up_question="What service do you need?",
+                follow_up_question='Какая услуга вам нужна?',
             )
 
         # Preferred day/time rejected by scheduling (closed day, full slot, etc.)
@@ -391,11 +388,11 @@ class ContextualReplyGenerator:
                 )
             )
             follow = (
-                "What other day works?"
+                'Какой другой день вам удобен?'
                 if aspect == "date"
-                else "What other time works?"
+                else 'Какое другое время вам удобно?'
                 if aspect == "time"
-                else "What other day or time works?"
+                else 'Какие другие день или время вам удобны?'
             )
             return ReplyDraft(
                 body=counselor.time_unavailable(
@@ -434,12 +431,12 @@ class ContextualReplyGenerator:
                     limit=4,
                 )
                 body = body.replace(
-                    "Want the first one, or a different time?",
-                    "Want the first one? Reply yes — or tell me a better day/time.",
+                    'Выбрать первый вариант или другое время?',
+                    'Выбрать первый вариант? Ответьте YES или укажите удобные день и время.',
                 )
                 return ReplyDraft(
                     body=body,
-                    follow_up_question="Preferred day/time for your appointment?",
+                    follow_up_question='Какие день и время вам удобны для записи?',
                 )
             if entities.get("needs_date") and not entities.get("needs_time"):
                 return ReplyDraft(
@@ -448,7 +445,7 @@ class ContextualReplyGenerator:
                         service_name=service_name,
                         known_time=preferred_partial,
                     ),
-                    follow_up_question="Preferred day for your appointment?",
+                    follow_up_question='Какой день вам удобен для записи?',
                 )
             known_day = (
                 preferred_partial
@@ -462,9 +459,9 @@ class ContextualReplyGenerator:
                     known_day=known_day,
                 ),
                 follow_up_question=(
-                    "Preferred time for your appointment?"
+                    'Какое время вам удобно для записи?'
                     if known_day
-                    else "Preferred day/time for your appointment?"
+                    else 'Какие день и время вам удобны для записи?'
                 ),
             )
 
@@ -489,17 +486,16 @@ class ContextualReplyGenerator:
                         body=counselor.ask_service(
                             customer_name=address_name
                         ),
-                        follow_up_question="What service do you need?",
+                        follow_up_question='Какая услуга вам нужна?',
                     )
                 return ReplyDraft(
                     body=(
-                        f"{greeting}got it — need to book, change, or cancel? "
-                        "Just tell me which."
+                        f'{greeting}понятно — хотите записаться, перенести или отменить визит?'
                     ),
-                    follow_up_question="Need to book, change, or cancel?",
+                    follow_up_question='Записать, перенести или отменить визит?',
                 )
             return ReplyDraft(
-                body=f"{greeting}got it. {memory.pending_question}",
+                body=f'{greeting}понятно. {memory.pending_question}',
                 follow_up_question=memory.pending_question,
             )
 
@@ -520,11 +516,11 @@ class ContextualReplyGenerator:
                 if aspect not in {"date", "time", "both"}:
                     aspect = "both"
                 follow = (
-                    "What other day works?"
+                    'Какой другой день вам удобен?'
                     if aspect == "date"
-                    else "What other time works?"
+                    else 'Какое другое время вам удобно?'
                     if aspect == "time"
-                    else "What other day or time works?"
+                    else 'Какие другие день или время вам удобны?'
                 )
                 return ReplyDraft(
                     body=counselor.time_unavailable(
@@ -578,7 +574,7 @@ class ContextualReplyGenerator:
                         service_name=service_name,
                         when=pending_when,
                     ),
-                    follow_up_question="Shall I book that for you?",
+                    follow_up_question='Записать вас?',
                 )
             # Availability ask → list openings. Booking → ask when they want to come.
             if intent == CustomerIntent.CHECK_AVAILABILITY:
@@ -594,29 +590,25 @@ class ContextualReplyGenerator:
                         limit=4,
                     )
                     body = body.replace(
-                        "Want the first one, or a different time?",
-                        "Want the first one? Reply yes — or tell me a better day/time.",
+                        'Выбрать первый вариант или другое время?',
+                        'Выбрать первый вариант? Ответьте YES или укажите удобные день и время.',
                     )
                     return ReplyDraft(
                         body=body,
-                        follow_up_question="Preferred day/time for your appointment?",
+                        follow_up_question='Какие день и время вам удобны для записи?',
                     )
                 if schedule_bit:
                     return ReplyDraft(
                         body=(
-                            f"{greeting}{schedule_bit.strip()} "
-                            f"Want a different time"
-                            f"{' for ' + service_name if service_name else ''}, or keep that one?"
+                            f"{greeting}{schedule_bit.strip()} Выбрать другое время{(' for ' + service_name if service_name else '')} или оставить текущее?"
                         ),
-                        follow_up_question="Keep existing appointment or pick a new time?",
+                        follow_up_question='Оставить текущую запись или выбрать новое время?',
                     )
                 return ReplyDraft(
                     body=(
-                        f"{greeting}I'm not seeing openings"
-                        f"{' for ' + service_name if service_name else ''} in the next week. "
-                        "Want me to check another day?"
+                        f"{greeting}на ближайшую неделю свободного времени{(' for ' + service_name if service_name else '')} не вижу. Проверить другой день?"
                     ),
-                    follow_up_question="Different day range?",
+                    follow_up_question='Другой диапазон дат?',
                 )
             known_clock = _parse_dt(entities.get("preferred_start")) or _parse_dt(
                 sched_meta.get("preferred_start")
@@ -633,13 +625,13 @@ class ContextualReplyGenerator:
                         service_name=service_name,
                         known_time=known_clock,
                     ),
-                    follow_up_question="Preferred day for your appointment?",
+                    follow_up_question='Какой день вам удобен для записи?',
                 )
             return ReplyDraft(
                 body=counselor.ask_time(
                     customer_name=address_name, service_name=service_name
                 ),
-                follow_up_question="What day and time work best?",
+                follow_up_question='Какие день и время вам удобны?',
             )
 
         if intent == CustomerIntent.RESCHEDULE:
@@ -669,7 +661,7 @@ class ContextualReplyGenerator:
                         customer_name=address_name,
                         current_service=current or service_name,
                     ),
-                    follow_up_question="Which service instead?",
+                    follow_up_question='Какую услугу выбрать вместо текущей?',
                 )
             if not service_name and upcoming:
                 service_name = upcoming[0].get("service_name") or service_name
@@ -689,10 +681,9 @@ class ContextualReplyGenerator:
             ):
                 return ReplyDraft(
                     body=(
-                        f"{greeting}I'm not seeing an upcoming appointment to move. "
-                        "Want me to book a new visit instead?"
+                        f'{greeting}будущей записи для переноса не вижу. Создать новую запись?'
                     ),
-                    follow_up_question="Book a visit, or something else?",
+                    follow_up_question='Записать вас или помочь с другим вопросом?',
                 )
             if (
                 sched_message == "preferred_time_unavailable"
@@ -705,11 +696,11 @@ class ContextualReplyGenerator:
                 if aspect not in {"date", "time", "both"}:
                     aspect = "both"
                 follow = (
-                    "What other day works?"
+                    'Какой другой день вам удобен?'
                     if aspect == "date"
-                    else "What other time works?"
+                    else 'Какое другое время вам удобно?'
                     if aspect == "time"
-                    else "What other day or time works?"
+                    else 'Какие другие день или время вам удобны?'
                 )
                 return ReplyDraft(
                     body=counselor.time_unavailable(
@@ -739,7 +730,7 @@ class ContextualReplyGenerator:
                         service_name=service_name,
                         when=pending_when,
                     ),
-                    follow_up_question="Should I move it?",
+                    follow_up_question='Перенести запись?',
                 )
             preferred_partial = _parse_dt(entities.get("preferred_start"))
             if entities.get("needs_date") and not entities.get("needs_time"):
@@ -749,7 +740,7 @@ class ContextualReplyGenerator:
                         service_name=service_name,
                         known_time=preferred_partial,
                     ),
-                    follow_up_question="Preferred day for your appointment?",
+                    follow_up_question='Какой день вам удобен для записи?',
                 )
             if entities.get("needs_time") or entities.get("vague_time"):
                 known_day = (
@@ -764,9 +755,9 @@ class ContextualReplyGenerator:
                         known_day=known_day,
                     ),
                     follow_up_question=(
-                        "Preferred time for your appointment?"
+                        'Какое время вам удобно для записи?'
                         if known_day
-                        else "New preferred day/time?"
+                        else 'Какие новые день и время вам удобны?'
                     ),
                 )
             # Soft day / earliest preference → list openings. Bare "change time" → ask.
@@ -782,17 +773,16 @@ class ContextualReplyGenerator:
                     limit=4,
                 )
                 return ReplyDraft(
-                    body=f"No problem, we can change it. {body}",
-                    follow_up_question="New preferred day/time?",
+                    body=f'Конечно, перенесём запись. {body}',
+                    follow_up_question='Какие новые день и время вам удобны?',
                 )
             existing = schedule_bit.strip()
             if existing:
                 return ReplyDraft(
                     body=(
-                        f"{greeting}no problem, we can change it. "
-                        f"{existing} What new day/time works?"
+                        f'{greeting}конечно, перенесём запись. {existing} Какие новые день и время вам удобны?'
                     ),
-                    follow_up_question="New preferred day/time?",
+                    follow_up_question='Какие новые день и время вам удобны?',
                 )
             return ReplyDraft(
                 body=counselor.summarize_reschedule_confirm(
@@ -800,7 +790,7 @@ class ContextualReplyGenerator:
                     service_name=service_name,
                     when=None,
                 ),
-                follow_up_question="New preferred day/time?",
+                follow_up_question='Какие новые день и время вам удобны?',
             )
 
         if intent == CustomerIntent.CANCEL_APPOINTMENT:
@@ -818,10 +808,9 @@ class ContextualReplyGenerator:
             ):
                 return ReplyDraft(
                     body=(
-                        f"{greeting}I'm not seeing an upcoming appointment on our "
-                        "schedule. Want me to book a new visit instead?"
+                        f'{greeting}будущей записи в расписании не вижу. Создать новую?'
                     ),
-                    follow_up_question="Book a visit, or something else?",
+                    follow_up_question='Записать вас или помочь с другим вопросом?',
                 )
             existing = schedule_bit.strip()
             when = None
@@ -838,7 +827,7 @@ class ContextualReplyGenerator:
                 body = f"{greeting}{existing} {body}"
             return ReplyDraft(
                 body=body,
-                follow_up_question="Confirm cancellation?",
+                follow_up_question='Подтвердите отмену?',
             )
 
         if intent == CustomerIntent.ASK_REPAIR_STATUS:
@@ -846,63 +835,54 @@ class ContextualReplyGenerator:
             if status_hint:
                 return ReplyDraft(
                     body=(
-                        f"{greeting}{status_hint} "
-                        "I'm checking on your vehicle — "
-                        "someone from the shop will text you an update shortly."
+                        f'{greeting}{status_hint} Уточняю состояние автомобиля — сотрудник скоро вам напишет.'
                     ),
-                    follow_up_question="RO number or vehicle (year/make/model)?",
+                    follow_up_question='Номер заказ-наряда или автомобиль (год/марка/модель)?',
                 )
             return ReplyDraft(
                 body=(
-                    f"{greeting}I'm checking on your vehicle. "
-                    "Someone from the shop will text an update shortly — "
-                    "or send your RO number / year-make-model and I'll dig in faster."
+                    f'{greeting}уточняю состояние автомобиля. Сотрудник скоро напишет вам — отправьте номер заказ-наряда или год, марку и модель для ускорения поиска.'
                 ),
-                follow_up_question="RO number or vehicle (year/make/model)?",
+                follow_up_question='Номер заказ-наряда или автомобиль (год/марка/модель)?',
             )
 
         if intent == CustomerIntent.PRICE_QUESTION:
             if service_name and service_price is not None:
                 return ReplyDraft(
                     body=(
-                        f"{greeting}{service_name} usually runs about ${service_price}. "
-                        "Want me to book that?"
+                        f'{greeting}{service_name} обычно стоит около ${service_price}. Записать вас?'
                     ),
-                    follow_up_question="Book this service?",
+                    follow_up_question='Записать на эту услугу?',
                 )
             if service_name:
                 return ReplyDraft(
                     body=(
-                        f"{greeting}for {service_name}, a service advisor will confirm "
-                        "the exact quote. Want me to get you on the schedule in the meantime?"
+                        f'{greeting}точную стоимость {service_name} подтвердит консультант. Пока записать вас?'
                     ),
-                    follow_up_question="Book this service?",
+                    follow_up_question='Записать на эту услугу?',
                 )
             return ReplyDraft(
                 body=counselor.ask_service(customer_name=address_name),
-                follow_up_question="Which service do you need priced?",
+                follow_up_question='Для какой услуги нужна стоимость?',
             )
 
         if intent == CustomerIntent.MAINTENANCE_QUESTION:
             if service_name:
                 return ReplyDraft(
-                    body=f"{greeting}yep, we do {service_name}. Want me to book a visit?",
-                    follow_up_question=f"Book {service_name}?",
+                    body=f'{greeting}да, мы выполняем {service_name}. Записать вас?',
+                    follow_up_question=f'Записать на {service_name}?',
                 )
             return ReplyDraft(
                 body=(
-                    f"{greeting}we usually recommend oil changes every 5,000 miles "
-                    "and brake checks around 20,000. Want me to book a visit?"
+                    f'{greeting}обычно мы рекомендуем менять масло каждые 5 000 миль, а тормоза проверять примерно каждые 20 000. Записать вас?'
                 ),
-                follow_up_question="Book a maintenance appointment?",
+                follow_up_question='Записать на обслуживание?',
             )
 
         if intent == CustomerIntent.EMERGENCY:
             return ReplyDraft(
                 body=(
-                    f"{greeting}sorry you're dealing with this — we've flagged it as urgent "
-                    "and someone from the shop will reach out ASAP. "
-                    "If you're in danger, call emergency services."
+                    f'{greeting}сожалею, что вы столкнулись с этим. Мы отметили обращение как срочное; сотрудник свяжется с вами как можно скорее. При опасности звоните в экстренные службы.'
                 ),
                 reason="emergency",
             )
@@ -910,8 +890,7 @@ class ContextualReplyGenerator:
         if intent == CustomerIntent.COMPLAINT:
             return ReplyDraft(
                 body=(
-                    f"{greeting}I'm really sorry about that. "
-                    "An owner/manager has been looped in and will follow up personally."
+                    f'{greeting}очень жаль, что так получилось. Владелец или руководитель уведомлён и свяжется с вами лично.'
                 ),
                 reason="complaint",
             )
@@ -925,38 +904,33 @@ class ContextualReplyGenerator:
                 body = f"{greeting}{ask}" if is_first_reply else ask
                 return ReplyDraft(
                     body=body,
-                    follow_up_question="What service do you need?",
+                    follow_up_question='Какая услуга вам нужна?',
                 )
             if is_first_reply and shop:
                 body = (
-                    f"{greeting}{counselor.ask_purpose()} "
-                    "I'm happy to help book, change, or cancel."
+                    f'{greeting}{counselor.ask_purpose()} Помогу записаться, перенести или отменить визит.'
                 )
             elif shop:
                 body = (
-                    f"{greeting}welcome to {shop} — glad you're here. "
-                    "How can we help you today?"
+                    f'{greeting}добро пожаловать в {shop}! Чем мы можем помочь?'
                 )
             else:
                 body = (
-                    f"{greeting}welcome — glad you found us. "
-                    "How can we help you today?"
+                    f'{greeting}добро пожаловать! Чем мы можем помочь?'
                 )
             return ReplyDraft(
                 body=body,
                 follow_up_question=counselor.ask_purpose()
                 if is_first_reply
-                else "How can we help you today?",
+                else 'Чем мы можем вам помочь?',
             )
 
         if schedule_bit:
             return ReplyDraft(
                 body=(
-                    f"{greeting}{schedule_bit.strip()} "
-                    "Happy to help — need to change that, check on something, "
-                    "or something else?"
+                    f'{greeting}{schedule_bit.strip()} Могу помочь изменить запись, что-то уточнить или решить другой вопрос.'
                 ),
-                follow_up_question="How can I help you today?",
+                follow_up_question='Чем я могу вам помочь?',
             )
         if counselor.looks_like_reschedule_desire(last_customer):
             draft = _service_type_or_time_reschedule_draft(
@@ -976,21 +950,19 @@ class ContextualReplyGenerator:
             body = f"{greeting}{ask}" if is_first_reply else ask
             return ReplyDraft(
                 body=body,
-                follow_up_question="What service can I help you with?",
+                follow_up_question='С какой услугой вам помочь?',
             )
         if is_first_reply:
             return ReplyDraft(
                 body=(
-                    f"{greeting}{counselor.ask_purpose()} "
-                    "I can help book, change, or cancel — just let me know."
+                    f'{greeting}{counselor.ask_purpose()} Помогу записаться, перенести или отменить визит.'
                 ),
                 follow_up_question=counselor.ask_purpose(),
             )
         return ReplyDraft(
             body=(
-                f"{greeting}{counselor.ask_purpose()} "
-                "I can help book, change, or cancel — just let me know."
+                f'{greeting}{counselor.ask_purpose()} Помогу записаться, перенести или отменить визит.'
             ),
-            follow_up_question="How can I help you today?",
+            follow_up_question='Чем я могу вам помочь?',
         )
 

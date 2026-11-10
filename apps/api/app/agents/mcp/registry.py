@@ -46,7 +46,7 @@ class McpToolRegistry:
     async def call(self, name: str, arguments: dict[str, Any] | None = None) -> dict[str, Any]:
         tool = self._tools.get(name)
         if tool is None:
-            raise AgentValidationError(f"Unknown MCP tool: {name}", agent="mcp")
+            raise AgentValidationError(f'Неизвестный инструмент MCP: {name}', agent="mcp")
         return await tool.handler(arguments or {})
 
     @classmethod

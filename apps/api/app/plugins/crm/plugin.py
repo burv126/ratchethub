@@ -209,7 +209,7 @@ class CrmPlugin:
                 shop_id,
                 kwargs["customer_id"],
                 kwargs.get("kind", "note"),
-                kwargs.get("summary") or kwargs.get("note") or "Workflow CRM update",
+                kwargs.get("summary") or kwargs.get("note") or 'Обновление CRM процессом',
             )
 
-        raise ValueError(f"Unknown CRM capability: {capability}")
+        raise ValueError(f'Неизвестная возможность CRM: {capability}')

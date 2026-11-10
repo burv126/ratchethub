@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
@@ -26,10 +28,10 @@ export default function ForgotPasswordPage() {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.detail || res.statusText);
-      setMessage("If an account exists, a reset link was sent.");
+      setMessage("Если учётная запись существует, ссылка для сброса отправлена.");
       if (body.dev_token) setDevToken(body.dev_token);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Request failed");
+      setError(err instanceof Error ? err.message : "Ошибка запроса");
     } finally {
       setBusy(false);
     }
@@ -42,13 +44,13 @@ export default function ForgotPasswordPage() {
           size={40}
           wordmarkClassName="text-2xl font-semibold tracking-tight text-[var(--ink)]"
         />
-        <h1 className="font-display mt-5 text-2xl font-semibold tracking-tight">Forgot password</h1>
+        <h1 className="font-display mt-5 text-2xl font-semibold tracking-tight">Забыли пароль</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          We will email a reset link if the account exists.
+          Мы отправим ссылку для сброса, если учётная запись существует.
         </p>
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium">Email</span>
+            <span className="text-sm font-medium">Эл. почта</span>
             <input
               type="email"
               required
@@ -57,23 +59,23 @@ export default function ForgotPasswordPage() {
               className="w-full rounded-xl border border-[var(--line)] bg-white/90 px-3 py-2.5 text-sm outline-none"
             />
           </label>
-          {error && <p className="text-sm text-red-700">{error}</p>}
+          {error && <p className="text-sm text-red-700">{ruError(error)}</p>}
           {message && <p className="text-sm text-green-700">{message}</p>}
           {devToken && (
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
-              Dev token:{" "}
+              Токен разработки:{" "}
               <Link className="underline" href={`/reset-password?token=${devToken}`}>
-                open reset page
+                открыть страницу сброса
               </Link>
             </p>
           )}
           <button type="submit" disabled={busy} className="btn-primary w-full disabled:opacity-60">
-            {busy ? "Sending…" : "Send reset link"}
+            {busy ? "Отправка…" : "Отправить ссылку для сброса"}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-[var(--muted)]">
           <Link href="/?login=1" className="text-[var(--accent)]">
-            Back to sign in
+            Вернуться к входу
           </Link>
         </p>
       </div>

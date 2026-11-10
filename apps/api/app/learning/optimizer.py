@@ -43,8 +43,7 @@ class LearningOptimizer:
                 shop_id=shop_id,
                 pattern_key=key,
                 description=(
-                    f"{decision_kind} outcomes via {key.split(':', 1)[1]} "
-                    f"succeed {success_rate*100:.0f}% of the time (n={len(items)})"
+                    f"Результаты {decision_kind} по {key.split(':', 1)[1]} успешны в {success_rate * 100:.0f}% случаев (n={len(items)})"
                 ),
                 support_count=len(items),
                 success_rate=round(success_rate, 4),
@@ -86,8 +85,7 @@ class LearningOptimizer:
         if patterns:
             top = patterns[0]
             suggestions.append(
-                f"Lean on pattern '{top.pattern_key}' "
-                f"(success_rate={top.success_rate:.0%}, n={top.support_count})"
+                f"Использовать закономерность '{top.pattern_key}' (успешность={top.success_rate:.0%}, примеров={top.support_count})"
             )
         fails = [r for r in evaluation_hint if not r.success]
         if fails:
@@ -96,10 +94,10 @@ class LearningOptimizer:
                 key=lambda k: sum(1 for r in fails if r.decision_kind == k),
             )
             suggestions.append(
-                f"Review failing '{common}' decisions — propose safer follow-ups"
+                f"Проверить неудачные решения '{common}' — предложить более безопасные обращения"
             )
         if not suggestions:
-            suggestions.append("Collect more outcome samples before optimizing")
+            suggestions.append('Соберите больше результатов перед оптимизацией')
 
         decision = OptimizationDecision(
             target=target,
@@ -107,7 +105,7 @@ class LearningOptimizer:
             expected_impact="improved_decision_accuracy",
             requires_review=True,
             auto_apply=False,
-            rationale="Optimization proposals from learning loop (review required)",
+            rationale='Предложения оптимизации цикла обучения (требуется проверка)',
         )
         return {
             "shop_id": str(shop_id),

@@ -1,3 +1,5 @@
+
+import { readApiError } from "@/lib/ru-errors";
 import { clearSession, getApiUrl, loadSession, refresh, saveSession } from "@/lib/api";
 
 export type ImportSourceInfo = {
@@ -81,17 +83,12 @@ export type ImportJob = {
 };
 
 async function parseError(res: Response) {
-  try {
-    const data = await res.json();
-    return typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail ?? data);
-  } catch {
-    return res.statusText;
-  }
+  return readApiError(res);
 }
 
 async function authFetch(path: string, init: RequestInit = {}) {
   let current = loadSession();
-  if (!current) throw new Error("Not authenticated");
+  if (!current) throw new Error("Вход не выполнен");
   const isForm = typeof FormData !== "undefined" && init.body instanceof FormData;
   const doFetch = (accessToken: string) => {
     const headers = new Headers(init.headers);
@@ -113,7 +110,7 @@ async function authFetch(path: string, init: RequestInit = {}) {
       res = await doFetch(current.accessToken);
     } catch {
       clearSession();
-      throw new Error("Session expired");
+      throw new Error("Сессия истекла");
     }
   }
   return res;

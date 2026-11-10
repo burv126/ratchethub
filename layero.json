@@ -1,0 +1,6 @@
+﻿{
+  "framework": "nextjs",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "cd apps/web && pnpm build && cd ../.. && node copy-standalone-modules.js",
+  "outputDirectory": "apps/web/.next/standalone"
+}

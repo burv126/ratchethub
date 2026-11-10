@@ -17,8 +17,7 @@ WORKFLOW_ID = UUID("a1111111-1111-4111-8111-111111111106")
 SPEC = meta(
     workflow_id=str(WORKFLOW_ID),
     purpose=(
-        "Close out a finished repair: payment cue, review request, maintenance reminder, "
-        "and final revenue/dashboard updates."
+        'Завершает ремонт: проверка оплаты, запрос отзыва, напоминание об обслуживании и итоговое обновление выручки и панели.'
     ),
     trigger=DomainEventType.REPAIR_FINISHED.value,
     capabilities=[
@@ -52,7 +51,7 @@ SPEC = meta(
         "CRM/revenue/reminder retried; rollback reverses CRM/revenue/reminder."
     ),
     human_escalation=(
-        "Notify front desk if payment still open after repair finished."
+        'Уведомляет приёмную, если после ремонта оплата не завершена.'
     ),
 )
 
@@ -60,7 +59,7 @@ SPEC = meta(
 def build() -> WorkflowDefinition:
     return build_definition(
         workflow_id=WORKFLOW_ID,
-        name="Automotive: Repair completed",
+        name='Автосервис: ремонт завершён',
         description=SPEC["purpose"],
         trigger=DomainEventType.REPAIR_FINISHED,
         conditions=[
@@ -72,7 +71,7 @@ def build() -> WorkflowDefinition:
         actions=[
             action(
                 ActionType.SET_CONTEXT,
-                "Bind repair-completed scenario",
+                'Привязать сценарий завершения ремонта',
                 1,
                 config={
                     "values": {
@@ -84,10 +83,10 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_CRM,
-                "Repair completion timeline",
+                'Завершение ремонта в истории',
                 2,
                 config={
-                    "note": "Repair finished — closeout started",
+                    "note": 'Ремонт завершён — начато закрытие',
                     "fields": {
                         "capability": "AddRepair|AddTimeline",
                         "ai_decision": "RepairStatusDecision",
@@ -97,7 +96,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Payment workflow cue",
+                'Запуск процесса оплаты',
                 3,
                 config={
                     "event_type": DomainEventType.INVOICE_PAID.value,
@@ -107,17 +106,17 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.NOTIFY,
-                "Front desk payment check",
+                'Проверка оплаты приёмной',
                 4,
                 config={
                     "channel": "in_app",
-                    "message": "Repair completed — confirm payment collected",
+                    "message": 'Ремонт завершён — подтвердите оплату',
                 },
                 continue_on_error=True,
             ),
             action(
                 ActionType.SCHEDULE_REMINDER,
-                "Review request outreach",
+                'Запрос отзыва',
                 5,
                 config={
                     "hours_before": -24,
@@ -129,7 +128,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Review request recorded",
+                'Запрос отзыва записан',
                 6,
                 config={
                     "event_type": DomainEventType.REVIEW_SUBMITTED.value,
@@ -139,7 +138,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Queue maintenance reminder",
+                'Поставить напоминание об обслуживании в очередь',
                 7,
                 config={
                     "event_type": DomainEventType.MAINTENANCE_REMINDER_REQUESTED.value,
@@ -149,17 +148,17 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_REVENUE,
-                "Final revenue update",
+                'Итоговое обновление выручки',
                 8,
                 config={"category": "repair_completed"},
                 compensate={"type": "undo_revenue"},
             ),
             action(
                 ActionType.UPDATE_CRM,
-                "Closeout CRM communication",
+                'Итоговое сообщение CRM',
                 9,
                 config={
-                    "note": "Repair completed — review + maintenance follow-ups scheduled",
+                    "note": 'Ремонт завершён — запланированы отзыв и напоминания',
                     "fields": {
                         "ai_decision": "CustomerCommunicationDecision|MaintenanceReminderDecision"
                     },
@@ -168,7 +167,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_DASHBOARD,
-                "Refresh completion widgets",
+                'Обновить виджеты завершения',
                 10,
                 config={
                     "widget": "overview",

@@ -49,8 +49,7 @@ class AdvisorPlugin:
 
     def plugin_description(self) -> str:
         return (
-            "Digital Service Advisor for the complete customer service lifecycle. "
-            "Returns Decision Objects only — Workflow executes all business actions."
+            'Цифровой консультант для полного цикла обслуживания клиента. Возвращает только объекты решений — бизнес-действия выполняет рабочий процесс.'
         )
 
     def supported_capabilities(self) -> list[str]:
@@ -317,4 +316,4 @@ class AdvisorPlugin:
         if capability == Capability.GENERATE_RETENTION_PLAN:
             return {"decisions": self._customer.analyze(ctx)}
 
-        raise ValueError(f"Unknown advisor capability: {capability}")
+        raise ValueError(f'Неизвестная возможность консультанта: {capability}')

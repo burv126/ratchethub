@@ -1,4 +1,7 @@
 "use client";
+import { ruLabel } from "@/lib/ru";
+import { ruError } from "@/lib/ru-errors";
+
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -35,21 +38,21 @@ function extensionForMime(mime: string): string {
 
 function micErrorMessage(err: unknown): string {
   if (typeof window !== "undefined" && !window.isSecureContext) {
-    return "Microphone needs HTTPS (or localhost). Open this page over a secure connection, or use the text note below.";
+    return "Для микрофона требуется HTTPS (или localhost). Откройте страницу по защищённому соединению или используйте текстовую заметку ниже.";
   }
   const name = err instanceof DOMException || err instanceof Error ? err.name : "";
   const message = err instanceof Error ? err.message : "";
   if (name === "NotAllowedError" || /NotAllowedError|Permission|Permissions policy/i.test(message)) {
-    return "Microphone permission denied or blocked. Allow microphone for this site in the browser, then try again.";
+    return "Доступ к микрофону запрещён. Разрешите его для этого сайта в браузере и повторите попытку.";
   }
   if (name === "NotFoundError" || /NotFoundError|Requested device not found/i.test(message)) {
-    return "No microphone found. Use the text note below, or plug in a mic and try again.";
+    return "Микрофон не найден. Используйте текстовую заметку ниже или подключите микрофон.";
   }
   if (name === "NotReadableError" || /NotReadableError|in use/i.test(message)) {
-    return "Microphone is in use by another app. Close it and try again.";
+    return "Микрофон используется другим приложением. Закройте его и повторите попытку.";
   }
   if (message) return message;
-  return "Could not access the microphone. Use the text note below, or check browser mic permissions.";
+  return "Не удалось получить доступ к микрофону. Используйте текстовую заметку или проверьте разрешения браузера.";
 }
 
 export function VoiceNotesPanel() {
@@ -68,7 +71,7 @@ export function VoiceNotesPanel() {
   const [notes, setNotes] = useState<VoiceNote[]>([]);
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({});
   const [textFallback, setTextFallback] = useState(
-    "2019 Honda Accord oil change completed. Brake pads are 30 percent. Recommend replacement next visit. Mileage 82000.",
+    "Honda Accord 2019 года: замена масла выполнена. Остаток тормозных колодок — 30 процентов. Рекомендуется замена при следующем визите. Пробег 82000.",
   );
 
   useEffect(() => {
@@ -78,7 +81,7 @@ export function VoiceNotesPanel() {
         setVehicles(await listShopVehicles());
         setNotes(await listVoiceNotes());
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load");
+        setError(err instanceof Error ? err.message : "Не удалось загрузить");
       }
     })();
   }, [authLoading, session]);
@@ -94,21 +97,21 @@ export function VoiceNotesPanel() {
     setError(null);
     setResult(null);
     if (!vehicleId) {
-      setError("Select a vehicle first");
+      setError("Сначала выберите автомобиль");
       return;
     }
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setError("Microphone is not supported in this browser. Use the text note below.");
+      setError("Браузер не поддерживает микрофон. Используйте текстовую заметку ниже.");
       return;
     }
     if (typeof window !== "undefined" && !window.isSecureContext) {
       setError(
-        "Microphone needs HTTPS (or localhost). Open this page over a secure connection, or use the text note below.",
+        "Для микрофона требуется HTTPS (или localhost). Откройте страницу по защищённому соединению или используйте текстовую заметку ниже.",
       );
       return;
     }
     if (typeof MediaRecorder === "undefined") {
-      setError("Recording is not supported in this browser. Use the text note below.");
+      setError("Браузер не поддерживает запись. Используйте текстовую заметку ниже.");
       return;
     }
     try {
@@ -160,14 +163,14 @@ export function VoiceNotesPanel() {
       const mime = mimeTypeRef.current || "audio/webm";
       const blob = new Blob(chunksRef.current, { type: mime });
       if (blob.size === 0) {
-        throw new Error("Recording was empty. Try speaking again, or use the text note below.");
+        throw new Error("Запись пустая. Попробуйте снова или используйте текстовую заметку ниже.");
       }
       const filename = `mechanic-note.${extensionForMime(mime)}`;
       const processed = await uploadVoiceNote(vehicleId, blob, filename);
       setResult(processed);
       setNotes(await listVoiceNotes());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить файл");
     } finally {
       setBusy(false);
     }
@@ -175,7 +178,7 @@ export function VoiceNotesPanel() {
 
   async function uploadTextAsNote() {
     if (!vehicleId) {
-      setError("Select a vehicle first");
+      setError("Сначала выберите автомобиль");
       return;
     }
     setBusy(true);
@@ -187,7 +190,7 @@ export function VoiceNotesPanel() {
       setResult(processed);
       setNotes(await listVoiceNotes());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить файл");
     } finally {
       setBusy(false);
     }
@@ -197,43 +200,43 @@ export function VoiceNotesPanel() {
     if (audioUrls[noteId]) return;
     const current = loadSession();
     if (!current) {
-      setError("Not authenticated");
+      setError("Вход не выполнен");
       return;
     }
     try {
       const res = await fetch(getAudioUrl(noteId), {
         headers: { Authorization: `Bearer ${current.accessToken}` },
       });
-      if (!res.ok) throw new Error("Audio fetch failed");
+      if (!res.ok) throw new Error("Не удалось получить аудио");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       setAudioUrls((prev) => ({ ...prev, [noteId]: url }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Audio load failed");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить аудио");
     }
   }
 
   return (
     <div className="min-h-0 flex-1 space-y-8 overflow-y-auto overscroll-contain">
       <p className="text-sm text-[var(--muted)]">
-        Speak naturally. The system transcribes, extracts service details, and writes Repair History.
+        Говорите естественно. Система распознает речь, извлечёт сведения и запишет их в историю ремонта.
       </p>
 
       {error && (
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-          {error}
+          {ruError(error)}
         </p>
       )}
 
       <section className="space-y-4 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
         <label className="block space-y-1.5">
-          <span className="text-sm font-medium">Vehicle</span>
+          <span className="text-sm font-medium">Автомобиль</span>
           <select
             value={vehicleId}
             onChange={(e) => setVehicleId(e.target.value)}
             className="w-full rounded-md border border-[var(--line)] bg-white px-3 py-2 text-sm"
           >
-            <option value="">Select vehicle…</option>
+            <option value="">Выберите автомобиль…</option>
             {vehicles.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.label}
@@ -250,7 +253,7 @@ export function VoiceNotesPanel() {
               disabled={busy}
               className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              Start speaking
+              Начать запись
             </button>
           ) : (
             <button
@@ -259,13 +262,13 @@ export function VoiceNotesPanel() {
               disabled={busy}
               className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              {busy ? "Processing…" : "Stop & process"}
+              {busy ? "Обработка…" : "Остановить и обработать"}
             </button>
           )}
         </div>
 
         <div className="border-t border-[var(--line)] pt-4">
-          <p className="text-sm font-medium">No mic? Paste / edit a spoken note</p>
+          <p className="text-sm font-medium">Нет микрофона? Вставьте или измените текст заметки</p>
           <textarea
             value={textFallback}
             onChange={(e) => setTextFallback(e.target.value)}
@@ -278,30 +281,30 @@ export function VoiceNotesPanel() {
             disabled={busy}
             className="mt-3 rounded-md border border-[var(--line)] px-4 py-2 text-sm disabled:opacity-60"
           >
-            {busy ? "Processing…" : "Process text as voice note"}
+            {busy ? "Обработка…" : "Обработать текст как голосовую заметку"}
           </button>
         </div>
       </section>
 
       {result && (
         <section className="space-y-3 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
-          <h2 className="text-sm font-semibold">AI result</h2>
+          <h2 className="text-sm font-semibold">Результат ИИ</h2>
           <p className="text-sm">
-            <span className="font-medium">Transcript:</span> {result.voice_note.transcript}
+            <span className="font-medium">Расшифровка:</span> {result.voice_note.transcript}
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Fact label="Service" value={result.extraction.service} />
-            <Fact label="Mileage" value={result.extraction.mileage?.toLocaleString() ?? "—"} />
-            <Fact label="Condition" value={result.extraction.condition} />
-            <Fact label="Recommendation" value={result.extraction.recommendation ?? "—"} />
+            <Fact label="Услуга" value={ruLabel(result.extraction.service)} />
+            <Fact label="Пробег" value={result.extraction.mileage?.toLocaleString("ru-RU") ?? "—"} />
+            <Fact label="Условие" value={result.extraction.condition} />
+            <Fact label="Рекомендация" value={result.extraction.recommendation ?? "—"} />
           </div>
           <p className="text-sm text-[var(--muted)]">
-            Saved repair record{" "}
+            Сохранённая запись о ремонте{" "}
             <Link
               href={`/dashboard/vehicles/${result.vehicle.id}`}
               className="font-medium text-[var(--accent)]"
             >
-              on vehicle page
+              на странице автомобиля
             </Link>
             .
           </p>
@@ -309,16 +312,16 @@ export function VoiceNotesPanel() {
       )}
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold">Recent voice notes</h2>
+        <h2 className="text-sm font-semibold">Последние голосовые заметки</h2>
         {notes.length === 0 ? (
-          <p className="text-sm text-[var(--muted)]">No voice notes yet</p>
+          <p className="text-sm text-[var(--muted)]">Голосовых заметок пока нет</p>
         ) : (
           notes.map((n) => (
             <div key={n.id} className="rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4">
               <p className="text-xs text-[var(--muted)]">
-                {n.created_at ? new Date(n.created_at).toLocaleString() : "—"}
+                {n.created_at ? new Date(n.created_at).toLocaleString("ru-RU") : "—"}
               </p>
-              <p className="mt-2 text-sm">{n.transcript ?? "Processing transcript…"}</p>
+              <p className="mt-2 text-sm">{n.transcript ?? "Обработка расшифровки…"}</p>
               <div className="mt-3">
                 {audioUrls[n.id] ? (
                   <audio controls src={audioUrls[n.id]} className="w-full max-w-md" />
@@ -328,7 +331,7 @@ export function VoiceNotesPanel() {
                     className="rounded-md border border-[var(--line)] px-3 py-1.5 text-xs"
                     onClick={() => void playAudio(n.id)}
                   >
-                    Load audio
+                    Загрузить аудио
                   </button>
                 )}
               </div>

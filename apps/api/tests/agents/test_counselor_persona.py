@@ -25,10 +25,10 @@ def test_ask_time_with_known_day_asks_only_time():
     day = datetime(2026, 8, 7, 15, 0, tzinfo=timezone.utc)  # Friday in LA
     body = ask_time(customer_name="Alex", service_name="Oil Change", known_day=day)
     assert "Alex" in body
-    assert "time" in body.lower()
-    assert "Friday" in body
+    assert 'время' in body.lower()
+    assert 'пятница' in body
     # Should not re-ask for both day and time equally
-    assert "day and time" not in body.lower()
+    assert 'день и время' not in body.lower()
 
 
 def test_ask_date_with_known_time_asks_only_day():
@@ -37,9 +37,9 @@ def test_ask_date_with_known_time_asks_only_day():
     when = datetime(2026, 8, 5, 15, 0, tzinfo=timezone.utc)  # 8am LA
     body = ask_date(customer_name="Alex", service_name="Oil Change", known_time=when)
     assert "Alex" in body
-    assert "day" in body.lower()
-    assert "8:00 AM" in body
-    assert "day and time" not in body.lower()
+    assert 'день' in body.lower()
+    assert '08:00' in body
+    assert 'день и время' not in body.lower()
 
 
 def test_time_unavailable_asks_for_another():
@@ -47,8 +47,8 @@ def test_time_unavailable_asks_for_another():
         __import__("datetime").datetime(2026, 8, 5, 14, 0),
         customer_name="Alex",
     )
-    assert "isn't available" in body.lower()
-    assert "other" in body.lower()
+    assert 'недоступ' in body.lower()
+    assert 'друг' in body.lower()
     assert "Alex" in body
 
 
@@ -58,17 +58,17 @@ def test_time_unavailable_reasks_only_broken_half():
     # 14:00 naive → shop TZ formatting still works via replace
     when = datetime(2026, 8, 5, 15, 0, tzinfo=timezone.utc)  # 8am LA Wednesday
     date_only = time_unavailable(when, ask="date")
-    assert "day" in date_only.lower()
-    assert "other day" in date_only.lower()
-    assert "day or time" not in date_only.lower()
+    assert 'день' in date_only.lower()
+    assert 'другой день' in date_only.lower()
+    assert 'день или время' not in date_only.lower()
 
     time_only = time_unavailable(when, ask="time")
-    assert "time" in time_only.lower()
-    assert "other time" in time_only.lower()
-    assert "day or time" not in time_only.lower()
+    assert 'время' in time_only.lower()
+    assert 'другое время' in time_only.lower()
+    assert 'день или время' not in time_only.lower()
 
     closed = time_unavailable(when, ask="date", day_only=True)
-    assert "other day" in closed.lower()
+    assert 'другой день' in closed.lower()
     assert "8:00" not in closed  # no invented clock on day-only closed
 
 
@@ -79,13 +79,13 @@ def test_format_when_uses_shop_timezone():
 
     # 15:00 UTC in August = 08:00 America/Los_Angeles
     utc = datetime(2026, 8, 5, 15, 0, tzinfo=timezone.utc)
-    assert format_when(utc) == "Wednesday at 8:00 AM"
+    assert format_when(utc) == 'среда в 08:00'
     end = datetime(2026, 8, 5, 16, 0, tzinfo=timezone.utc)
-    assert format_when_range(utc, end) == "Wednesday from 8:00 AM to 9:00 AM"
+    assert format_when_range(utc, end) == 'среда с 08:00 до 09:00'
     half = datetime(2026, 8, 5, 15, 30, tzinfo=timezone.utc)
-    assert format_when_range(utc, half) == "Wednesday from 8:00 AM to 8:30 AM"
+    assert format_when_range(utc, half) == 'среда с 08:00 до 08:30'
     ninety = datetime(2026, 8, 5, 16, 30, tzinfo=timezone.utc)
-    assert format_duration(utc, ninety) == "1 hour 30 minutes"
+    assert format_duration(utc, ninety) == '1 ч 30 мин'
 
 
 def test_offer_slots_spoken_uses_from_to_windows():
@@ -96,10 +96,10 @@ def test_offer_slots_spoken_uses_from_to_windows():
     start = datetime(2026, 8, 5, 15, 0, tzinfo=timezone.utc)
     end = datetime(2026, 8, 5, 16, 0, tzinfo=timezone.utc)
     body = offer_slots_spoken([(start, end)], customer_name="Alex")
-    assert "from 8:00 AM to 9:00 AM" in body
-    assert "for 1 hour" not in body
-    assert "minute" not in body.lower()
-    assert "I've got a few openings" in body
+    assert 'с 08:00 до 09:00' in body
+    assert 'на 1 час' not in body
+    assert 'минут' not in body.lower()
+    assert 'Есть несколько свободных вариантов' in body
     assert "go ahead" not in body.lower()
     assert "going" not in body.lower()
 
@@ -121,9 +121,9 @@ def test_offer_slots_spoken_merges_contiguous_microslots():
     assert merged[0] == (t0, t0 + timedelta(minutes=60))
 
     body = offer_slots_spoken(micro, customer_name="Alex")
-    assert "from 8:00 AM to 9:00 AM" in body
-    assert "for 1 hour" not in body
-    assert "8:30 AM" not in body  # not spoken as two micro-slots
+    assert 'с 08:00 до 09:00' in body
+    assert 'на 1 час' not in body
+    assert '08:30' not in body  # not spoken as two micro-slots
 
     # Gap between blocks → two windows
     gap = [
@@ -132,9 +132,9 @@ def test_offer_slots_spoken_merges_contiguous_microslots():
     ]
     assert len(merge_contiguous_windows(gap)) == 2
     body_gap = offer_slots_spoken(gap)
-    assert "from 8:00 AM to 8:30 AM" in body_gap
-    assert "from 9:30 AM to 10:00 AM" in body_gap
-    assert "for 30 minutes" not in body_gap
+    assert 'с 08:00 до 08:30' in body_gap
+    assert 'с 09:30 до 10:00' in body_gap
+    assert 'на 30 мин' not in body_gap
 
 
 def test_booking_confirm_omits_go_ahead():
@@ -143,7 +143,7 @@ def test_booking_confirm_omits_go_ahead():
         service_name="Oil Change",
         when=__import__("datetime").datetime(2026, 8, 5, 14, 0),
     )
-    assert "shall i book that" in body.lower()
+    assert 'записать вас' in body.lower()
     assert "going" not in body.lower()
 
 
@@ -158,17 +158,17 @@ def test_spoken_first_name_skips_unknown_placeholders():
     assert spoken_first_name("Alex Rivera") == "Alex"
     assert "Going" not in greeting(shop_name="Main Street Auto", customer_name="Going")
     assert greeting(shop_name="Main Street Auto", customer_name="Going").startswith(
-        "Hello, this is Main Street Auto"
+        'Здравствуйте! Это Main Street Auto'
     )
     assert "Going" not in ask_service(customer_name="Going")
-    assert ask_service(customer_name="Going") == "sure — what service can I help you with?"
+    assert ask_service(customer_name="Going") == 'конечно — какая услуга вам нужна?'
     body = summarize_booking_confirm(
         customer_name="Going",
         service_name="Oil Change",
         when=None,
     )
     assert "Going" not in body
-    assert body.startswith("I can book you for Oil Change")
+    assert body.startswith('могу записать вас на Oil Change')
 
 
 def test_sanitize_spoken_reply_strips_going_address():
@@ -190,34 +190,34 @@ def test_ask_name_for_new_customers():
     assert needs_customer_name(None)
     assert not needs_customer_name("Alex")
     ask = ask_name()
-    assert "name" in ask.lower()
+    assert 'зовут' in ask.lower()
     assert is_name_question(ask)
     assert is_name_question("may I have your name so I can put the booking under you?")
 
 
 def test_replies_omit_unknown_name():
     assert ask_service(customer_name="Unknown Customer") == (
-        "sure — what service can I help you with?"
+        'конечно — какая услуга вам нужна?'
     )
     assert "Unknown" not in greeting(shop_name="Main Street Auto", customer_name="Unknown")
     assert greeting(shop_name="Main Street Auto", customer_name="Unknown").startswith(
-        "Hello, this is Main Street Auto"
+        'Здравствуйте! Это Main Street Auto'
     )
     body = summarize_booking_confirm(
         customer_name="Unknown Customer",
         service_name="Oil Change",
         when=None,
     )
-    assert body.startswith("I can book you for Oil Change")
+    assert body.startswith('могу записать вас на Oil Change')
     assert "Unknown" not in body
 
 
 def test_greeting_introduces_shop_and_asks_purpose():
     text = greeting(shop_name="Main Street Auto")
-    assert text.startswith("Hello, this is Main Street Auto")
-    assert "how can i help you today" in text.lower()
-    assert ask_purpose() == "how can I help you today?"
-    assert first_reply_prefix(shop_name="Main Street Auto") == "Hello, this is Main Street Auto. "
+    assert text.startswith('Здравствуйте! Это Main Street Auto')
+    assert 'чем я могу вам помочь' in text.lower()
+    assert ask_purpose() == 'чем я могу вам помочь?'
+    assert first_reply_prefix(shop_name="Main Street Auto") == 'Здравствуйте! Это Main Street Auto. '
     assert is_purpose_question(ask_purpose())
     assert looks_like_booking_desire("I want to make a reservation")
     assert looks_like_booking_desire("I'd like to book an appointment")
@@ -346,7 +346,7 @@ def test_greeting_introduces_shop_and_asks_purpose():
         assert looks_like_service_type_change(phrase), phrase
         assert looks_like_reschedule_desire(phrase), phrase
 
-    assert "instead of Oil Change" in ask_replacement_service(
+    assert 'вместо Oil Change' in ask_replacement_service(
         current_service="Oil Change"
     )
 
@@ -359,24 +359,24 @@ def test_summarize_done_keep_open_offers_more_help():
         when=__import__("datetime").datetime(2026, 8, 5, 14, 0),
         keep_open=True,
     )
-    assert "booked" in body.lower()
-    assert "anything else" in body.lower()
-    assert "take care" not in body.lower()
+    assert 'записаны' in body.lower()
+    assert 'ещё с чем-нибудь' in body.lower()
+    assert 'всего доброго' not in body.lower()
 
     closed = summarize_done(action="book", service_name="Oil Change", keep_open=False)
-    assert "take care" in closed.lower()
+    assert 'всего доброго' in closed.lower()
 
 
 def test_redirect_to_service_topic_is_kind_and_scoped():
     from app.agents.counselor.persona import looks_like_off_topic, redirect_to_service_topic
 
     body = redirect_to_service_topic()
-    assert "vehicle service" in body.lower() or "shop" in body.lower()
-    assert "book" in body.lower()
+    assert 'обслуживанием автомобилей' in body.lower() or 'автосервис' in body.lower()
+    assert 'запис' in body.lower()
     assert "Going" not in redirect_to_service_topic(customer_name="Going")
     named = redirect_to_service_topic(customer_name="Alex")
     assert named.startswith("Alex,")
-    assert "vehicle" in named.lower() or "shop" in named.lower()
+    assert 'автомобил' in named.lower() or 'автосервис' in named.lower()
 
     assert looks_like_off_topic("What's the weather like today? Tell me a joke.")
     assert looks_like_off_topic("Who won the game last night?")

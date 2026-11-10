@@ -34,15 +34,14 @@ class MemoryPlugin:
         return "memory"
 
     def plugin_name(self) -> str:
-        return "AI Knowledge Base & Shop Memory"
+        return 'База знаний ИИ и память автосервиса'
 
     def plugin_version(self) -> str:
         return "1.0.0"
 
     def plugin_description(self) -> str:
         return (
-            "Personalized shop/customer/vehicle memory and business knowledge. "
-            "AI reads; Workflow applies write Decisions."
+            'Память о клиентах, автомобилях и автосервисе, а также бизнес-знания. ИИ читает; запись выполняет процесс по решениям.'
         )
 
     def supported_capabilities(self) -> list[str]:
@@ -86,7 +85,7 @@ class MemoryPlugin:
 
         shop_id: UUID | None = kwargs.get("shop_id") or (context.shop_id if context else None)
         if shop_id is None:
-            raise ValueError("shop_id is required for memory capabilities")
+            raise ValueError('Для памяти требуется shop_id')
 
         mgr = self._mgr()
 
@@ -97,7 +96,7 @@ class MemoryPlugin:
         if capability == Capability.GET_CUSTOMER_HISTORY:
             customer_id = kwargs.get("customer_id") or (context.customer_id if context else None)
             if customer_id is None:
-                raise ValueError("customer_id is required for GetCustomerHistory")
+                raise ValueError('Для GetCustomerHistory требуется customer_id')
             records = await mgr.get_customer_history(
                 shop_id, customer_id, limit=int(kwargs.get("limit") or 50)
             )
@@ -105,7 +104,7 @@ class MemoryPlugin:
         if capability == Capability.GET_VEHICLE_HISTORY:
             vehicle_id = kwargs.get("vehicle_id") or (context.vehicle_id if context else None)
             if vehicle_id is None:
-                raise ValueError("vehicle_id is required for GetVehicleHistory")
+                raise ValueError('Для GetVehicleHistory требуется vehicle_id')
             records = await mgr.get_vehicle_history(
                 shop_id, vehicle_id, limit=int(kwargs.get("limit") or 50)
             )
@@ -122,26 +121,26 @@ class MemoryPlugin:
         if capability == Capability.UPDATE_CUSTOMER_PROFILE:
             customer_id = kwargs.get("customer_id")
             if customer_id is None:
-                raise ValueError("customer_id is required for UpdateCustomerProfile")
+                raise ValueError('Для UpdateCustomerProfile требуется customer_id')
             patch = dict(kwargs.get("patch") or kwargs.get("profile") or {})
             record = await mgr.update_customer_profile(shop_id, customer_id, patch)
             return _record_dict(record)
         if capability == Capability.UPDATE_VEHICLE_HEALTH:
             vehicle_id = kwargs.get("vehicle_id")
             if vehicle_id is None:
-                raise ValueError("vehicle_id is required for UpdateVehicleHealth")
+                raise ValueError('Для UpdateVehicleHealth требуется vehicle_id')
             health = dict(kwargs.get("health") or kwargs.get("patch") or {})
             record = await mgr.update_vehicle_health(shop_id, vehicle_id, health)
             return _record_dict(record)
 
-        raise ValueError(f"Unknown memory capability: {capability}")
+        raise ValueError(f'Неизвестная возможность памяти: {capability}')
 
     async def _save(
         self, mgr: MemoryManager, shop_id: UUID, kwargs: dict[str, Any]
     ) -> dict[str, Any]:
         content = str(kwargs.get("content") or "").strip()
         if not content:
-            raise ValueError("content is required for SaveMemory")
+            raise ValueError('Для SaveMemory требуется content')
         mem_type = kwargs.get("memory_type") or MemoryType.SEMANTIC.value
         category = kwargs.get("category") or MemoryCategory.GENERAL.value
         try:

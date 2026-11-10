@@ -197,7 +197,7 @@ class SqlAlchemySmsStore:
             await self._bind(session, conversation.shop_id)
             row = await session.get(SmsConversationModel, conversation.id)
             if row is None:
-                raise ValueError("Conversation not found")
+                raise ValueError('Переписка не найдена')
             row.customer_id = conversation.customer_id
             row.status = conversation.status
             row.subject = conversation.subject

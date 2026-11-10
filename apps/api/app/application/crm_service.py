@@ -58,7 +58,7 @@ def _validate_phone(phone: str | None) -> str | None:
         return None
     cleaned = phone.strip()
     if not _PHONE_RE.match(cleaned):
-        raise ValidationError("Invalid phone number format")
+        raise ValidationError('Некорректный формат телефона')
     digits = _PHONE_DIGITS_RE.sub("", cleaned)
     if len(digits) == 10:
         return f"+1{digits}"
@@ -70,19 +70,19 @@ def _validate_phone(phone: str | None) -> str | None:
 def _validate_year(year: int) -> int:
     current = datetime.now().year + 1
     if year < 1900 or year > current:
-        raise ValidationError(f"Year must be between 1900 and {current}")
+        raise ValidationError(f'Год должен быть от 1900 до {current}')
     return year
 
 
 def _validate_mileage(mileage: int) -> int:
     if mileage < 0 or mileage > 3_000_000:
-        raise ValidationError("Mileage must be between 0 and 3,000,000")
+        raise ValidationError('Пробег должен быть от 0 до 3 000 000')
     return mileage
 
 
 def _validate_cost(cost: Decimal) -> Decimal:
     if cost < 0:
-        raise ValidationError("Cost cannot be negative")
+        raise ValidationError('Стоимость не может быть отрицательной')
     return cost.quantize(Decimal("0.01"))
 
 
@@ -141,7 +141,7 @@ class CrmService:
         await self._uow.bind_shop(shop_id)
         existing = await self._uow.customers.get_by_id(shop_id, customer_id)
         if existing is None:
-            raise NotFoundError("Customer not found")
+            raise NotFoundError('Клиент не найден')
 
         updated = Customer(
             id=existing.id,
@@ -162,10 +162,10 @@ class CrmService:
         await self._uow.bind_shop(shop_id)
         existing = await self._uow.customers.get_by_id(shop_id, customer_id)
         if existing is None:
-            raise NotFoundError("Customer not found")
+            raise NotFoundError('Клиент не найден')
         deleted = await self._uow.customers.delete(shop_id, customer_id)
         if not deleted:
-            raise NotFoundError("Customer not found")
+            raise NotFoundError('Клиент не найден')
         await self._uow.commit()
 
     async def search_customers(self, *, shop_id: UUID, query: str | None) -> list[Customer]:
@@ -221,7 +221,7 @@ class CrmService:
         await self._uow.bind_shop(shop_id)
         customer = await self._uow.customers.get_by_id(shop_id, customer_id)
         if customer is None:
-            raise NotFoundError("Customer not found")
+            raise NotFoundError('Клиент не найден')
         return customer
 
     async def get_customer_detail(
@@ -231,7 +231,7 @@ class CrmService:
         await self._uow.bind_shop(shop_id)
         customer = await self._uow.customers.get_by_id(shop_id, customer_id)
         if customer is None:
-            raise NotFoundError("Customer not found")
+            raise NotFoundError('Клиент не найден')
         vehicles = await self._uow.vehicles.list_by_customer(shop_id, customer_id)
         communications = await self._uow.communications.list_by_customer(
             shop_id, customer_id
@@ -256,7 +256,7 @@ class CrmService:
         await self._uow.bind_shop(shop_id)
         customer = await self._uow.customers.get_by_id(shop_id, customer_id)
         if customer is None:
-            raise NotFoundError("Customer not found")
+            raise NotFoundError('Клиент не найден')
 
         normalized_vin = _normalize_vin(vin)
         if await self._uow.vehicles.get_by_vin(shop_id, normalized_vin):
@@ -280,7 +280,7 @@ class CrmService:
     async def list_customer_vehicles(self, *, shop_id: UUID, customer_id: UUID) -> list[Vehicle]:
         await self._uow.bind_shop(shop_id)
         if await self._uow.customers.get_by_id(shop_id, customer_id) is None:
-            raise NotFoundError("Customer not found")
+            raise NotFoundError('Клиент не найден')
         return await self._uow.vehicles.list_by_customer(shop_id, customer_id)
 
     async def update_vehicle(
@@ -299,7 +299,7 @@ class CrmService:
         await self._uow.bind_shop(shop_id)
         existing = await self._uow.vehicles.get_by_id(shop_id, vehicle_id)
         if existing is None:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
 
         next_vin = existing.vin
         if "vin" in fields_set:
@@ -318,25 +318,25 @@ class CrmService:
         next_year = existing.year
         if "year" in fields_set:
             if year is None:
-                raise ValidationError("Year cannot be empty")
+                raise ValidationError('Укажите год')
             next_year = _validate_year(year)
 
         next_make = existing.make
         if "make" in fields_set:
             if make is None or not make.strip():
-                raise ValidationError("Make cannot be empty")
+                raise ValidationError('Укажите марку')
             next_make = make.strip()
 
         next_model = existing.model
         if "model" in fields_set:
             if model is None or not model.strip():
-                raise ValidationError("Model cannot be empty")
+                raise ValidationError('Укажите модель')
             next_model = model.strip()
 
         next_mileage = existing.mileage
         if "mileage" in fields_set:
             if mileage is None:
-                raise ValidationError("Mileage cannot be empty")
+                raise ValidationError('Укажите пробег')
             next_mileage = _validate_mileage(mileage)
 
         updated = Vehicle(
@@ -359,27 +359,27 @@ class CrmService:
         await self._uow.bind_shop(shop_id)
         existing = await self._uow.vehicles.get_by_id(shop_id, vehicle_id)
         if existing is None:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
         if await self._uow.vehicles.has_walk_in_visits(shop_id, vehicle_id):
             raise ConflictError(
-                "Cannot delete vehicle with walk-in visits — close or reassign those visits first"
+                'Нельзя удалить автомобиль с визитами без записи — сначала закройте или переназначьте визиты'
             )
         deleted = await self._uow.vehicles.delete(shop_id, vehicle_id)
         if not deleted:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
         await self._uow.commit()
 
     async def get_vehicle(self, *, shop_id: UUID, vehicle_id: UUID) -> Vehicle:
         await self._uow.bind_shop(shop_id)
         vehicle = await self._uow.vehicles.get_by_id(shop_id, vehicle_id)
         if vehicle is None:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
         return vehicle
 
     async def vehicle_history(self, *, shop_id: UUID, vehicle_id: UUID) -> list[RepairHistory]:
         await self._uow.bind_shop(shop_id)
         if await self._uow.vehicles.get_by_id(shop_id, vehicle_id) is None:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
         return await self._uow.repair_histories.list_by_vehicle(shop_id, vehicle_id)
 
     async def customer_repair_history(
@@ -406,7 +406,7 @@ class CrmService:
         await self._uow.bind_shop(shop_id)
         vehicle = await self._uow.vehicles.get_by_id(shop_id, vehicle_id)
         if vehicle is None:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
 
         occurred = created_at
         if occurred is not None and occurred.tzinfo is None:
@@ -432,10 +432,10 @@ class CrmService:
     ) -> None:
         await self._uow.bind_shop(shop_id)
         if await self._uow.vehicles.get_by_id(shop_id, vehicle_id) is None:
-            raise NotFoundError("Vehicle not found")
+            raise NotFoundError('Автомобиль не найден')
         deleted = await self._uow.repair_histories.delete(shop_id, vehicle_id, repair_id)
         if not deleted:
-            raise NotFoundError("Repair history not found")
+            raise NotFoundError('История ремонта не найдена')
         await self._uow.commit()
 
     async def communication_timeline(
@@ -443,7 +443,7 @@ class CrmService:
     ) -> list[CommunicationHistory]:
         await self._uow.bind_shop(shop_id)
         if await self._uow.customers.get_by_id(shop_id, customer_id) is None:
-            raise NotFoundError("Customer not found")
+            raise NotFoundError('Клиент не найден')
         return await self._uow.communications.list_by_customer(shop_id, customer_id)
 
     async def add_communication(
@@ -458,9 +458,9 @@ class CrmService:
     ) -> CommunicationHistory:
         await self._uow.bind_shop(shop_id)
         if await self._uow.customers.get_by_id(shop_id, customer_id) is None:
-            raise NotFoundError("Customer not found")
+            raise NotFoundError('Клиент не найден')
         if not message.strip():
-            raise ValidationError("Message cannot be empty")
+            raise ValidationError('Сообщение не может быть пустым')
 
         occurred = created_at
         if occurred is not None and occurred.tzinfo is None:
@@ -484,10 +484,10 @@ class CrmService:
     ) -> None:
         await self._uow.bind_shop(shop_id)
         if await self._uow.customers.get_by_id(shop_id, customer_id) is None:
-            raise NotFoundError("Customer not found")
+            raise NotFoundError('Клиент не найден')
         deleted = await self._uow.communications.delete(
             shop_id, customer_id, communication_id
         )
         if not deleted:
-            raise NotFoundError("Communication not found")
+            raise NotFoundError('Сообщение не найдено')
         await self._uow.commit()

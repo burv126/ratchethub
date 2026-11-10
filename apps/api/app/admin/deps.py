@@ -23,20 +23,20 @@ async def require_platform_admin(
     if settings.environment.lower() in {"production", "prod"} and not allowlist:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Platform admin required",
+            detail='Требуются права администратора платформы',
         )
 
     if (current.account_type or "") != AccountType.PLATFORM_ADMIN.value:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Platform admin required",
+            detail='Требуются права администратора платформы',
         )
 
     username = (current.username or "").strip().lower()
     if not username or username not in allowlist:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Platform admin required",
+            detail='Требуются права администратора платформы',
         )
 
     return username

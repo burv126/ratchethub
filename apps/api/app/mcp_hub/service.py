@@ -147,7 +147,7 @@ class McpHubService:
             self.logger.log(
                 request.shop_id,
                 event="invoke.success",
-                message=f"Invoked {request.tool}",
+                message=f'Вызвано {request.tool}',
                 provider=request.provider,
                 connection_id=connection.id,
                 details={"tool": request.tool, "attempts": attempts},
@@ -227,11 +227,11 @@ class McpHubService:
         if request.connection_id is not None:
             conn = self.connections.get(request.shop_id, request.connection_id)
             if conn is None:
-                raise KeyError(f"Connection not found: {request.connection_id}")
+                raise KeyError(f'Подключение не найдено: {request.connection_id}')
             if conn.provider != request.provider:
-                raise ValueError("Connection provider mismatch")
+                raise ValueError('Провайдер подключения не совпадает')
             if conn.status != ConnectionStatus.CONNECTED:
-                raise ValueError(f"Connection is {conn.status.value}; connect first")
+                raise ValueError(f'Статус подключения: {conn.status.value}; сначала подключите')
             return conn
 
         connected = [
@@ -240,5 +240,5 @@ class McpHubService:
             if c.status == ConnectionStatus.CONNECTED
         ]
         if not connected:
-            raise ValueError(f"No connected {request.provider.value} connection; create and connect one first")
+            raise ValueError(f'Нет активного подключения {request.provider.value}; сначала создайте и подключите его')
         return connected[0]

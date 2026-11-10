@@ -15,7 +15,7 @@ class ShopmonkeyAdapter(BaseAdapter):
     provider = IntegrationProvider.SHOPMONKEY
     category = IntegrationCategory.DMS
     display_name = "Shopmonkey"
-    description = "Modern shop OS — customers, vehicles, jobs, and appointments."
+    description = 'Современная система автосервиса — клиенты, автомобили, работы и записи.'
     auth_method = AuthMethod.API_KEY
     docs_url = "https://www.shopmonkey.io"
     credential_fields = ["api_key"]

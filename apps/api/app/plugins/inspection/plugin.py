@@ -46,15 +46,14 @@ class InspectionPlugin:
         return "inspection"
 
     def plugin_name(self) -> str:
-        return "Inspection Intelligence"
+        return 'Аналитика осмотров'
 
     def plugin_version(self) -> str:
         return "1.0.0"
 
     def plugin_description(self) -> str:
         return (
-            "Transforms technician inspection results into AI-powered customer service "
-            "workflows via Decision Objects only — Workflow executes business actions."
+            'Преобразует результаты осмотра в процессы обслуживания клиентов с помощью объектов решений — бизнес-действия выполняет рабочий процесс.'
         )
 
     def supported_capabilities(self) -> list[str]:
@@ -142,11 +141,11 @@ class InspectionPlugin:
         diagnosis = self._diagnosis.analyze(ctx)
         decisions.extend(diagnosis)
         safety = [d for d in diagnosis if d.__class__.__name__ == "SafetyAlertDecision"]
-        notes.append(f"Diagnosed {len(ctx.findings)} finding(s); safety={len(safety)}")
+        notes.append(f'Выявлено замечаний: {len(ctx.findings)}; по безопасности: {len(safety)}')
 
         recs = self._recommendation.prioritize(ctx)
         decisions.extend(recs)
-        notes.append(f"Prioritized {len(recs)} repair recommendation(s)")
+        notes.append(f'Расставлены приоритеты рекомендаций: {len(recs)}')
 
         explanations = self._explanation.explain(ctx, safety_alerts=safety)
         decisions.extend(explanations)
@@ -200,7 +199,7 @@ class InspectionPlugin:
     ) -> Any:
         shop_id = kwargs.get("shop_id") or (context.shop_id if context else None)
         if shop_id is None:
-            raise ValueError("shop_id required for Inspection Intelligence")
+            raise ValueError('Для аналитики осмотров требуется shop_id')
         if isinstance(shop_id, str):
             shop_id = UUID(shop_id)
 
@@ -260,4 +259,4 @@ class InspectionPlugin:
             decisions = self._approval.create_follow_up(ctx, recommendations=recs)
             return {"decisions": decisions, "count": len(decisions)}
 
-        raise LookupError(f"Unsupported inspection capability: {cap}")
+        raise LookupError(f'Неподдерживаемая возможность осмотра: {cap}')

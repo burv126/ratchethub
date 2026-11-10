@@ -102,20 +102,19 @@ def _service_type_or_time_reschedule_draft(
         if _mentions_time_change_with_service(last_customer):
             who = f"{address_name}, " if address_name else ""
             cur = current_service or service_name
-            svc_bit = f" instead of {cur}" if cur else ""
+            svc_bit = f' вместо {cur}' if cur else ""
             return VoiceReplyDraft(
                 text=(
-                    f"{who}sure — which service{svc_bit}, "
-                    "and what day and time work for you?"
+                    f'{who}конечно — какая услуга{svc_bit}, какие день и время вам удобны?'
                 ),
-                follow_up_question="Which service and new day/time?",
+                follow_up_question='Какая услуга и новые день и время вам нужны?',
             )
         return VoiceReplyDraft(
             text=counselor.ask_replacement_service(
                 customer_name=address_name,
                 current_service=current_service or service_name,
             ),
-            follow_up_question="Which service instead?",
+            follow_up_question='Какую услугу выбрать вместо текущей?',
         )
     if counselor.looks_like_reschedule_desire(last_customer):
         return VoiceReplyDraft(
@@ -124,7 +123,7 @@ def _service_type_or_time_reschedule_draft(
                 service_name=service_name,
                 when=None,
             ),
-            follow_up_question="New day and time?",
+            follow_up_question='Какие новые день и время вам удобны?',
         )
     return None
 
@@ -164,11 +163,10 @@ class VoiceReplyGenerator:
         snapshot = meta.get("customer_snapshot") or {}
 
         if pipeline.escalate:
-            who = f"{address_name}, hang tight — " if address_name else "Hang tight — "
+            who = f'{address_name}, подождите немного — ' if address_name else 'Подождите немного — '
             return VoiceReplyDraft(
                 text=(
-                    f"{who}I'm grabbing someone from the shop who can help. "
-                    "Stay with me one sec."
+                    f'{who}сейчас подключу сотрудника, который поможет. Пожалуйста, оставайтесь на линии.'
                 ),
                 escalate_to_human=True,
                 reason=(
@@ -206,7 +204,7 @@ class VoiceReplyGenerator:
                 text=counselor.offer_service_candidates(
                     candidates, customer_name=address_name
                 ),
-                follow_up_question="Which service?",
+                follow_up_question='Какая услуга вам нужна?',
             )
 
         last_customer = next(
@@ -241,7 +239,7 @@ class VoiceReplyGenerator:
                 text=counselor.redirect_to_service_topic(
                     customer_name=address_name
                 ),
-                follow_up_question="How can I help with vehicle service?",
+                follow_up_question='Чем помочь с обслуживанием автомобиля?',
             )
 
         # Already booked this turn — confirm, then keep the line open.
@@ -259,7 +257,7 @@ class VoiceReplyGenerator:
                     when=sched.appointment.start,
                     keep_open=True,
                 ),
-                follow_up_question="Anything else I can help with?",
+                follow_up_question='Могу помочь ещё с чем-нибудь?',
             )
 
         needs_name = counselor.needs_customer_name(
@@ -275,7 +273,7 @@ class VoiceReplyGenerator:
         ):
             return VoiceReplyDraft(
                 text=counselor.ask_service(customer_name=address_name),
-                follow_up_question="What service do you need?",
+                follow_up_question='Какая услуга вам нужна?',
             )
 
         # Misclassified BOOK that is actually a reschedule desire.
@@ -314,7 +312,7 @@ class VoiceReplyGenerator:
         ):
             return VoiceReplyDraft(
                 text=counselor.ask_service(customer_name=address_name),
-                follow_up_question="What service do you need?",
+                follow_up_question='Какая услуга вам нужна?',
             )
 
         # Preferred day/time rejected by scheduling (closed day, full slot, etc.)
@@ -347,11 +345,11 @@ class VoiceReplyGenerator:
                 )
             )
             follow = (
-                "What other day works?"
+                'Какой другой день вам удобен?'
                 if aspect == "date"
-                else "What other time works?"
+                else 'Какое другое время вам удобно?'
                 if aspect == "time"
-                else "What other day or time works?"
+                else 'Какие другие день или время вам удобны?'
             )
             return VoiceReplyDraft(
                 text=counselor.time_unavailable(
@@ -389,7 +387,7 @@ class VoiceReplyGenerator:
                         customer_name=address_name,
                         service_name=service_name,
                     ),
-                    follow_up_question="Which time works?",
+                    follow_up_question='Какое время вам удобно?',
                 )
             # Clock/part without a day → only ask for the day.
             if entities.get("needs_date") and not entities.get("needs_time"):
@@ -399,7 +397,7 @@ class VoiceReplyGenerator:
                         service_name=service_name,
                         known_time=preferred_partial,
                     ),
-                    follow_up_question="Preferred day?",
+                    follow_up_question='Какой день вам удобен?',
                 )
             # Day known, clock missing → only ask for the time.
             known_day = (
@@ -414,7 +412,7 @@ class VoiceReplyGenerator:
                     known_day=known_day,
                 ),
                 follow_up_question=(
-                    "Preferred time?" if known_day else "Preferred day and time?"
+                    'Какое время вам удобно?' if known_day else 'Какие день и время вам удобны?'
                 ),
             )
 
@@ -442,11 +440,11 @@ class VoiceReplyGenerator:
                     )
                 )
                 follow = (
-                    "What other day works?"
+                    'Какой другой день вам удобен?'
                     if aspect == "date"
-                    else "What other time works?"
+                    else 'Какое другое время вам удобно?'
                     if aspect == "time"
-                    else "What other day or time works?"
+                    else 'Какие другие день или время вам удобны?'
                 )
                 return VoiceReplyDraft(
                     text=counselor.time_unavailable(
@@ -501,7 +499,7 @@ class VoiceReplyGenerator:
                         service_name=service_name,
                         when=pending_when,
                     ),
-                    follow_up_question="Shall I book that for you?",
+                    follow_up_question='Записать вас?',
                 )
             if intent == CustomerIntent.CHECK_AVAILABILITY:
                 if sched and sched.available_slots:
@@ -515,15 +513,14 @@ class VoiceReplyGenerator:
                             customer_name=address_name,
                             service_name=service_name,
                         ),
-                        follow_up_question="Which time works?",
+                        follow_up_question='Какое время вам удобно?',
                     )
                 who = f"{address_name}, " if address_name else ""
                 return VoiceReplyDraft(
                     text=(
-                        f"{who}I'm not seeing openings in the next week. "
-                        "Want me to look at another day?"
+                        f'{who}на ближайшую неделю свободного времени не вижу. Проверить другой день?'
                     ),
-                    follow_up_question="Another day?",
+                    follow_up_question='Другой день?',
                 )
             # Clock already known (time_only / needs_date) — do not re-ask the hour.
             known_clock = _parse_dt(entities.get("preferred_start")) or _parse_dt(
@@ -541,13 +538,13 @@ class VoiceReplyGenerator:
                         service_name=service_name,
                         known_time=known_clock,
                     ),
-                    follow_up_question="Preferred day?",
+                    follow_up_question='Какой день вам удобен?',
                 )
             return VoiceReplyDraft(
                 text=counselor.ask_time(
                     customer_name=address_name, service_name=service_name
                 ),
-                follow_up_question="Preferred day and time?",
+                follow_up_question='Какие день и время вам удобны?',
             )
 
         if intent == CustomerIntent.RESCHEDULE:
@@ -584,7 +581,7 @@ class VoiceReplyGenerator:
                         customer_name=address_name,
                         current_service=current or service_name,
                     ),
-                    follow_up_question="Which service instead?",
+                    follow_up_question='Какую услугу выбрать вместо текущей?',
                 )
             if not service_name and upcoming:
                 service_name = upcoming[0].get("service_name") or service_name
@@ -597,7 +594,7 @@ class VoiceReplyGenerator:
                         when=sched.appointment.start,
                         keep_open=True,
                     ),
-                    follow_up_question="Anything else I can help with?",
+                    follow_up_question='Могу помочь ещё с чем-нибудь?',
                 )
             sched_meta = (getattr(sched, "metadata", None) or {}) if sched else {}
             sched_message = getattr(sched, "message", None) if sched else None
@@ -607,10 +604,9 @@ class VoiceReplyGenerator:
                 who = f"{address_name}, " if address_name else ""
                 return VoiceReplyDraft(
                     text=(
-                        f"{who}I'm not seeing an upcoming appointment to move. "
-                        "Would you like to book a visit instead?"
+                        f'{who}будущей записи для переноса не вижу. Хотите записаться на новый визит?'
                     ),
-                    follow_up_question="Book a visit, or something else?",
+                    follow_up_question='Записать вас или помочь с другим вопросом?',
                 )
             if (
                 sched_message == "preferred_time_unavailable"
@@ -623,11 +619,11 @@ class VoiceReplyGenerator:
                 if aspect not in {"date", "time", "both"}:
                     aspect = "both"
                 follow = (
-                    "What other day works?"
+                    'Какой другой день вам удобен?'
                     if aspect == "date"
-                    else "What other time works?"
+                    else 'Какое другое время вам удобно?'
                     if aspect == "time"
-                    else "What other day or time works?"
+                    else 'Какие другие день или время вам удобны?'
                 )
                 return VoiceReplyDraft(
                     text=counselor.time_unavailable(
@@ -657,7 +653,7 @@ class VoiceReplyGenerator:
                         service_name=service_name,
                         when=pending_when,
                     ),
-                    follow_up_question="Should I move it?",
+                    follow_up_question='Перенести запись?',
                 )
             # Incomplete answers during reschedule — pin down the missing half.
             preferred_partial = _parse_dt(entities.get("preferred_start"))
@@ -668,7 +664,7 @@ class VoiceReplyGenerator:
                         service_name=service_name,
                         known_time=preferred_partial,
                     ),
-                    follow_up_question="Preferred day?",
+                    follow_up_question='Какой день вам удобен?',
                 )
             if entities.get("needs_time") or entities.get("vague_time"):
                 known_day = (
@@ -683,7 +679,7 @@ class VoiceReplyGenerator:
                         known_day=known_day,
                     ),
                     follow_up_question=(
-                        "Preferred time?" if known_day else "Preferred day and time?"
+                        'Какое время вам удобно?' if known_day else 'Какие день и время вам удобны?'
                     ),
                 )
             if sched and sched.available_slots and has_preference:
@@ -695,11 +691,11 @@ class VoiceReplyGenerator:
                     ranges, customer_name=address_name, service_name=service_name
                 )
                 return VoiceReplyDraft(
-                    text=spoken.replace("I've got", "no problem — I've got").replace(
-                        "Want the first one, or a different time?",
-                        "Which works, or another day?",
+                    text=spoken.replace('Есть', 'конечно — есть').replace(
+                        'Выбрать первый вариант или другое время?',
+                        'Какой вариант подходит, или выбрать другой день?',
                     ),
-                    follow_up_question="Which new time?",
+                    follow_up_question='Какое новое время вам удобно?',
                 )
             return VoiceReplyDraft(
                 text=counselor.summarize_reschedule_confirm(
@@ -707,7 +703,7 @@ class VoiceReplyGenerator:
                     service_name=service_name,
                     when=None,
                 ),
-                follow_up_question="New day and time?",
+                follow_up_question='Какие новые день и время вам удобны?',
             )
 
         if intent == CustomerIntent.CANCEL_APPOINTMENT:
@@ -719,7 +715,7 @@ class VoiceReplyGenerator:
                         service_name=service_name,
                         keep_open=True,
                     ),
-                    follow_up_question="Anything else I can help with?",
+                    follow_up_question='Могу помочь ещё с чем-нибудь?',
                 )
             if sched and (
                 getattr(sched, "message", None) == "no_appointment_to_cancel"
@@ -728,10 +724,9 @@ class VoiceReplyGenerator:
                 who = f"{address_name}, " if address_name else ""
                 return VoiceReplyDraft(
                     text=(
-                        f"{who}I'm not seeing an upcoming appointment on the schedule. "
-                        "Would you like to book a visit instead?"
+                        f'{who}будущей записи в расписании не вижу. Хотите записаться на визит?'
                     ),
-                    follow_up_question="Book a visit, or something else?",
+                    follow_up_question='Записать вас или помочь с другим вопросом?',
                 )
             # Prefer known upcoming visit details in the confirmation ask.
             upcoming = list(meta.get("upcoming_appointments") or [])
@@ -746,18 +741,16 @@ class VoiceReplyGenerator:
                     service_name=svc,
                     when=when,
                 ),
-                follow_up_question="Confirm cancellation?",
+                follow_up_question='Подтвердите отмену?',
             )
 
         if intent == CustomerIntent.ASK_REPAIR_STATUS:
             who = f"{address_name}, " if address_name else ""
             return VoiceReplyDraft(
                 text=(
-                    f"{who}let me check on that. "
-                    "Someone from the shop will get you the details shortly. "
-                    "Do you have a repair order number handy?"
+                    f'{who}сейчас уточню. Сотрудник скоро сообщит подробности. У вас есть номер заказ-наряда?'
                 ),
-                follow_up_question="Repair order number?",
+                follow_up_question='Номер заказ-наряда?',
             )
 
         if intent == CustomerIntent.PRICE_QUESTION:
@@ -766,22 +759,20 @@ class VoiceReplyGenerator:
             if service_name and service_price is not None:
                 return VoiceReplyDraft(
                     text=(
-                        f"{who}{service_name} usually runs about ${service_price}. "
-                        "Want me to get you on the schedule?"
+                        f'{who}{service_name} обычно стоит около ${service_price}. Записать вас?'
                     ),
-                    follow_up_question=f"Book {service_name}?",
+                    follow_up_question=f'Записать на {service_name}?',
                 )
             if service_name:
                 return VoiceReplyDraft(
                     text=(
-                        f"{who}I can check pricing for {service_name}. "
-                        "Want me to get you on the schedule?"
+                        f'{who}могу уточнить стоимость {service_name}. Записать вас?'
                     ),
-                    follow_up_question=f"Book {service_name}?",
+                    follow_up_question=f'Записать на {service_name}?',
                 )
             return VoiceReplyDraft(
                 text=counselor.ask_service(customer_name=address_name),
-                follow_up_question="Which service?",
+                follow_up_question='Какая услуга вам нужна?',
             )
 
         if intent == CustomerIntent.MAINTENANCE_QUESTION:
@@ -793,22 +784,20 @@ class VoiceReplyGenerator:
                 if tip:
                     return VoiceReplyDraft(
                         text=(
-                            f"{who}for your vehicle, {tip} is coming up. "
-                            "Want me to get you on the schedule?"
+                            f'{who}для вашего автомобиля скоро потребуется {tip}. Записать вас?'
                         ),
-                        follow_up_question="Book a maintenance visit?",
+                        follow_up_question='Записать на обслуживание?',
                     )
             if service_name:
                 return VoiceReplyDraft(
                     text=(
-                        f"{who}yep, we can take care of {service_name}. "
-                        "Want me to get you on the schedule?"
+                        f'{who}да, мы выполняем {service_name}. Записать вас?'
                     ),
-                    follow_up_question=f"Book {service_name}?",
+                    follow_up_question=f'Записать на {service_name}?',
                 )
             return VoiceReplyDraft(
-                text=f"{who}want me to get you on the schedule for a visit?",
-                follow_up_question="Book a visit?",
+                text=f'{who}записать вас на визит?',
+                follow_up_question='Записать вас?',
             )
 
         text_blob = " ".join(t.text.lower() for t in memory.turns[-3:])
@@ -816,8 +805,7 @@ class VoiceReplyGenerator:
             who = f"{address_name}, " if address_name else ""
             return VoiceReplyDraft(
                 text=(
-                    f"{who}got it — I've noted your estimate decision. "
-                    "We'll update the shop. Anything else?"
+                    f'{who}понятно, ваше решение по смете записано. Сообщим автосервису. Могу помочь ещё с чем-нибудь?'
                 )
             )
 
@@ -825,8 +813,7 @@ class VoiceReplyGenerator:
             who = f"{address_name}, " if address_name else ""
             return VoiceReplyDraft(
                 text=(
-                    f"{who}I'm sorry you're dealing with that. "
-                    "I'm getting the shop on the line right now — stay with me."
+                    f'{who}сожалею, что вы столкнулись с этим. Сейчас соединю с автосервисом — оставайтесь на линии.'
                 ),
                 escalate_to_human=True,
                 reason="emergency",
@@ -836,8 +823,7 @@ class VoiceReplyGenerator:
             who = f"{address_name}, " if address_name else ""
             return VoiceReplyDraft(
                 text=(
-                    f"{who}I'm really sorry about that. "
-                    "Let me get an owner for you — one moment."
+                    f'{who}очень жаль, что так получилось. Сейчас подключу владельца — одну минуту.'
                 ),
                 escalate_to_human=True,
                 reason="complaint",
@@ -862,7 +848,7 @@ class VoiceReplyGenerator:
                 if counselor.looks_like_booking_desire(last_customer):
                     return VoiceReplyDraft(
                         text=counselor.ask_service(customer_name=address_name),
-                        follow_up_question="What service do you need?",
+                        follow_up_question='Какая услуга вам нужна?',
                     )
                 # Unclear OTHER after the offer — soft close instead of looping the same ask.
                 return self.farewell()
@@ -878,17 +864,17 @@ class VoiceReplyGenerator:
                 if counselor.looks_like_booking_desire(last_customer):
                     return VoiceReplyDraft(
                         text=counselor.ask_service(customer_name=address_name),
-                        follow_up_question="What service do you need?",
+                        follow_up_question='Какая услуга вам нужна?',
                     )
                 # Off-topic / unclear after the open purpose ask — guide back to service.
                 return VoiceReplyDraft(
                     text=counselor.redirect_to_service_topic(
                         customer_name=address_name
                     ),
-                    follow_up_question="How can I help with vehicle service?",
+                    follow_up_question='Чем помочь с обслуживанием автомобиля?',
                 )
             return VoiceReplyDraft(
-                text=f"{who}got it. {memory.pending_question}",
+                text=f'{who}понятно. {memory.pending_question}',
                 follow_up_question=memory.pending_question,
             )
 
@@ -903,17 +889,17 @@ class VoiceReplyGenerator:
         if counselor.looks_like_booking_desire(last_customer) and not service_name:
             return VoiceReplyDraft(
                 text=counselor.ask_service(customer_name=address_name),
-                follow_up_question="What service do you need?",
+                follow_up_question='Какая услуга вам нужна?',
             )
 
         # Unrelated / unclear intent with no booking path — kindly stay on service topics.
         return VoiceReplyDraft(
             text=counselor.redirect_to_service_topic(customer_name=address_name),
-            follow_up_question="How can I help with vehicle service?",
+            follow_up_question='Чем помочь с обслуживанием автомобиля?',
         )
 
     def farewell(self) -> VoiceReplyDraft:
         return VoiceReplyDraft(
-            text="Thank you so much for calling — take care, and have a great day.",
+            text='Спасибо за звонок! Всего доброго и хорошего дня.',
             end_call=True,
         )

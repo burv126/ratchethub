@@ -74,7 +74,7 @@ export function SetupGate({ children }: { children: React.ReactNode }) {
   if (authLoading || !session || !ready) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm text-[var(--muted)]">
-        Loading…
+        Загрузка…
       </div>
     );
   }

@@ -73,7 +73,7 @@ async def connect(
     if tenant_id != user.shop_id:
         raise HTTPException(
             status_code=403,
-            detail="tenant_id must match authenticated shop_id (no cross-shop access)",
+            detail='tenant_id должен соответствовать shop_id текущего пользователя; доступ между автосервисами запрещён',
         )
     try:
         conn = await _service().connect(
@@ -128,7 +128,7 @@ async def execute_capability(
     if tenant_id != user.shop_id:
         raise HTTPException(
             status_code=403,
-            detail="tenant_id must match authenticated shop_id (no cross-shop access)",
+            detail='tenant_id должен соответствовать shop_id текущего пользователя; доступ между автосервисами запрещён',
         )
     try:
         result = await _service().execute(

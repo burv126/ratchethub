@@ -16,35 +16,35 @@ def default_workflows() -> list[WorkflowDefinition]:
     appointment_booked = WorkflowDefinition(
         id=uuid4(),
         shop_id=None,
-        name="Appointment booked cascade",
-        description="Reminder → CRM → Revenue → Dashboard on appointment.booked",
+        name='Цепочка создания записи',
+        description='Напоминание → CRM → выручка → панель при appointment.booked',
         trigger=DomainEventType.APPOINTMENT_BOOKED,
         conditions=[],
         actions=[
             WorkflowAction(
                 type=ActionType.SCHEDULE_REMINDER,
-                name="Schedule reminder",
+                name='Запланировать напоминание',
                 order=1,
                 config={"hours_before": 24, "channel": "sms", "template": "appointment_reminder"},
                 compensate={"type": "cancel_reminder"},
             ),
             WorkflowAction(
                 type=ActionType.UPDATE_CRM,
-                name="Update CRM",
+                name='Обновить CRM',
                 order=2,
-                config={"note": "Appointment booked"},
+                config={"note": 'Запись создана'},
                 compensate={"type": "undo_crm"},
             ),
             WorkflowAction(
                 type=ActionType.UPDATE_REVENUE,
-                name="Update revenue",
+                name='Обновить выручку',
                 order=3,
                 config={"category": "appointment"},
                 compensate={"type": "undo_revenue"},
             ),
             WorkflowAction(
                 type=ActionType.UPDATE_DASHBOARD,
-                name="Refresh dashboard",
+                name='Обновить панель',
                 order=4,
                 config={"widget": "overview", "invalidate": ["appointments", "revenue"]},
                 compensate={"type": "undo_dashboard"},
@@ -58,25 +58,25 @@ def default_workflows() -> list[WorkflowDefinition]:
     appointment_cancelled = WorkflowDefinition(
         id=uuid4(),
         shop_id=None,
-        name="Appointment cancelled cascade",
-        description="CRM + revenue + dashboard on cancellation",
+        name='Цепочка отмены записи',
+        description='CRM + выручка + панель при отмене',
         trigger=DomainEventType.APPOINTMENT_CANCELLED,
         actions=[
             WorkflowAction(
                 type=ActionType.UPDATE_CRM,
-                name="Log cancellation in CRM",
+                name='Записать отмену в CRM',
                 order=1,
-                config={"note": "Appointment cancelled"},
+                config={"note": 'Запись отменена'},
             ),
             WorkflowAction(
                 type=ActionType.UPDATE_REVENUE,
-                name="Adjust revenue forecast",
+                name='Скорректировать прогноз выручки',
                 order=2,
                 config={"category": "cancellation"},
             ),
             WorkflowAction(
                 type=ActionType.UPDATE_DASHBOARD,
-                name="Refresh dashboard",
+                name='Обновить панель',
                 order=3,
                 config={"widget": "overview"},
             ),
@@ -88,13 +88,13 @@ def default_workflows() -> list[WorkflowDefinition]:
     invoice_paid = WorkflowDefinition(
         id=uuid4(),
         shop_id=None,
-        name="Invoice paid cascade",
-        description="Revenue + CRM + dashboard when invoice is paid",
+        name='Цепочка оплаты счёта',
+        description='Выручка + CRM + панель при оплате счёта',
         trigger=DomainEventType.INVOICE_PAID,
         actions=[
-            WorkflowAction(type=ActionType.UPDATE_REVENUE, name="Record payment", order=1),
+            WorkflowAction(type=ActionType.UPDATE_REVENUE, name='Записать платёж', order=1),
             WorkflowAction(type=ActionType.UPDATE_CRM, name="CRM payment note", order=2),
-            WorkflowAction(type=ActionType.UPDATE_DASHBOARD, name="Refresh dashboard", order=3),
+            WorkflowAction(type=ActionType.UPDATE_DASHBOARD, name='Обновить панель', order=3),
         ],
         status=WorkflowStatus.ACTIVE,
         tags=["default", "billing"],
@@ -104,16 +104,16 @@ def default_workflows() -> list[WorkflowDefinition]:
         id=uuid4(),
         shop_id=None,
         name="Walk-in created",
-        description="CRM + dashboard for new walk-ins",
+        description='CRM + панель для новых визитов без записи',
         trigger=DomainEventType.WALK_IN_CREATED,
         actions=[
             WorkflowAction(type=ActionType.UPDATE_CRM, name="CRM walk-in", order=1),
-            WorkflowAction(type=ActionType.UPDATE_DASHBOARD, name="Refresh dashboard", order=2),
+            WorkflowAction(type=ActionType.UPDATE_DASHBOARD, name='Обновить панель', order=2),
             WorkflowAction(
                 type=ActionType.NOTIFY,
-                name="Notify advisors",
+                name='Уведомить консультантов',
                 order=3,
-                config={"channel": "in_app", "message": "New walk-in arrived"},
+                config={"channel": "in_app", "message": 'Пришёл посетитель без записи'},
             ),
         ],
         status=WorkflowStatus.ACTIVE,
@@ -123,7 +123,7 @@ def default_workflows() -> list[WorkflowDefinition]:
     customer_created = WorkflowDefinition(
         id=uuid4(),
         shop_id=None,
-        name="Customer created welcome",
+        name='Приветствие нового клиента',
         trigger=DomainEventType.CUSTOMER_CREATED,
         conditions=[
             WorkflowCondition(field="name", operator=ConditionOperator.EXISTS),
@@ -131,12 +131,12 @@ def default_workflows() -> list[WorkflowDefinition]:
         actions=[
             WorkflowAction(
                 type=ActionType.LOG,
-                name="Log new customer",
+                name='Записать нового клиента',
                 order=1,
-                config={"message": "New customer onboarded"},
+                config={"message": 'Новый клиент зарегистрирован'},
             ),
-            WorkflowAction(type=ActionType.UPDATE_CRM, name="Seed CRM timeline", order=2),
-            WorkflowAction(type=ActionType.UPDATE_DASHBOARD, name="Refresh dashboard", order=3),
+            WorkflowAction(type=ActionType.UPDATE_CRM, name='Создать историю CRM', order=2),
+            WorkflowAction(type=ActionType.UPDATE_DASHBOARD, name='Обновить панель', order=3),
         ],
         status=WorkflowStatus.ACTIVE,
         tags=["default", "crm"],
@@ -145,21 +145,21 @@ def default_workflows() -> list[WorkflowDefinition]:
     maintenance_reminder = WorkflowDefinition(
         id=uuid4(),
         shop_id=None,
-        name="Maintenance reminder requested",
-        description="Log + CRM note when revenue requests a maintenance marketing action",
+        name='Запрошено напоминание об обслуживании',
+        description='Журнал + заметка CRM при запросе напоминания об обслуживании',
         trigger=DomainEventType.MAINTENANCE_REMINDER_REQUESTED,
         actions=[
             WorkflowAction(
                 type=ActionType.LOG,
-                name="Log maintenance reminder orchestration",
+                name='Записать организацию напоминания',
                 order=1,
-                config={"message": "Maintenance reminder requested via Workflow coordinator"},
+                config={"message": 'Напоминание запрошено координатором процессов'},
             ),
             WorkflowAction(
                 type=ActionType.UPDATE_CRM,
                 name="CRM maintenance reminder note",
                 order=2,
-                config={"note": "Maintenance reminder requested"},
+                config={"note": 'Запрошено напоминание об обслуживании'},
             ),
         ],
         status=WorkflowStatus.ACTIVE,
@@ -177,13 +177,30 @@ def default_workflows() -> list[WorkflowDefinition]:
     ]
 
 
+# Names were historically used as seed identities. Recognize the original names
+# without renaming stored templates or running their actions a second time.
+_LEGACY_TEMPLATE_NAMES = {
+    "Цепочка создания записи": "Appointment booked cascade",
+    "Цепочка отмены записи": "Appointment cancelled cascade",
+    "Цепочка оплаты счёта": "Invoice paid cascade",
+    "Приветствие нового клиента": "Customer created welcome",
+    "Запрошено напоминание об обслуживании": "Maintenance reminder requested",
+    "Автосервис: запрос ремонта нового клиента по телефону": "Automotive: New customer phone repair request",
+    "Автосервис: напоминание об обслуживании": "Automotive: Maintenance reminder",
+    "Автосервис: осмотр завершён": "Automotive: Inspection completed",
+    "Автосервис: возврат отклонённых смет": "Automotive: Declined estimate recovery",
+    "Автосервис: посетитель без записи": "Automotive: Walk-in customer",
+    "Автосервис: ремонт завершён": "Automotive: Repair completed",
+}
+
+
 async def seed_default_workflows(store: WorkflowStorePort) -> list[WorkflowDefinition]:
     existing = await store.list_workflows(shop_id=uuid4())  # lists globals + none for random shop
     # Prefer check by name among globals
     names = {w.name for w in existing if w.shop_id is None}
     seeded: list[WorkflowDefinition] = []
     for wf in default_workflows():
-        if wf.name in names:
+        if wf.name in names or _LEGACY_TEMPLATE_NAMES.get(wf.name) in names:
             continue
         seeded.append(await store.save_workflow(wf))
     return seeded

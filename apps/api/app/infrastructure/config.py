@@ -8,7 +8,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    app_name: str = "RatchetHub for Independent Auto Repair Shops"
+    app_name: str = 'RatchetHub для независимых автосервисов'
     environment: str = "development"
 
     database_url: str = "postgresql+asyncpg://asa:asa@localhost:5432/ai_service_advisor"

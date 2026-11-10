@@ -124,7 +124,7 @@ class RevenueIntelligenceEngine:
             customer_id=customer_id,
             campaign_type=campaign_type,
             channel=channel,
-            message_draft="We miss you — book your next service when you're ready.",
+            message_draft='Будем рады видеть вас снова — запишитесь на обслуживание, когда вам удобно.',
         )
         await self._insights.record(
             shop_id,

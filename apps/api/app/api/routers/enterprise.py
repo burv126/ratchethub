@@ -381,7 +381,7 @@ async def get_brand(
     _ = user
     brand = rt.service.get_brand(org_id)
     if brand is None:
-        raise HTTPException(status_code=404, detail="Brand not found")
+        raise HTTPException(status_code=404, detail='Оформление не найдено')
     return _brand_out(brand)
 
 

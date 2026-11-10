@@ -15,7 +15,7 @@ def role_at_least(actual: EnterpriseRole, required: EnterpriseRole) -> bool:
 
 def require_role(actual: EnterpriseRole, required: EnterpriseRole) -> None:
     if not role_at_least(actual, required):
-        raise InsufficientRole(f"Requires {required.value}, have {actual.value}")
+        raise InsufficientRole(f'Требуется {required.value}, у вас {actual.value}')
 
 
 def hierarchy() -> list[dict[str, object]]:

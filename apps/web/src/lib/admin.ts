@@ -1,3 +1,5 @@
+
+import { readApiError } from "@/lib/ru-errors";
 import { AuthSession, getApiUrl } from "@/lib/api";
 
 /**
@@ -48,12 +50,7 @@ export function canAccessAdminConsole(session: AuthSession | null | undefined): 
 }
 
 async function parseError(res: Response) {
-  try {
-    const data = await res.json();
-    return typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail ?? data);
-  } catch {
-    return res.statusText;
-  }
+  return readApiError(res);
 }
 
 function adminHeaders(accessToken: string, init?: HeadersInit, method = "GET"): HeadersInit {
@@ -79,7 +76,7 @@ async function adminFetch(accessToken: string, path: string, init: RequestInit =
       headers: adminHeaders(accessToken, init.headers, method),
     });
   } catch {
-    throw new Error(`Cannot reach API at ${apiUrl}${path}. Is the API running?`);
+    throw new Error(`Нет связи с API по адресу ${apiUrl}${path}. Проверьте, запущен ли API.`);
   }
   if (!res.ok) throw new Error(await parseError(res));
   return res.json();
@@ -323,13 +320,13 @@ export type NotificationsFeed = {
 };
 
 export const ADMIN_NOTIFICATION_EVENT_LABELS: Record<string, string> = {
-  "saas.signup": "New signup",
-  "saas.member_joined": "Member joined",
-  "saas.shop_deleted": "Shop deleted",
-  "billing.payment_succeeded": "Payment success",
-  "billing.payment_failed": "Payment failure",
-  "billing.quota_warning": "Token limit warning",
-  "system.error": "System error",
+  "saas.signup": "Новая регистрация",
+  "saas.member_joined": "Новый сотрудник",
+  "saas.shop_deleted": "Автосервис удалён",
+  "billing.payment_succeeded": "Платёж выполнен",
+  "billing.payment_failed": "Ошибка платежа",
+  "billing.quota_warning": "Предупреждение о лимите токенов",
+  "system.error": "Системная ошибка",
 };
 
 export type SystemStatus = {
@@ -438,7 +435,7 @@ function streamAdminSse<T>(
   eventName: string,
   onData: (data: T) => void,
   onError?: (err: Error) => void,
-  errorLabel = "Admin stream failed",
+  errorLabel = "Ошибка потока администратора",
   onPing?: () => void,
 ): () => void {
   const url = `${getApiUrl()}${path}`;
@@ -506,7 +503,7 @@ function streamAdminSse<T>(
         if (closed) break;
         if (isAbort) {
           // Idle watchdog aborted a hung stream after API restart — reconnect.
-          onError?.(new Error(`${errorLabel}: connection idle`));
+          onError?.(new Error(`${errorLabel}: соединение неактивно`));
         } else {
           onError?.(err instanceof Error ? err : new Error(errorLabel));
         }
@@ -537,7 +534,7 @@ export function streamAdminDashboard(
     "dashboard",
     onData,
     onError,
-    "Dashboard stream failed",
+    "Ошибка потока панели",
     onPing,
   );
 }
@@ -554,7 +551,7 @@ export function streamAdminOrganizations(
     "organizations",
     onData,
     onError,
-    "Organizations stream failed",
+    "Ошибка потока организаций",
     onPing,
   );
 }
@@ -571,7 +568,7 @@ export function streamAdminOrganizationDetail(
     "organization",
     onData,
     onError,
-    "Organization stream failed",
+    "Ошибка потока организации",
   );
 }
 
@@ -586,7 +583,7 @@ export function streamAdminBilling(
     "billing",
     onData,
     onError,
-    "Billing stream failed",
+    "Ошибка потока оплаты",
   );
 }
 
@@ -601,7 +598,7 @@ export function streamAdminUsage(
     "usage",
     onData,
     onError,
-    "Usage stream failed",
+    "Ошибка потока использования",
   );
 }
 
@@ -617,7 +614,7 @@ export function streamAdminSystem(
     "system",
     onData,
     onError,
-    "System stream failed",
+    "Ошибка потока системы",
     onPing,
   );
 }
@@ -633,7 +630,7 @@ export function streamAdminSettings(
     "settings",
     onData,
     onError,
-    "Settings stream failed",
+    "Ошибка потока настроек",
   );
 }
 
@@ -838,7 +835,7 @@ export function streamAdminUsers(
     "users",
     onData,
     onError,
-    "Users stream failed",
+    "Ошибка потока пользователей",
     onPing,
   );
 }
@@ -890,12 +887,12 @@ export function streamAdminNotifications(
     "notifications",
     onFeed,
     onError,
-    "Notification stream failed",
+    "Ошибка потока уведомлений",
   );
 }
 
 export function formatCents(cents: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+  return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "USD" }).format(cents / 100);
 }
 
 export function statusTone(status: string) {

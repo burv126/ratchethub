@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
@@ -16,11 +18,11 @@ import { getShopSettings, setShopAiPaused } from "@/lib/tenant";
 const POLL_MS = 15000;
 
 const OVERVIEW_LABELS = {
-  todays_revenue: "Today's Revenue",
-  appointments: "Appointments",
-  walk_ins: "New Customers",
-  revenue_opportunities: "Follow-up Customers",
-  expected_revenue: "Potential Revenue",
+  todays_revenue: "Выручка за сегодня",
+  appointments: "Записи",
+  walk_ins: "Новые клиенты",
+  revenue_opportunities: "Повторные обращения",
+  expected_revenue: "Потенциальная выручка",
 } as const;
 
 const SECONDARY_IDS = ["appointments", "walk_ins", "revenue_opportunities"] as const;
@@ -68,7 +70,7 @@ export default function DashboardPage() {
       if (shop) applyShopSettings(shop);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load dashboard");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить панель");
     }
   }, [applyShopSettings]);
 
@@ -111,7 +113,7 @@ export default function DashboardPage() {
       const shop = await setShopAiPaused(next);
       applyShopSettings(shop);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update AI pause");
+      setError(err instanceof Error ? err.message : "Не удалось изменить паузу ИИ");
     } finally {
       setPauseBusy(false);
     }
@@ -143,14 +145,14 @@ export default function DashboardPage() {
   const greeting = greetingFor(now);
   const workStatusLine = summarizeWorkStatus(repairGroups);
   const dateLabel = now
-    ? now.toLocaleDateString(undefined, {
+    ? now.toLocaleDateString("ru-RU", {
         weekday: "long",
         month: "short",
         day: "numeric",
       })
     : null;
   const timeLabel = now
-    ? now.toLocaleTimeString(undefined, {
+    ? now.toLocaleTimeString("ru-RU", {
         hour: "numeric",
         minute: "2-digit",
       })
@@ -187,13 +189,13 @@ export default function DashboardPage() {
           </p>
           <div className="mt-2 flex items-center justify-between gap-3">
             <h1 className="font-display min-w-0 flex-1 truncate text-[1.75rem] font-semibold leading-[1.05] tracking-tight text-[var(--foreground)] sm:text-[2.05rem]">
-              {session?.shopName ?? "Loading shop…"}
+              {session?.shopName ?? "Загрузка автосервиса…"}
             </h1>
             <div className="flex shrink-0 items-center gap-3 sm:gap-4">
               {timeLabel && (
                 <div className="text-right">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                    Local time
+                    Местное время
                   </p>
                   <p className="font-display mt-0.5 text-xl font-semibold tabular-nums tracking-tight text-[var(--foreground)] sm:text-2xl">
                     {timeLabel}
@@ -210,7 +212,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="mt-2.5 break-words text-sm leading-relaxed text-[var(--muted)] whitespace-normal md:overflow-hidden md:text-ellipsis md:leading-normal md:whitespace-nowrap">
-            {`Today's shop pulse — revenue, appointments, and AI activity. Work status: ${workStatusLine}. Pause AI anytime from the control on the right.`}
+            {`Автосервис сегодня — выручка, записи и активность ИИ. Статус работы: ${workStatusLine}. ИИ можно приостановить кнопкой справа.`}
           </p>
           <div className="mt-3.5 flex flex-wrap items-center gap-2 text-sm text-[var(--muted)]">
             {session && (
@@ -231,7 +233,7 @@ export default function DashboardPage() {
 
       {error && (
         <p className="relative rounded-xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-sm text-red-700 shadow-[var(--shadow-soft)]">
-          {error}
+          {ruError(error)}
         </p>
       )}
 
@@ -247,13 +249,13 @@ export default function DashboardPage() {
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-3">
-                <p className="min-w-0 text-sm font-semibold tracking-tight">No shop data yet</p>
+                <p className="min-w-0 text-sm font-semibold tracking-tight">Данных автосервиса пока нет</p>
                 <Link href="/dashboard/import" className="btn-primary shrink-0 px-3 py-1.5 text-sm sm:px-4 sm:py-2">
-                  Import data
+                  Импорт данных
                 </Link>
               </div>
               <p className="mt-1 max-w-md text-sm text-[var(--muted)]">
-                Import customers and history to populate this dashboard.
+                Импортируйте клиентов и историю для заполнения панели.
               </p>
             </div>
           </div>
@@ -318,7 +320,7 @@ export default function DashboardPage() {
           <div className="relative grid gap-5 lg:grid-cols-[0.88fr_1.12fr]">
             <section>
               <SectionHeading
-                title="AI Activity"
+                title="Активность ИИ"
                 icon={<IconSpark className="h-3.5 w-3.5" />}
               />
               <div className="relative mt-3 overflow-hidden rounded-[1.25rem] border border-[var(--line)] bg-[var(--panel)] shadow-[var(--shadow-soft)]">
@@ -328,12 +330,12 @@ export default function DashboardPage() {
                 />
                 <div className="relative grid grid-cols-2 divide-x divide-[var(--line)]">
                   <AiStat
-                    label="Calls handled"
+                    label="Обработано звонков"
                     value={String(aiActivity.callsHandled)}
                     icon={<IconPhone className="h-3.5 w-3.5" />}
                   />
                   <AiStat
-                    label="Appointments"
+                    label="Записи"
                     value={String(aiActivity.appointmentsCreated)}
                     icon={<IconCalendar className="h-3.5 w-3.5" />}
                   />
@@ -343,7 +345,7 @@ export default function DashboardPage() {
 
             <section>
               <SectionHeading
-                title="Repair Status"
+                title="Статус ремонта"
                 icon={<IconWrench className="h-3.5 w-3.5" />}
               />
               <div className="relative mt-3 overflow-hidden rounded-[1.25rem] border border-[var(--line)] bg-[var(--panel)] shadow-[var(--shadow-soft)]">
@@ -352,9 +354,9 @@ export default function DashboardPage() {
                   className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_100%_0%,var(--accent-soft),transparent_50%)]"
                 />
                 <div className="relative grid grid-cols-3 divide-x divide-[var(--line)]">
-                  <RepairColumn title="Active" tone="active" items={repairGroups.active} />
-                  <RepairColumn title="Waiting" tone="waiting" items={repairGroups.waiting} />
-                  <RepairColumn title="Scheduled" tone="scheduled" items={repairGroups.scheduled} />
+                  <RepairColumn title="Активно" tone="active" items={repairGroups.active} />
+                  <RepairColumn title="Ожидание" tone="waiting" items={repairGroups.waiting} />
+                  <RepairColumn title="Запланировано" tone="scheduled" items={repairGroups.scheduled} />
                 </div>
               </div>
             </section>
@@ -366,11 +368,11 @@ export default function DashboardPage() {
 }
 
 function greetingFor(now: Date | null) {
-  if (!now) return "Welcome back";
+  if (!now) return "С возвращением";
   const hour = now.getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return "Доброе утро";
+  if (hour < 17) return "Добрый день";
+  return "Добрый вечер";
 }
 
 function summarizeWorkStatus(groups: {
@@ -382,9 +384,9 @@ function summarizeWorkStatus(groups: {
   const waiting = groups.waiting.length;
   const scheduled = groups.scheduled.length;
   if (active + waiting + scheduled === 0) {
-    return "no jobs in bay yet";
+    return "на постах пока нет работ";
   }
-  return `${active} active · ${waiting} waiting · ${scheduled} scheduled`;
+  return `${active} активно · ${waiting} ожидает · ${scheduled} запланировано`;
 }
 
 function deriveAiActivity(data: ExecutiveDashboard | null) {
@@ -394,13 +396,13 @@ function deriveAiActivity(data: ExecutiveDashboard | null) {
 
   // Prefer durable live count (today SMS inbound + voice calls from DB).
   const fromLive = Number(data?.live?.ai_conversations ?? 0) || 0;
-  const sms = Number(points.get("SMS handled") ?? 0);
-  const voice = Number(points.get("Voice turns") ?? 0);
+  const sms = Number(points.get("Обработано SMS") ?? 0);
+  const voice = Number(points.get("Реплики голосового ИИ") ?? 0);
   const callsFromChart = Math.round(sms + voice);
   const callsFromCard = Number(cards.get("ai_conversations")?.value ?? 0) || 0;
   const callsHandled = fromLive || callsFromChart || callsFromCard;
 
-  const appointmentsCreated = Math.round(Number(points.get("Appts booked") ?? 0));
+  const appointmentsCreated = Math.round(Number(points.get("Создано записей") ?? 0));
 
   return { callsHandled, appointmentsCreated };
 }
@@ -489,16 +491,16 @@ function StatusPill({
   const canToggle = hasTwilioNumber && (usageAvailable || live);
   const disabled = busy || !canToggle;
   const label = !hasTwilioNumber
-    ? "No AI phone number assigned yet"
+    ? "Номер телефона ИИ пока не назначен"
     : !usageAvailable && !live
-      ? "AI quota used up — upgrade plan to resume"
+      ? "Квота ИИ исчерпана — повысьте тариф для продолжения"
       : !usageAvailable && live
-        ? "AI quota used up — click to pause"
+        ? "Квота ИИ исчерпана — нажмите для паузы"
         : busy
-          ? "Updating…"
+          ? "Обновление…"
           : live
-            ? "AI answering — click to pause"
-            : "Calls paused — click to resume";
+            ? "ИИ отвечает — нажмите для паузы"
+            : "Звонки приостановлены — нажмите для продолжения";
 
   return (
     <button
@@ -1014,7 +1016,7 @@ function RepairColumn({
           dotOuter: "bg-[var(--accent)]/60",
           dotInner: "bg-[var(--accent)] shadow-[0_0_6px_var(--accent-glow)]",
           statusDot: "bg-[var(--accent)] shadow-[0_0_5px_var(--accent-glow)]",
-          statusLabel: "In progress",
+          statusLabel: "В работе",
           iconWrap:
             "bg-[var(--accent-soft)] text-[var(--accent)] ring-1 ring-[var(--accent)]/20",
           icon: <IconWrench className="h-3 w-3" />,
@@ -1036,7 +1038,7 @@ function RepairColumn({
             dotOuter: "bg-amber-400/65",
             dotInner: "bg-amber-500",
             statusDot: "bg-amber-500",
-            statusLabel: "Waiting",
+            statusLabel: "Ожидание",
             iconWrap: "bg-amber-50 text-amber-800 ring-1 ring-amber-200/80",
             icon: <IconClock className="h-3 w-3" />,
             label: "text-[var(--muted)]",
@@ -1056,7 +1058,7 @@ function RepairColumn({
             dotOuter: "bg-[var(--muted)]/40",
             dotInner: "bg-[var(--muted)]",
             statusDot: "bg-[var(--muted)]",
-            statusLabel: "Scheduled",
+            statusLabel: "Запланировано",
             iconWrap:
               "bg-[var(--background)] text-[var(--muted)] ring-1 ring-[var(--line)]",
             icon: <IconCalendar className="h-3 w-3" />,
@@ -1116,7 +1118,7 @@ function RepairColumn({
           className={`${meta.scroll} h-full min-h-0 space-y-1.5 overflow-y-auto overscroll-contain scroll-smooth pr-1 [-webkit-overflow-scrolling:touch]`}
         >
           {items.length === 0 ? (
-            <li className={`rounded-lg px-2 py-2 text-xs ${meta.empty}`}>None</li>
+            <li className={`rounded-lg px-2 py-2 text-xs ${meta.empty}`}>Нет</li>
           ) : (
             items.map((item) => {
               const body = (

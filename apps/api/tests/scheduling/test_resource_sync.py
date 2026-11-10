@@ -79,7 +79,7 @@ async def test_sync_catalog_bays_one_lane_per_team_member(monkeypatch):
     bays = await store.list_bays(shop_id)
     assert len(bays) == 3
     assert {b.id for b in bays} == {_stable_bay_id(shop_id, "lane", i) for i in range(3)}
-    assert [b.name for b in bays] == ["Bay 1", "Bay 2", "Bay 3"]
+    assert [b.name for b in bays] == ["Пост 1", "Пост 2", "Пост 3"]
     # Labels rotate across catalog types for preference scoring only.
     assert sorted(b.bay_type for b in bays) == ["general", "quick_service", "quick_service"]
 

@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import { FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -414,7 +418,7 @@ export function TeamPanel() {
         setSeatQuota(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load team");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить команду");
     } finally {
       setLoading(false);
     }
@@ -433,11 +437,11 @@ export function TeamPanel() {
     setError(null);
     setSuccess(null);
     if (password !== confirmPassword) {
-      setError("Password and confirmation do not match.");
+      setError("Пароль и подтверждение не совпадают.");
       return;
     }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError("Пароль должен содержать не менее 8 символов.");
       return;
     }
     setSaving(true);
@@ -449,7 +453,7 @@ export function TeamPanel() {
         password,
         capabilities: selectedCaps,
       });
-      setSuccess(`Invited ${member.full_name} as Staff.`);
+      setSuccess(`Приглашён ${member.full_name} как сотрудник.`);
       setFullName("");
       setPhone("");
       setEmail("");
@@ -459,7 +463,7 @@ export function TeamPanel() {
       setShowForm(false);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to invite member");
+      setError(err instanceof Error ? err.message : "Не удалось пригласить сотрудника");
     } finally {
       setSaving(false);
     }
@@ -497,13 +501,13 @@ export function TeamPanel() {
     setSuccess(null);
     try {
       await updateMemberCapabilities(editingId, editCaps);
-      setSuccess("Permissions updated.");
+      setSuccess("Разрешения обновлены.");
       setEditingId(null);
       setEditingName("");
       setInitialEditCaps([]);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update permissions");
+      setError(err instanceof Error ? err.message : "Не удалось обновить разрешения");
     } finally {
       setSavingEdit(false);
     }
@@ -535,10 +539,10 @@ export function TeamPanel() {
         setInitialEditCaps([]);
       }
       setPendingRemove(null);
-      setSuccess(`Removed ${member.full_name} from the team.`);
+      setSuccess(`Удалён ${member.full_name} из команды.`);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to remove member");
+      setError(err instanceof Error ? err.message : "Не удалось удалить сотрудника");
     } finally {
       setRemovingId(null);
     }
@@ -546,7 +550,7 @@ export function TeamPanel() {
 
   function openInvite() {
     if (seatsFull) {
-      setError("Seat limit reached. Upgrade your plan to add more members.");
+      setError("Достигнут лимит мест. Повысьте тариф для добавления сотрудников.");
       return;
     }
     setShowForm(true);
@@ -570,7 +574,7 @@ export function TeamPanel() {
           className="shrink-0 rounded-xl border border-red-200/80 bg-red-50 px-4 py-3 text-sm text-red-700"
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       )}
       {success && !showForm && (
@@ -593,11 +597,11 @@ export function TeamPanel() {
             </span>
             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <h2 className="truncate text-sm font-semibold tracking-tight text-[var(--ink)]">
-                Team
+                Команда
               </h2>
               <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-[var(--ink)] ring-1 ring-[var(--line)]">
                 <IconShield className="h-2.5 w-2.5 text-[var(--accent)]" />
-                Access
+                Доступ
               </span>
               {!loading ? (
                 <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-medium tabular-nums text-[var(--muted)] ring-1 ring-[var(--line)]">
@@ -606,7 +610,7 @@ export function TeamPanel() {
               ) : null}
               {!isOwner ? (
                 <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-medium text-[var(--muted)] ring-1 ring-[var(--line)]">
-                  View only
+                  Только просмотр
                 </span>
               ) : null}
             </div>
@@ -618,7 +622,7 @@ export function TeamPanel() {
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Seat usage
+                  Использование мест
                 </p>
                 <p className="mt-0.5 text-sm font-medium tabular-nums text-[var(--ink)]">
                   {seatQuota.used}
@@ -627,12 +631,12 @@ export function TeamPanel() {
               </div>
               {seatsFull ? (
                 <p className="text-xs font-medium text-amber-700">
-                  Limit reached — upgrade to invite more.
+                  Лимит достигнут — повысьте тариф для приглашения сотрудников.
                 </p>
               ) : (
                 <p className="text-xs text-[var(--muted)]">
-                  {seatQuota.limit - seatQuota.used} seat
-                  {seatQuota.limit - seatQuota.used === 1 ? "" : "s"} remaining
+                  {seatQuota.limit - seatQuota.used} мест
+                  {seatQuota.limit - seatQuota.used === 1 ? "" : ""} осталось
                 </p>
               )}
             </div>
@@ -642,7 +646,7 @@ export function TeamPanel() {
               aria-valuenow={seatQuota.used}
               aria-valuemin={0}
               aria-valuemax={seatQuota.limit}
-              aria-label="Seat usage"
+              aria-label="Использование мест"
             >
               <div
                 className={`h-full rounded-full transition-[width] duration-500 ease-out ${
@@ -681,12 +685,12 @@ export function TeamPanel() {
               <IconUsers className="h-6 w-6" />
             </span>
             <p className="font-display mt-4 text-base font-semibold tracking-tight text-[var(--ink)]">
-              No members yet
+              Сотрудников пока нет
             </p>
             <p className="mt-1.5 max-w-sm text-sm text-[var(--muted)]">
               {isOwner
-                ? "Invite staff and set permissions so they can run appointments, inspections, and AI-assisted work."
-                : "Shop team roles and permissions will appear here once members are invited."}
+                ? "Пригласите сотрудников и задайте разрешения для работы с записями, осмотрами и ИИ."
+                : "Роли и разрешения появятся здесь после приглашения сотрудников."}
             </p>
             {isOwner ? (
               <button
@@ -696,7 +700,7 @@ export function TeamPanel() {
                 className="btn-primary mt-5 inline-flex items-center gap-1.5 px-4 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <IconPlus className="h-3.5 w-3.5" />
-                Add your first member
+                Добавить первого сотрудника
               </button>
             ) : null}
           </div>
@@ -728,7 +732,7 @@ export function TeamPanel() {
                             className="btn-ghost inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs"
                           >
                             <IconPencil className="h-3.5 w-3.5" />
-                            Permissions
+                            Разрешения
                           </button>
                           <button
                             type="button"
@@ -737,7 +741,7 @@ export function TeamPanel() {
                             className="inline-flex items-center gap-1.5 rounded-full border border-red-200/80 bg-white px-2.5 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
                           >
                             <IconTrash className="h-3.5 w-3.5" />
-                            {removingId === m.membership_id ? "Removing…" : "Remove"}
+                            {removingId === m.membership_id ? "Удаление…" : "Удалить"}
                           </button>
                         </div>
                       ) : undefined
@@ -753,11 +757,11 @@ export function TeamPanel() {
           <button
             type="button"
             disabled={seatsFull}
-            aria-label="Add member"
+            aria-label="Добавить сотрудника"
             title={
               seatsFull
-                ? "Seat limit reached. Upgrade your plan to add more members."
-                : "Add member"
+                ? "Достигнут лимит мест. Повысьте тариф для добавления сотрудников."
+                : "Добавить сотрудника"
             }
             onClick={openInvite}
             className="btn-primary absolute bottom-2.5 right-4 z-10 inline-flex h-9 w-9 items-center justify-center p-0 shadow-md disabled:cursor-not-allowed disabled:opacity-50"
@@ -796,7 +800,7 @@ export function TeamPanel() {
                   id="invite-member-title"
                   className="text-base font-semibold tracking-tight text-[var(--ink)]"
                 >
-                  Add member
+                  Добавить сотрудника
                 </h2>
               </div>
             </div>
@@ -804,14 +808,14 @@ export function TeamPanel() {
             <div className="asa-scroll min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-5 py-3.5">
               <div className="grid grid-cols-2 items-start gap-x-4 gap-y-3">
                 <Field
-                  label="Full name"
+                  label="Полное имя"
                   icon={<IconUser />}
                   value={fullName}
                   onChange={setFullName}
                   required
                 />
                 <Field
-                  label="Phone"
+                  label="Телефон"
                   icon={<IconPhone />}
                   value={phone}
                   onChange={(v) => setPhone(formatPhoneInput(v))}
@@ -820,7 +824,7 @@ export function TeamPanel() {
                   required
                 />
                 <Field
-                  label="Email (optional)"
+                  label="Эл. почта (необязательно)"
                   icon={<IconMail />}
                   type="email"
                   value={email}
@@ -828,7 +832,7 @@ export function TeamPanel() {
                 />
                 <div className="col-span-2 grid grid-cols-2 items-start gap-x-4 gap-y-3">
                   <PasswordField
-                    label="Password"
+                    label="Пароль"
                     icon={<IconLock />}
                     value={password}
                     onChange={setPassword}
@@ -838,7 +842,7 @@ export function TeamPanel() {
                   />
                   <div className="space-y-1.5">
                     <PasswordField
-                      label="Confirm password"
+                      label="Подтвердите пароль"
                       icon={<IconLock />}
                       value={confirmPassword}
                       onChange={setConfirmPassword}
@@ -847,7 +851,7 @@ export function TeamPanel() {
                       autoComplete="new-password"
                     />
                     {confirmPassword && password !== confirmPassword ? (
-                      <p className="text-xs text-red-600">Passwords do not match.</p>
+                      <p className="text-xs text-red-600">Пароли не совпадают.</p>
                     ) : null}
                   </div>
                 </div>
@@ -858,15 +862,15 @@ export function TeamPanel() {
                   <span className="text-[var(--muted)]">
                     <IconBriefcase />
                   </span>
-                  Role
+                  Роль
                 </legend>
                 <p className="mt-1 text-xs text-[var(--muted)]">
-                  Invited members are always Staff. Access is controlled by permissions below.
+                  Приглашённые участники всегда получают роль сотрудника. Доступ определяется разрешениями ниже.
                 </p>
                 <div className="mt-3">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] ring-1 ring-inset ring-[var(--accent)]/20">
                     <IconShield className="h-3 w-3" />
-                    Staff
+                    Сотрудник
                   </span>
                 </div>
               </fieldset>
@@ -883,7 +887,7 @@ export function TeamPanel() {
                   className="rounded-xl border border-red-200/80 bg-red-50 px-3 py-2 text-sm text-red-700"
                   role="alert"
                 >
-                  {error}
+                  {ruError(error)}
                 </p>
               )}
             </div>
@@ -896,7 +900,7 @@ export function TeamPanel() {
                 className="btn-ghost inline-flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-60"
               >
                 <IconX className="h-3.5 w-3.5" />
-                Cancel
+                Отмена
               </button>
               <button
                 type="submit"
@@ -910,7 +914,7 @@ export function TeamPanel() {
                 className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <IconSave className="h-3.5 w-3.5" />
-                {saving ? "Saving…" : "Save"}
+                {saving ? "Сохранение…" : "Сохранить"}
               </button>
             </div>
           </form>
@@ -942,23 +946,23 @@ export function TeamPanel() {
                   id="remove-member-title"
                   className="text-lg font-semibold tracking-tight text-slate-900"
                 >
-                  Remove team member
+                  Удалить сотрудника
                 </h2>
               </div>
             </div>
 
             <div className="space-y-4 px-5 py-5">
               <p className="text-sm leading-relaxed text-[var(--muted)]">
-                Remove{" "}
+                Удалить{" "}
                 <span className="font-medium text-[var(--ink)]">{pendingRemove.full_name}</span>{" "}
-                from the team? They will lose access immediately.
+                из команды? Доступ будет закрыт сразу.
               </p>
               {error && (
                 <p
                   className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                   role="alert"
                 >
-                  {error}
+                  {ruError(error)}
                 </p>
               )}
               <div className="flex flex-nowrap justify-end gap-2">
@@ -968,7 +972,7 @@ export function TeamPanel() {
                   disabled={!!removingId}
                   className="btn-ghost px-4 py-2 text-sm disabled:opacity-60"
                 >
-                  No
+                  Нет
                 </button>
                 <button
                   type="button"
@@ -976,7 +980,7 @@ export function TeamPanel() {
                   disabled={!!removingId}
                   className="inline-flex items-center justify-center rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-red-600/20 transition hover:bg-red-700 disabled:opacity-60"
                 >
-                  {removingId ? "Removing…" : "Yes"}
+                  {removingId ? "Удаление…" : "Да"}
                 </button>
               </div>
             </div>
@@ -1010,7 +1014,7 @@ export function TeamPanel() {
                   id="edit-permissions-title"
                   className="min-w-0 truncate text-base font-semibold tracking-tight text-[var(--ink)]"
                 >
-                  Edit permissions
+                  Изменить разрешения
                   {editingName ? ` · ${editingName}` : ""}
                 </h2>
               </div>
@@ -1031,7 +1035,7 @@ export function TeamPanel() {
                 className="btn-ghost inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs disabled:opacity-60"
               >
                 <IconX className="h-3.5 w-3.5" />
-                Cancel
+                Отмена
               </button>
               <button
                 type="submit"
@@ -1039,7 +1043,7 @@ export function TeamPanel() {
                 className="btn-primary inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <IconSave className="h-3.5 w-3.5" />
-                {savingEdit ? "Saving…" : "Save"}
+                {savingEdit ? "Сохранение…" : "Сохранить"}
               </button>
             </div>
           </form>
@@ -1071,11 +1075,11 @@ function MemberCard({
 }) {
   const activeWork =
     role === "owner" && capabilities.length === 0
-      ? "Shop oversight"
+      ? "Управление автосервисом"
       : deriveActiveWork(capabilities);
   const aiAssistance =
     role === "owner" && capabilities.length === 0
-      ? "On · full shop"
+      ? "Включено · весь автосервис"
       : deriveAiAssistance(capabilities);
   const isOwner = role === "owner";
 
@@ -1132,14 +1136,14 @@ function MemberCard({
               <span className="inline-flex min-w-0 items-center gap-1.5">
                 <IconBriefcase className="h-3 w-3 shrink-0 text-[var(--accent)]/80" />
                 <span className="min-w-0">
-                  <span className="text-[var(--muted)]">Work </span>
+                  <span className="text-[var(--muted)]">Работа </span>
                   <span className="font-medium text-[var(--ink)]">{activeWork}</span>
                 </span>
               </span>
               <span className="inline-flex min-w-0 items-center gap-1.5">
                 <IconSparkles className="h-3 w-3 shrink-0 text-[var(--accent)]/80" />
                 <span className="min-w-0">
-                  <span className="text-[var(--muted)]">AI </span>
+                  <span className="text-[var(--muted)]">ИИ </span>
                   <span className="font-medium text-[var(--ink)]">{aiAssistance}</span>
                 </span>
               </span>
@@ -1148,7 +1152,7 @@ function MemberCard({
             <div className="flex flex-wrap gap-1.5">
               {isOwner && permissionLabels.length === 0 ? (
                 <span className="rounded-full bg-black/[0.04] px-2.5 py-0.5 text-[11px] font-medium leading-4 text-[var(--muted)] ring-1 ring-inset ring-black/5">
-                  Full access
+                  Полный доступ
                 </span>
               ) : permissionLabels.length > 0 ? (
                 permissionLabels.map((p) => (
@@ -1160,7 +1164,7 @@ function MemberCard({
                   </span>
                 ))
               ) : (
-                <span className="text-xs leading-4 text-[var(--muted)]">No permissions listed</span>
+                <span className="text-xs leading-4 text-[var(--muted)]">Разрешения не указаны</span>
               )}
             </div>
           </div>
@@ -1192,10 +1196,10 @@ function CapabilityChecklist({
         <span className="text-[var(--muted)]">
           <IconShield />
         </span>
-        Permissions
+        Разрешения
       </legend>
       <p className="mt-1 text-xs text-[var(--muted)]">
-        Choose what this person can do across the shop floor and desk.
+        Выберите, какие действия доступны сотруднику в автосервисе.
       </p>
       <ul
         className={`mt-3 grid gap-2 ${desktopLayout ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}
@@ -1236,7 +1240,7 @@ function CapabilityChecklist({
                 <span className="min-w-0">
                   <span className="font-medium text-[var(--ink)]">{item.label}</span>
                   <span className="mt-0.5 block truncate text-[10px] uppercase tracking-[0.08em] text-[var(--muted)]">
-                    {item.id.replace(/_/g, " ")}
+                    {ruLabel(item.id)}
                   </span>
                 </span>
               </label>

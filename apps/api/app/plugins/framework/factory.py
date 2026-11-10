@@ -371,17 +371,17 @@ def ensure_workflow_plugins(ports: Any | None = None) -> PluginRuntime:
         )
         ports.scheduling_plugin = scheduling  # type: ignore[attr-defined]
     if scheduling is not None:
-        _bind_scoped(scheduling, fallback_id="scheduling", fallback_name="Scheduling Plugin")
+        _bind_scoped(scheduling, fallback_id="scheduling", fallback_name='Плагин расписания')
 
     conversation = getattr(ports, "conversation_plugin", None)
     if conversation is not None:
         _bind_scoped(
-            conversation, fallback_id="conversation", fallback_name="Conversation Plugin"
+            conversation, fallback_id="conversation", fallback_name='Плагин диалогов'
         )
 
     revenue = getattr(ports, "revenue_plugin", None)
     if revenue is not None:
-        _bind_scoped(revenue, fallback_id="revenue", fallback_name="Revenue Intelligence Plugin")
+        _bind_scoped(revenue, fallback_id="revenue", fallback_name='Плагин аналитики выручки')
 
     advisor = getattr(ports, "advisor_plugin", None)
     if advisor is not None:
@@ -390,7 +390,7 @@ def ensure_workflow_plugins(ports: Any | None = None) -> PluginRuntime:
     inspection = getattr(ports, "inspection_plugin", None)
     if inspection is not None:
         _bind_scoped(
-            inspection, fallback_id="inspection", fallback_name="Inspection Intelligence"
+            inspection, fallback_id="inspection", fallback_name='Аналитика осмотров'
         )
 
     inventory = getattr(ports, "inventory_plugin", None)
@@ -398,12 +398,12 @@ def ensure_workflow_plugins(ports: Any | None = None) -> PluginRuntime:
         _bind_scoped(
             inventory,
             fallback_id="inventory",
-            fallback_name="Parts & Inventory Intelligence",
+            fallback_name='Аналитика запчастей и склада',
         )
 
     voice = getattr(ports, "voice_plugin", None)
     if voice is not None:
-        _bind_scoped(voice, fallback_id="voice", fallback_name="Production Voice AI")
+        _bind_scoped(voice, fallback_id="voice", fallback_name='Голосовой ИИ')
 
     return runtime
 

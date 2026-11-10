@@ -96,7 +96,7 @@ class AuthService:
                 return preferred
             # Explicit preferred slug is reserved: only rename may fall through.
             if exclude_shop_id is None:
-                raise ConflictError("Shop slug already taken")
+                raise ConflictError('Идентификатор автосервиса уже занят')
             # Rename path: preferred taken by another shop — fall through to auto.
 
         base = slugify_shop_name(shop_name)
@@ -107,7 +107,7 @@ class AuthService:
             if existing is None or (exclude_shop_id and existing.id == exclude_shop_id):
                 return candidate
             if not allow_suffix:
-                raise ConflictError("Shop slug already taken")
+                raise ConflictError('Идентификатор автосервиса уже занят')
         digest = uuid4().hex[:8]
         return f"shop-{digest}"
 
@@ -140,7 +140,7 @@ class AuthService:
                 if shop is not None:
                     return shop
 
-        raise NotFoundError("Shop not found")
+        raise NotFoundError('Автосервис не найден')
 
     async def register_shop(
         self,
@@ -160,7 +160,7 @@ class AuthService:
 
         name = (shop_name or "").strip()
         if len(name) < 2:
-            raise ValidationError("Shop name too short")
+            raise ValidationError('Название автосервиса слишком короткое')
 
         phone: str | None = None
         email: str | None = None
@@ -181,13 +181,13 @@ class AuthService:
                 phone_verified = True
 
         if phone and await self._uow.users.get_by_phone(phone):
-            raise ConflictError("Phone already registered")
+            raise ConflictError('Телефон уже зарегистрирован')
         if email and await self._uow.users.get_by_email(email):
-            raise ConflictError("Email already registered")
+            raise ConflictError('Почта уже зарегистрирована')
 
         # Display name is the public login key — reject duplicates (case-insensitive).
         if await self._uow.shops.get_by_name(name):
-            raise ConflictError("Shop name already taken")
+            raise ConflictError('Название автосервиса уже занято')
 
         # Auto slug from name (base-2, base-3… on collision). Optional preferred
         # slug for tests / legacy clients must still be free or register 409s.
@@ -298,7 +298,7 @@ class AuthService:
 
             await AdminNotificationService().create(
                 event_type=DomainEventType.SAAS_SIGNUP.value,
-                title="New signup",
+                title='Новая регистрация',
                 message=signup_message,
                 severity="info",
                 source="auth",
@@ -325,12 +325,12 @@ class AuthService:
         elif email:
             user = await self._uow.users.get_by_email(normalize_email(email))
         else:
-            raise ValidationError("phone or email is required")
+            raise ValidationError('Укажите телефон или почту')
 
         if user is None or not user.is_active or not verify_password(password, user.password_hash):
-            raise AuthenticationError("Invalid credentials")
+            raise AuthenticationError('Неверные учётные данные')
         if (user.account_type or AccountType.SHOP.value) == AccountType.PLATFORM_ADMIN.value:
-            raise AuthenticationError("Use admin sign-in for platform admin accounts")
+            raise AuthenticationError('Для администратора платформы используйте вход администратора')
 
         # Password already proved identity. Heal stale verified flags so contacts
         # added/changed in Settings (which previously left verified=false) can log in.
@@ -345,7 +345,7 @@ class AuthService:
 
         membership = await self._uow.memberships.get(shop.id, user.id)
         if membership is None:
-            raise AuthenticationError("Not a member of this shop")
+            raise AuthenticationError('Вы не состоите в этом автосервисе')
 
         # Enterprise SSO enforcement: password login blocked when org requires SSO.
         try:
@@ -357,7 +357,7 @@ class AuthService:
                 sso = rt.store.get_sso(loc.organization_id)
                 if sso and sso.enabled and sso.require_sso:
                     raise AuthenticationError(
-                        "This shop requires SSO. Sign in with your organization identity provider."
+                        'Этот автосервис требует SSO. Войдите через провайдера вашей организации.'
                     )
         except AuthenticationError:
             raise
@@ -431,24 +431,24 @@ class AuthService:
         if not normalized:
             raise ValidationError("username is required")
         if not password:
-            raise ValidationError("password is required")
+            raise ValidationError('Введите пароль')
 
         allowlist = settings.platform_admin_username_set
         if settings.environment.lower() in {"production", "prod"} and not allowlist:
-            raise AuthenticationError("Platform admin required")
+            raise AuthenticationError('Требуются права администратора платформы')
         if normalized not in allowlist:
-            raise AuthenticationError("Platform admin required")
+            raise AuthenticationError('Требуются права администратора платформы')
 
         user = await self._uow.users.get_by_username(normalized)
         if user is None or not user.is_active or not verify_password(password, user.password_hash):
-            raise AuthenticationError("Invalid credentials")
+            raise AuthenticationError('Неверные учётные данные')
 
         if (user.account_type or AccountType.SHOP.value) != AccountType.PLATFORM_ADMIN.value:
             updated = await self._uow.users.update_account_type(
                 user.id, account_type=AccountType.PLATFORM_ADMIN.value
             )
             if updated is None:
-                raise AuthenticationError("Platform admin required")
+                raise AuthenticationError('Требуются права администратора платформы')
             user = updated
 
         if user.mfa_enabled and user.mfa_secret:
@@ -487,45 +487,45 @@ class AuthService:
         try:
             payload = decode_token(mfa_token)
             if payload.get("type") != "mfa_pending":
-                raise ValueError("bad type")
+                raise ValueError('Некорректный тип')
             user_id = UUID(payload["sub"])
             account_type = str(payload.get("account_type") or AccountType.SHOP.value).strip().lower()
             raw_shop = payload.get("shop_id")
             shop_id = UUID(raw_shop) if raw_shop else None
         except (ValueError, KeyError, TypeError) as exc:
-            raise AuthenticationError("Invalid MFA token") from exc
+            raise AuthenticationError('Недействительный токен двухфакторной аутентификации') from exc
 
         user = await self._uow.users.get_by_id(user_id)
         if user is None or not user.is_active:
-            raise AuthenticationError("Invalid MFA token")
+            raise AuthenticationError('Недействительный токен двухфакторной аутентификации')
         if not user.mfa_enabled or not user.mfa_secret:
-            raise AuthenticationError("Invalid MFA code")
+            raise AuthenticationError('Неверный код двухфакторной аутентификации')
 
         ok = verify_totp(user.mfa_secret, code)
         if not ok:
             used, updated = consume_backup_code(user.mfa_backup_codes_json, code)
             if not used:
-                raise AuthenticationError("Invalid MFA code")
+                raise AuthenticationError('Неверный код двухфакторной аутентификации')
             await self._uow.users.set_mfa_backup_codes(user.id, updated)
 
         if account_type == AccountType.PLATFORM_ADMIN.value or (
             user.account_type or ""
         ) == AccountType.PLATFORM_ADMIN.value:
             if (user.username or "").strip().lower() not in settings.platform_admin_username_set:
-                raise AuthenticationError("Platform admin required")
+                raise AuthenticationError('Требуются права администратора платформы')
             tokens = await self._issue_admin_tokens(user=user)
             await self._uow.commit()
             return tokens
 
         if shop_id is None:
-            raise AuthenticationError("Invalid MFA token")
+            raise AuthenticationError('Недействительный токен двухфакторной аутентификации')
         shop = await self._uow.shops.get_by_id(shop_id)
         if shop is None:
-            raise AuthenticationError("Invalid MFA token")
+            raise AuthenticationError('Недействительный токен двухфакторной аутентификации')
 
         membership = await self._uow.memberships.get(shop.id, user.id)
         if membership is None:
-            raise AuthenticationError("Not a member of this shop")
+            raise AuthenticationError('Вы не состоите в этом автосервисе')
         role = normalize_user_role(membership.role)
         caps = get_permission_service().resolve_capabilities(
             role=role,
@@ -566,7 +566,7 @@ class AuthService:
 
         user = await self._uow.users.get_by_id(user_id)
         if user is None:
-            raise NotFoundError("User not found")
+            raise NotFoundError('Пользователь не найден')
         secret = generate_mfa_secret()
         await self._uow.users.set_mfa(user_id, secret=secret, enabled=False, backup_codes_json=None)
         await self._uow.commit()
@@ -582,9 +582,9 @@ class AuthService:
 
         user = await self._uow.users.get_by_id(user_id)
         if user is None or not user.mfa_secret:
-            raise ValidationError("Start MFA setup first")
+            raise ValidationError('Сначала начните настройку двухфакторной аутентификации')
         if not verify_totp(user.mfa_secret, code):
-            raise AuthenticationError("Invalid MFA code")
+            raise AuthenticationError('Неверный код двухфакторной аутентификации')
         plain, hashed_json = generate_backup_codes()
         await self._uow.users.set_mfa(
             user_id,
@@ -602,7 +602,7 @@ class AuthService:
         if user is None or not user.mfa_enabled or not user.mfa_secret:
             raise ValidationError("MFA is not enabled")
         if not verify_totp(user.mfa_secret, code):
-            raise AuthenticationError("Invalid MFA code")
+            raise AuthenticationError('Неверный код двухфакторной аутентификации')
         plain, hashed_json = generate_backup_codes()
         await self._uow.users.set_mfa_backup_codes(user_id, hashed_json)
         await self._uow.commit()
@@ -613,13 +613,13 @@ class AuthService:
 
         user = await self._uow.users.get_by_id(user_id)
         if user is None:
-            raise NotFoundError("User not found")
+            raise NotFoundError('Пользователь не найден')
         if user.mfa_enabled and user.mfa_secret:
             ok = verify_totp(user.mfa_secret, code)
             if not ok:
                 used, _ = consume_backup_code(user.mfa_backup_codes_json, code)
                 if not used:
-                    raise AuthenticationError("Invalid MFA code")
+                    raise AuthenticationError('Неверный код двухфакторной аутентификации')
         await self._uow.users.set_mfa(user_id, secret=None, enabled=False, backup_codes_json=None)
         await self._uow.commit()
         return {"mfa_enabled": False}
@@ -629,32 +629,32 @@ class AuthService:
         stored = await self._uow.refresh_tokens.get_by_hash(token_hash)
         now = datetime.now(timezone.utc)
         if stored is None or stored.revoked_at is not None or stored.expires_at <= now:
-            raise AuthenticationError("Invalid refresh token")
+            raise AuthenticationError('Недействительный токен обновления')
 
         user = await self._uow.users.get_by_id(stored.user_id)
         if user is None or not user.is_active:
-            raise AuthenticationError("Invalid refresh token")
+            raise AuthenticationError('Недействительный токен обновления')
 
         # Atomic revoke: if logout already cleared this token, do not mint a new session.
         if not await self._uow.refresh_tokens.revoke(stored.id, now):
-            raise AuthenticationError("Invalid refresh token")
+            raise AuthenticationError('Недействительный токен обновления')
 
         if (user.account_type or AccountType.SHOP.value) == AccountType.PLATFORM_ADMIN.value:
             if (user.username or "").strip().lower() not in settings.platform_admin_username_set:
-                raise AuthenticationError("Invalid refresh token")
+                raise AuthenticationError('Недействительный токен обновления')
             tokens = await self._issue_admin_tokens(user=user)
             await self._uow.commit()
             return tokens
 
         if stored.shop_id is None:
-            raise AuthenticationError("Invalid refresh token")
+            raise AuthenticationError('Недействительный токен обновления')
         shop = await self._uow.shops.get_by_id(stored.shop_id)
         if shop is None:
-            raise AuthenticationError("Invalid refresh token")
+            raise AuthenticationError('Недействительный токен обновления')
 
         membership = await self._uow.memberships.get(shop.id, user.id)
         if membership is None:
-            raise AuthenticationError("Invalid refresh token")
+            raise AuthenticationError('Недействительный токен обновления')
 
         role = normalize_user_role(membership.role)
         caps = get_permission_service().resolve_capabilities(
@@ -687,10 +687,10 @@ class AuthService:
     ) -> MeResult:
         user = await self._uow.users.get_by_id(user_id)
         if user is not None and (user.account_type or "") == AccountType.PLATFORM_ADMIN.value:
-            raise AuthenticationError("Shop profile unavailable for platform admin")
+            raise AuthenticationError('Профиль автосервиса недоступен администратору платформы')
         shop = await self._uow.shops.get_by_id(shop_id)
         if user is None or shop is None:
-            raise NotFoundError("User or shop not found")
+            raise NotFoundError('Пользователь или автосервис не найден')
         caps = capabilities
         if caps is None:
             membership = await self._uow.memberships.get(shop_id, user_id)

@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import Link from "next/link";
 import {
@@ -58,9 +60,9 @@ const VinInput = dynamic(
 );
 
 const DETAIL_TABS = [
-  { id: "profile", label: "Profile" },
-  { id: "repairs", label: "Repair history" },
-  { id: "calls", label: "Calls" },
+  { id: "profile", label: "Профиль" },
+  { id: "repairs", label: "История ремонта" },
+  { id: "calls", label: "Звонки" },
 ] as const;
 
 /** Minimum horizontal drag distance (px) to change detail tabs. */
@@ -382,7 +384,7 @@ function formatConversationWhen(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString(undefined, {
+  return d.toLocaleString("ru-RU", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -407,9 +409,9 @@ function formatCallDuration(call: VoiceCall): string | null {
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
   const s = sec % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s.toString().padStart(2, "0")}s`;
-  return `${s}s`;
+  if (h > 0) return `${h}ч ${m}мин`;
+  if (m > 0) return `${m}мин ${s.toString().padStart(2, "0")}с`;
+  return `${s}с`;
 }
 
 function channelLabel(channel: Communication["channel"]): string {
@@ -417,11 +419,11 @@ function channelLabel(channel: Communication["channel"]): string {
     case "sms":
       return "SMS";
     case "email":
-      return "Email";
+      return "Эл. почта";
     case "facebook":
       return "Facebook";
     case "phone":
-      return "Phone";
+      return "Телефон";
     default:
       return channel;
   }
@@ -632,7 +634,7 @@ export function CustomerDetailContent({
           const v = vehicleById.get(r.vehicle_id);
           return {
             ...r,
-            vehicle_label: v ? vehicleLabel(v) : "Vehicle",
+            vehicle_label: v ? vehicleLabel(v) : "Автомобиль",
           };
         })
         .sort((a, b) => {
@@ -649,7 +651,7 @@ export function CustomerDetailContent({
       setEditAddress(data.customer.address ?? "");
       setLoading(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load customer");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить клиента");
       setLoading(false);
     }
   }, [customerId]);
@@ -843,9 +845,9 @@ export function CustomerDetailContent({
       });
       await load();
       setProfileEditing(false);
-      setSuccess("Customer profile updated.");
+      setSuccess("Профиль клиента обновлён.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Update failed");
+      setError(err instanceof Error ? err.message : "Не удалось обновить");
     }
   }
 
@@ -911,7 +913,7 @@ export function CustomerDetailContent({
           setVinStatus(assist.message);
         } catch (err) {
           if (seq !== vinAssistSeq.current) return;
-          setVinStatus(err instanceof Error ? err.message : "VIN lookup failed");
+          setVinStatus(err instanceof Error ? err.message : "Не удалось найти VIN");
         } finally {
           if (seq === vinAssistSeq.current) setVinLooking(false);
         }
@@ -987,10 +989,10 @@ export function CustomerDetailContent({
       if (vehicleModal === "edit" && editingVehicleId) {
         const cleanedVin = vin.replace(/[\s-]/g, "").toUpperCase();
         if (cleanedVin.length !== 17) {
-          throw new Error("VIN must be 17 characters");
+          throw new Error("VIN должен содержать 17 символов");
         }
         if (!make.trim() || !model.trim() || !year.trim()) {
-          throw new Error("Year, make, and model are required");
+          throw new Error("Укажите год, марку и модель");
         }
         await updateVehicle(editingVehicleId, {
           vin: cleanedVin,
@@ -1000,7 +1002,7 @@ export function CustomerDetailContent({
           model: model.trim(),
           mileage: Number(mileage || 0),
         });
-        setSuccess("Vehicle updated.");
+        setSuccess("Автомобиль обновлён.");
       } else {
         const hasAny =
           Boolean(vin.trim()) ||
@@ -1010,22 +1012,22 @@ export function CustomerDetailContent({
           Boolean(model.trim()) ||
           Boolean(mileage.trim());
         if (!hasAny) {
-          throw new Error("Enter at least one vehicle detail to add");
+          throw new Error("Укажите хотя бы одну характеристику автомобиля");
         }
 
         const cleanedVin = vin.replace(/[\s-]/g, "").toUpperCase();
         if (cleanedVin && cleanedVin.length !== 17) {
-          throw new Error("VIN must be 17 characters, or leave it blank");
+          throw new Error("VIN должен содержать 17 символов или быть пустым");
         }
 
         const yearNum = year.trim() ? Number(year) : new Date().getFullYear();
         if (!Number.isFinite(yearNum) || yearNum < 1900 || yearNum > 2100) {
-          throw new Error("Year must be between 1900 and 2100");
+          throw new Error("Год должен быть от 1900 до 2100");
         }
 
         const mileageNum = mileage.trim() ? Number(mileage) : 0;
         if (!Number.isFinite(mileageNum) || mileageNum < 0) {
-          throw new Error("Mileage must be a non-negative number");
+          throw new Error("Пробег должен быть неотрицательным числом");
         }
 
         createdVehicle = await createVehicle(customerId, {
@@ -1036,7 +1038,7 @@ export function CustomerDetailContent({
           model: model.trim() || "Unknown",
           mileage: mileageNum,
         });
-        setSuccess("Vehicle added.");
+        setSuccess("Автомобиль добавлен.");
       }
       const continueToRepair = openRepairAfterVehicle && createdVehicle !== null;
       setVehicleModal(null);
@@ -1052,8 +1054,8 @@ export function CustomerDetailContent({
         err instanceof Error
           ? err.message
           : vehicleModal === "edit"
-            ? "Vehicle update failed"
-            : "Vehicle create failed",
+            ? "Не удалось обновить автомобиль"
+            : "Не удалось создать автомобиль",
       );
     } finally {
       setVehicleSaving(false);
@@ -1073,10 +1075,10 @@ export function CustomerDetailContent({
         resetVehicleForm();
       }
       setDeleteVehicleTarget(null);
-      setSuccess("Vehicle deleted.");
+      setSuccess("Автомобиль удалён.");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete vehicle");
+      setError(err instanceof Error ? err.message : "Не удалось удалить автомобиль");
     } finally {
       setDeletingVehicleId(null);
     }
@@ -1091,10 +1093,10 @@ export function CustomerDetailContent({
     try {
       await deleteRepairHistory(r.vehicle_id, r.id);
       setDeleteRepairTarget(null);
-      setSuccess("Repair history deleted.");
+      setSuccess("История ремонта удалена.");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete repair history");
+      setError(err instanceof Error ? err.message : "Не удалось удалить историю ремонта");
     } finally {
       setDeletingRepairId(null);
     }
@@ -1110,13 +1112,13 @@ export function CustomerDetailContent({
       if (target.kind === "call") {
         await deleteVoiceCall(target.call.id);
         setVoiceCalls((prev) => prev.filter((c) => c.id !== target.call.id));
-        setSuccess("Call history deleted.");
+        setSuccess("История звонков удалена.");
       } else if (target.kind === "sms") {
         await deleteSmsConversation(target.sms.id);
         setSmsConversations((prev) =>
           prev.filter((c) => c.id !== target.sms.id),
         );
-        setSuccess("SMS conversation deleted.");
+        setSuccess("Переписка SMS удалена.");
       } else {
         await deleteCommunication(customerId, target.comm.id);
         setDetail((prev) =>
@@ -1129,12 +1131,12 @@ export function CustomerDetailContent({
               }
             : prev,
         );
-        setSuccess("Message deleted.");
+        setSuccess("Сообщение удалено.");
       }
       setDeleteConversationTarget(null);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to delete conversation",
+        err instanceof Error ? err.message : "Не удалось удалить переписку",
       );
     } finally {
       setDeletingConversation(false);
@@ -1204,7 +1206,7 @@ export function CustomerDetailContent({
   async function onAddRepair(e: FormEvent) {
     e.preventDefault();
     if (!repairVehicleId) {
-      setError("Select a vehicle for this repair history.");
+      setError("Выберите автомобиль для этой записи о ремонте.");
       return;
     }
 
@@ -1216,17 +1218,17 @@ export function CustomerDetailContent({
       .filter((row) => row.service_type.length > 0);
 
     if (lines.length === 0) {
-      setError("Add at least one service (catalog or custom).");
+      setError("Добавьте хотя бы одну услугу из каталога или свою.");
       return;
     }
     for (const line of lines) {
       if (!Number.isFinite(line.cost) || line.cost < 0) {
-        setError(`Enter a valid cost for “${line.service_type}” (0 or greater).`);
+        setError(`Укажите корректную стоимость для «${line.service_type}» (не менее 0).`);
         return;
       }
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(repairDate)) {
-      setError("Select a valid repair date.");
+      setError("Выберите корректную дату ремонта.");
       return;
     }
 
@@ -1250,12 +1252,12 @@ export function CustomerDetailContent({
       resetRepairForm();
       setSuccess(
         lines.length === 1
-          ? "Repair history added."
-          : `${lines.length} repair history entries added.`,
+          ? "История ремонта добавлена."
+          : `${lines.length} записей о ремонте добавлено.`,
       );
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add repair history");
+      setError(err instanceof Error ? err.message : "Не удалось добавить историю ремонта");
     } finally {
       setRepairSaving(false);
     }
@@ -1275,7 +1277,7 @@ export function CustomerDetailContent({
         router.push("/dashboard/customer");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete customer");
+      setError(err instanceof Error ? err.message : "Не удалось удалить клиента");
       setDeletingCustomer(false);
     }
   }
@@ -1283,7 +1285,7 @@ export function CustomerDetailContent({
   if (!customerId) {
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:h-full">
-        <p className="text-sm text-red-700">Customer not found</p>
+        <p className="text-sm text-red-700">Клиент не найден</p>
       </div>
     );
   }
@@ -1309,7 +1311,7 @@ export function CustomerDetailContent({
   if (!detail) {
     return (
       <div className="surface-panel flex min-h-0 flex-1 flex-col overflow-hidden p-5 md:h-full">
-        <p className="text-sm text-red-700">{error ?? "Customer not found"}</p>
+        <p className="text-sm text-red-700">{ruError(error ?? "Клиент не найден")}</p>
       </div>
     );
   }
@@ -1336,14 +1338,14 @@ export function CustomerDetailContent({
             onClick={() => onBack?.()}
             className="mb-1.5 text-xs font-medium text-[var(--accent)] lg:hidden"
           >
-            ← list
+            ← Список
           </button>
         ) : (
           <Link
             href="/dashboard/customer"
             className="text-sm text-[var(--muted)] hover:text-[var(--accent)]"
           >
-            ← list
+            ← Список
           </Link>
         )}
 
@@ -1375,7 +1377,7 @@ export function CustomerDetailContent({
               embedded ? "p-0.5" : "p-1"
             }`}
             role="tablist"
-            aria-label="Customer detail sections"
+            aria-label="Разделы карточки клиента"
           >
             {DETAIL_TABS.map((t) => (
               <button
@@ -1396,7 +1398,7 @@ export function CustomerDetailContent({
               >
                 {t.id === "repairs" ? (
                   <>
-                    <span className="md:hidden">Repairs</span>
+                    <span className="md:hidden">Ремонты</span>
                     <span className="hidden md:inline">{t.label}</span>
                   </>
                 ) : (
@@ -1421,7 +1423,7 @@ export function CustomerDetailContent({
           }`}
           role="alert"
         >
-          {error}
+          {ruError(error)}
         </p>
       )}
       {success &&
@@ -1472,7 +1474,7 @@ export function CustomerDetailContent({
               className="grid grid-cols-2 gap-3"
             >
               <Field
-                label="Name"
+                label="Имя"
                 icon={<IconUser />}
                 value={editName}
                 onChange={setEditName}
@@ -1480,7 +1482,7 @@ export function CustomerDetailContent({
                 disabled={!profileEditing}
               />
               <Field
-                label="Phone"
+                label="Телефон"
                 icon={<IconPhone />}
                 type="tel"
                 value={editPhone}
@@ -1489,7 +1491,7 @@ export function CustomerDetailContent({
                 disabled={!profileEditing}
               />
               <Field
-                label="Email"
+                label="Эл. почта"
                 icon={<IconMail />}
                 type="email"
                 value={editEmail}
@@ -1497,7 +1499,7 @@ export function CustomerDetailContent({
                 disabled={!profileEditing}
               />
               <Field
-                label="Address"
+                label="Адрес"
                 icon={<IconMapPin />}
                 value={editAddress}
                 onChange={setEditAddress}
@@ -1512,7 +1514,7 @@ export function CustomerDetailContent({
                       className="btn-primary inline-flex items-center gap-1.5 px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <IconSave />
-                      Save
+                      Сохранить
                     </button>
                     <button
                       type="button"
@@ -1520,7 +1522,7 @@ export function CustomerDetailContent({
                       className="btn-ghost inline-flex items-center gap-1.5 px-4 py-2 text-sm"
                     >
                       <IconCancel />
-                      Cancel
+                      Отмена
                     </button>
                   </>
                 ) : (
@@ -1533,7 +1535,7 @@ export function CustomerDetailContent({
                     className="btn-primary inline-flex items-center gap-1.5 px-4 py-2"
                   >
                     <IconPencil className="h-4 w-4" />
-                    Edit
+                    Изменить
                   </button>
                 )}
                 <button
@@ -1546,7 +1548,7 @@ export function CustomerDetailContent({
                   className="inline-flex items-center gap-1.5 rounded-full border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <IconTrash />
-                  Delete
+                  Удалить
                 </button>
               </div>
             </form>
@@ -1555,15 +1557,15 @@ export function CustomerDetailContent({
           <section className="flex shrink-0 flex-col gap-2">
             <div className="flex shrink-0 items-start justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-sm font-semibold">Vehicles</h2>
+                <h2 className="text-sm font-semibold">Автомобили</h2>
                 <p className="mt-0.5 text-xs text-[var(--muted)]">
-                  VIN, plate, and mileage for this customer
+                  VIN, госномер и пробег автомобилей клиента
                 </p>
               </div>
               <button
                 type="button"
                 onClick={openAddVehicleModal}
-                aria-label="Add vehicle"
+                aria-label="Добавить автомобиль"
                 className="btn-primary mr-3 inline-flex h-10 w-10 shrink-0 items-center justify-center p-0 sm:mr-4"
               >
                 <IconCarPlus className="h-5 w-5" />
@@ -1576,9 +1578,9 @@ export function CustomerDetailContent({
                   <span className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[var(--muted)] ring-1 ring-[var(--line)]">
                     <IconCar className="h-4 w-4" />
                   </span>
-                  <p className="text-sm font-medium">No vehicles yet</p>
+                  <p className="text-sm font-medium">Автомобилей пока нет</p>
                   <p className="mt-0.5 text-xs text-[var(--muted)]">
-                    Add a vehicle to log repair history and service visits.
+                    Добавьте автомобиль для учёта ремонтов и визитов.
                   </p>
                 </div>
               ) : (
@@ -1606,7 +1608,7 @@ export function CustomerDetailContent({
                       <dl className="mt-2 grid grid-cols-2 gap-1.5 text-xs">
                         <div className="rounded-lg bg-[var(--background)]/70 px-2 py-1.5">
                           <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-                            Plate
+                            Госномер
                           </dt>
                           <dd className="mt-0.5 font-medium">
                             {v.license_plate ?? "—"}
@@ -1614,10 +1616,10 @@ export function CustomerDetailContent({
                         </div>
                         <div className="rounded-lg bg-[var(--background)]/70 px-2 py-1.5">
                           <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-                            Mileage
+                            Пробег
                           </dt>
                           <dd className="mt-0.5 font-medium tabular-nums">
-                            {v.mileage.toLocaleString()}
+                            {v.mileage.toLocaleString("ru-RU")}
                           </dd>
                         </div>
                       </dl>
@@ -1629,7 +1631,7 @@ export function CustomerDetailContent({
                           className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] px-2.5 py-0.5 text-xs font-medium hover:border-[var(--accent)]/40 disabled:opacity-60"
                         >
                           <IconPencil />
-                          Edit
+                          Изменить
                         </button>
                         <button
                           type="button"
@@ -1641,7 +1643,7 @@ export function CustomerDetailContent({
                           className="inline-flex items-center gap-1.5 rounded-full border border-red-200 px-2.5 py-0.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-60"
                         >
                           <IconTrash className="h-3.5 w-3.5" />
-                          {deletingVehicleId === v.id ? "Deleting…" : "Delete"}
+                          {deletingVehicleId === v.id ? "Удаление…" : "Удалить"}
                         </button>
                       </div>
                     </article>
@@ -1665,25 +1667,25 @@ export function CustomerDetailContent({
               <div className="flex min-h-[12rem] flex-col items-center justify-center px-4 text-center text-sm text-[var(--muted)]">
                 {detail.vehicles.length === 0 ? (
                   <span>
-                    No repair history yet.{" "}
+                    Истории ремонта пока нет.{" "}
                     <button
                       type="button"
                       onClick={openAddRepairModal}
                       className="font-medium text-[var(--accent)] hover:underline"
                     >
-                      Add a vehicle
+                      Добавить автомобиль
                     </button>{" "}
-                    to log the first service.
+                    для записи первого обслуживания.
                   </span>
                 ) : (
                   <span>
-                    No repair history yet.{" "}
+                    Истории ремонта пока нет.{" "}
                     <button
                       type="button"
                       onClick={openAddRepairModal}
                       className="font-medium text-[var(--accent)] hover:underline"
                     >
-                      Add the first entry
+                      Добавить первую запись
                     </button>
                     .
                   </span>
@@ -1700,11 +1702,11 @@ export function CustomerDetailContent({
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                           <p className="text-sm font-semibold leading-snug">
-                            {r.service_type || "Service"}
+                            {r.service_type || "Услуга"}
                           </p>
                           <p className="text-xs tabular-nums text-[var(--muted)]">
                             {r.created_at
-                              ? new Date(r.created_at).toLocaleDateString()
+                              ? new Date(r.created_at).toLocaleDateString("ru-RU")
                               : "—"}
                           </p>
                         </div>
@@ -1723,8 +1725,8 @@ export function CustomerDetailContent({
                             setDeleteRepairTarget(r);
                           }}
                           disabled={deletingRepairId === r.id}
-                          aria-label="Delete repair history"
-                          title="Delete"
+                          aria-label="Удалить историю ремонта"
+                          title="Удалить"
                           className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-60"
                         >
                           <IconTrash className="h-3.5 w-3.5" />
@@ -1751,13 +1753,13 @@ export function CustomerDetailContent({
             <table>
               <thead className="border-b border-[var(--line)] text-xs uppercase tracking-[0.08em] text-[var(--muted)]">
                 <tr>
-                  <th className="px-4 py-3 sm:px-5">Date</th>
-                  <th className="px-4 py-3 sm:px-5">Vehicle</th>
-                  <th className="px-4 py-3 sm:px-5">Service</th>
-                  <th className="px-4 py-3 sm:px-5">Description</th>
-                  <th className="px-4 py-3 sm:px-5">Cost</th>
+                  <th className="px-4 py-3 sm:px-5">Дата</th>
+                  <th className="px-4 py-3 sm:px-5">Автомобиль</th>
+                  <th className="px-4 py-3 sm:px-5">Услуга</th>
+                  <th className="px-4 py-3 sm:px-5">Описание</th>
+                  <th className="px-4 py-3 sm:px-5">Стоимость</th>
                   <th className="w-14 px-4 py-3 sm:px-5">
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">Действия</span>
                   </th>
                 </tr>
               </thead>
@@ -1767,25 +1769,25 @@ export function CustomerDetailContent({
                     <td colSpan={6} className="px-4 py-10 text-center text-[var(--muted)] sm:px-5">
                       {detail.vehicles.length === 0 ? (
                         <span>
-                          No repair history yet.{" "}
+                          Истории ремонта пока нет.{" "}
                           <button
                             type="button"
                             onClick={openAddRepairModal}
                             className="font-medium text-[var(--accent)] hover:underline"
                           >
-                            Add a vehicle
+                            Добавить автомобиль
                           </button>{" "}
-                          to log the first service.
+                          для записи первого обслуживания.
                         </span>
                       ) : (
                         <span>
-                          No repair history yet.{" "}
+                          Истории ремонта пока нет.{" "}
                           <button
                             type="button"
                             onClick={openAddRepairModal}
                             className="font-medium text-[var(--accent)] hover:underline"
                           >
-                            Add the first entry
+                            Добавить первую запись
                           </button>
                           .
                         </span>
@@ -1799,7 +1801,7 @@ export function CustomerDetailContent({
                       className="border-t border-[var(--line)] transition-colors hover:bg-[var(--background)]/60"
                     >
                       <td className="px-4 py-3 text-sm text-[var(--muted)] sm:px-5">
-                        {r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}
+                        {r.created_at ? new Date(r.created_at).toLocaleDateString("ru-RU") : "—"}
                       </td>
                       <td className="px-4 py-3 text-sm sm:px-5">{r.vehicle_label}</td>
                       <td className="px-4 py-3 text-sm font-medium sm:px-5">{r.service_type}</td>
@@ -1813,8 +1815,8 @@ export function CustomerDetailContent({
                             setDeleteRepairTarget(r);
                           }}
                           disabled={deletingRepairId === r.id}
-                          aria-label="Delete repair history"
-                          title="Delete"
+                          aria-label="Удалить историю ремонта"
+                          title="Удалить"
                           className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-60"
                         >
                           <IconTrash className="h-3.5 w-3.5" />
@@ -1829,7 +1831,7 @@ export function CustomerDetailContent({
           <button
             type="button"
             onClick={openAddRepairModal}
-            aria-label="Add repair"
+            aria-label="Добавить ремонт"
             className="btn-primary absolute bottom-3 right-3 z-10 inline-flex h-11 w-11 items-center justify-center p-0 shadow-md"
           >
             <IconWrenchPlus className="h-5 w-5" />
@@ -1852,7 +1854,7 @@ export function CustomerDetailContent({
               {voiceCalls.length > 0 && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white/80 px-3 py-1 text-xs font-medium text-[var(--muted)] shadow-sm">
                   <IconPhone className="h-3 w-3" />
-                  {voiceCalls.length} call history
+                  {voiceCalls.length} история звонков
                 </span>
               )}
               {smsConversations.length > 0 && (
@@ -1864,8 +1866,8 @@ export function CustomerDetailContent({
               {otherMessageCount > 0 && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white/80 px-3 py-1 text-xs font-medium text-[var(--muted)] shadow-sm">
                   <IconMessage className="h-3 w-3" />
-                  {otherMessageCount} message
-                  {otherMessageCount === 1 ? "" : "s"}
+                  {otherMessageCount} сообщение
+                  {otherMessageCount === 1 ? "" : ""}
                 </span>
               )}
             </div>
@@ -1876,15 +1878,15 @@ export function CustomerDetailContent({
               <span className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-[var(--muted)] shadow-sm ring-1 ring-[var(--line)]">
                 <IconMessage className="h-5 w-5" />
               </span>
-              <p className="text-sm font-medium">No calls yet</p>
+              <p className="text-sm font-medium">Звонков пока нет</p>
               <p className="mt-1 max-w-xs text-xs text-[var(--muted)]">
-                Call history and messages will appear here once this customer starts contacting the shop.
+                История звонков и сообщения появятся здесь, когда клиент свяжется с автосервисом.
               </p>
               <Link
                 href="/dashboard/calls?tab=calls"
                 className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent)] hover:underline"
               >
-                Open Calls
+                Открыть звонки
                 <IconChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -1924,8 +1926,8 @@ export function CustomerDetailContent({
                             setDeleteConversationTarget({ kind: "call", call: c });
                           }}
                           disabled={deletingConversation}
-                          aria-label="Delete call history"
-                          title="Delete"
+                          aria-label="Удалить историю звонков"
+                          title="Удалить"
                           className="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-60"
                         >
                           <IconTrash className="h-3.5 w-3.5" />
@@ -1944,7 +1946,7 @@ export function CustomerDetailContent({
                     s.reply_preview ||
                     s.owner_summary ||
                     s.last_intent ||
-                    "SMS conversation";
+                    "Переписка SMS";
                   return (
                     <li key={item.id} className="relative flex items-start gap-3">
                       <span className="relative z-10 mt-2.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-sm ring-4 ring-[var(--panel)]">
@@ -1974,8 +1976,8 @@ export function CustomerDetailContent({
                             setDeleteConversationTarget({ kind: "sms", sms: s });
                           }}
                           disabled={deletingConversation}
-                          aria-label="Delete SMS conversation"
-                          title="Delete"
+                          aria-label="Удалить переписку SMS"
+                          title="Удалить"
                           className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-60"
                         >
                           <IconTrash className="h-3.5 w-3.5" />
@@ -2014,7 +2016,7 @@ export function CustomerDetailContent({
                                 : "bg-[var(--accent-soft)] text-[var(--accent)]"
                             }`}
                           >
-                            {m.direction === "incoming" ? "Inbound" : "Outbound"}
+                            {m.direction === "incoming" ? "Входящие" : "Исходящие"}
                           </span>
                         </div>
                         <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed">
@@ -2028,8 +2030,8 @@ export function CustomerDetailContent({
                           setDeleteConversationTarget({ kind: "comm", comm: m });
                         }}
                         disabled={deletingConversation}
-                        aria-label="Delete message"
-                        title="Delete"
+                        aria-label="Удалить сообщение"
+                        title="Удалить"
                         className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-60"
                       >
                         <IconTrash className="h-3.5 w-3.5" />
@@ -2062,7 +2064,7 @@ export function CustomerDetailContent({
               filledLines
                 .slice(0, 2)
                 .map((r) => r.name.trim())
-                .join(", ") || "No services selected yet";
+                .join(", ") || "Услуги ещё не выбраны";
 
             return (
               <div
@@ -2091,7 +2093,7 @@ export function CustomerDetailContent({
                         id="add-repair-title"
                         className="text-base font-semibold tracking-tight text-[var(--ink)]"
                       >
-                        Add repair history
+                        Добавить историю ремонта
                       </h2>
                     </div>
                   </div>
@@ -2104,10 +2106,10 @@ export function CustomerDetailContent({
                             <IconCar className="h-4 w-4" />
                           </span>
                           <p className="mt-2.5 text-sm font-semibold text-slate-900">
-                            Add a vehicle first
+                            Сначала добавьте автомобиль
                           </p>
                           <p className="mt-1 text-xs text-[var(--muted)]">
-                            Repair history is logged per vehicle.
+                            История ремонта ведётся отдельно для каждого автомобиля.
                           </p>
                         </div>
                       </div>
@@ -2118,7 +2120,7 @@ export function CustomerDetailContent({
                           className="btn-ghost inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm"
                         >
                           <IconCancel />
-                          Cancel
+                          Отмена
                         </button>
                       </div>
                     </>
@@ -2136,24 +2138,24 @@ export function CustomerDetailContent({
                             <p className="truncate text-sm font-semibold text-slate-900">
                               {selectedVehicle
                                 ? vehicleLabel(selectedVehicle)
-                                : "Select a vehicle"}
+                                : "Выберите автомобиль"}
                             </p>
                             <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--muted)]">
                               {selectedVehicle?.license_plate ? (
-                                <span>Plate {selectedVehicle.license_plate}</span>
+                                <span>Госномер {selectedVehicle.license_plate}</span>
                               ) : (
-                                <span>No plate on file</span>
+                                <span>Госномер не указан</span>
                               )}
                               {repairDate ? (
                                 <span>
                                   {new Date(
                                     dateInputToIso(repairDate),
-                                  ).toLocaleDateString()}
+                                  ).toLocaleDateString("ru-RU")}
                                 </span>
                               ) : null}
                               <span>
-                                {filledLines.length} service
-                                {filledLines.length === 1 ? "" : "s"}
+                                {filledLines.length} услуга
+                                {filledLines.length === 1 ? "" : ""}
                               </span>
                               <span className="tabular-nums font-medium text-slate-800">
                                 ${formatPrice(repairTotal)}
@@ -2162,7 +2164,7 @@ export function CustomerDetailContent({
                             <p className="mt-1.5 line-clamp-1 text-xs text-[var(--muted)]">
                               {servicePreview}
                               {filledLines.length > 2
-                                ? ` +${filledLines.length - 2} more`
+                                ? ` +${filledLines.length - 2} ещё`
                                 : ""}
                             </p>
                           </div>
@@ -2173,16 +2175,16 @@ export function CustomerDetailContent({
                             className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                             role="alert"
                           >
-                            {error}
+                            {ruError(error)}
                           </p>
                         )}
 
                         <div className="space-y-3">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                            Vehicle
+                            Автомобиль
                           </p>
                           <label className="block space-y-1.5">
-                            <span className="text-sm font-medium">Which vehicle was serviced?</span>
+                            <span className="text-sm font-medium">Какой автомобиль обслуживался?</span>
                             <select
                               value={repairVehicleId}
                               required
@@ -2198,7 +2200,7 @@ export function CustomerDetailContent({
                             </select>
                           </label>
                           <label className="block space-y-1.5">
-                            <span className="text-sm font-medium">Repair date</span>
+                            <span className="text-sm font-medium">Дата ремонта</span>
                             <input
                               type="date"
                               value={repairDate}
@@ -2213,7 +2215,7 @@ export function CustomerDetailContent({
                         <div className="space-y-3">
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                              Services
+                              Услуги
                             </p>
                             <button
                               type="button"
@@ -2221,12 +2223,11 @@ export function CustomerDetailContent({
                               className="inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)] transition hover:opacity-80"
                             >
                               <IconPlus className="h-3.5 w-3.5" />
-                              Add line
+                              Добавить строку
                             </button>
                           </div>
                           <p className="text-xs leading-relaxed text-[var(--muted)]">
-                            Tap catalog chips below, or choose Custom and type a name. Costs stay
-                            editable.
+                            Выберите услуги из каталога ниже или укажите свою. Стоимость можно изменить.
                           </p>
 
                           {shopServices.length > 0 && (
@@ -2292,21 +2293,21 @@ export function CustomerDetailContent({
                               >
                                 <div className="mb-2.5 flex items-center justify-between gap-2">
                                   <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                                    Line {index + 1}
+                                    Строка {index + 1}
                                   </span>
                                   <button
                                     type="button"
                                     onClick={() => removeRepairLine(row.key)}
                                     disabled={repairLines.length <= 1}
                                     className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] text-[var(--muted)] transition hover:border-red-300 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
-                                    aria-label={`Remove service ${index + 1}`}
+                                    aria-label={`Удалить услугу ${index + 1}`}
                                   >
                                     <IconTrash className="h-3.5 w-3.5" />
                                   </button>
                                 </div>
                                 <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_6rem] gap-2.5">
                                   <label className="block space-y-1">
-                                    <span className="text-xs text-[var(--muted)]">Catalog</span>
+                                    <span className="text-xs text-[var(--muted)]">Каталог</span>
                                     <select
                                       value={
                                         row.serviceId || (row.name ? "__custom__" : "")
@@ -2317,7 +2318,7 @@ export function CustomerDetailContent({
                                       className="w-full rounded-lg border border-[var(--line)] bg-[var(--background)]/40 px-2.5 py-2 text-sm outline-none ring-[var(--accent)] focus:ring-2"
                                     >
                                       <option value="" disabled>
-                                        Select…
+                                        Выберите…
                                       </option>
                                       {shopServices.map((s) => (
                                         <option key={s.id} value={s.id}>
@@ -2325,12 +2326,12 @@ export function CustomerDetailContent({
                                           {` · $${formatPrice(s.price)}`}
                                         </option>
                                       ))}
-                                      <option value="__custom__">Custom (type name)</option>
+                                      <option value="__custom__">Своя услуга (введите название)</option>
                                     </select>
                                   </label>
                                   <label className="block space-y-1">
                                     <span className="text-xs text-[var(--muted)]">
-                                      Service name
+                                      Название услуги
                                     </span>
                                     <input
                                       type="text"
@@ -2351,13 +2352,13 @@ export function CustomerDetailContent({
                                           serviceId: matched?.id ?? "",
                                         });
                                       }}
-                                      placeholder="e.g. Oil Change"
+                                      placeholder="Например, замена масла"
                                       maxLength={100}
                                       className="w-full rounded-lg border border-[var(--line)] bg-[var(--background)]/40 px-2.5 py-2 text-sm outline-none ring-[var(--accent)] focus:ring-2"
                                     />
                                   </label>
                                   <label className="block space-y-1">
-                                    <span className="text-xs text-[var(--muted)]">Cost</span>
+                                    <span className="text-xs text-[var(--muted)]">Стоимость</span>
                                     <div className="relative">
                                       <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--muted)]">
                                         $
@@ -2385,12 +2386,12 @@ export function CustomerDetailContent({
 
                           {shopServices.length === 0 && (
                             <p className="rounded-xl border border-dashed border-[var(--line)] bg-[rgba(15,23,42,0.02)] px-3.5 py-3 text-xs leading-relaxed text-[var(--muted)]">
-                              No catalog services yet — type a custom name, or add services in{" "}
+                              В каталоге пока нет услуг — введите своё название или добавьте услуги в{" "}
                               <Link
                                 href="/dashboard/settings?tab=shop"
                                 className="font-medium text-[var(--accent)] hover:underline"
                               >
-                                Service Catalog
+                                Каталог услуг
                               </Link>
                               .
                             </p>
@@ -2399,28 +2400,28 @@ export function CustomerDetailContent({
 
                         <div className="space-y-3">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                            Notes
+                            Примечания
                           </p>
                           <label className="block space-y-1.5">
-                            <span className="text-sm font-medium">Description</span>
+                            <span className="text-sm font-medium">Описание</span>
                             <textarea
                               value={repairDescription}
                               onChange={(e) => setRepairDescription(e.target.value)}
                               rows={2}
-                              placeholder="What was done (applies to all services above)"
+                              placeholder="Выполненные работы (для всех услуг выше)"
                               className="w-full resize-y rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none ring-[var(--accent)] focus:ring-2"
                             />
                           </label>
                           <label className="block space-y-1.5">
                             <span className="text-sm font-medium">
-                              Follow-up recommendation{" "}
-                              <span className="font-normal text-[var(--muted)]">(optional)</span>
+                              Рекомендация по обслуживанию{" "}
+                              <span className="font-normal text-[var(--muted)]">(необязательно)</span>
                             </span>
                             <textarea
                               value={repairRecommendation}
                               onChange={(e) => setRepairRecommendation(e.target.value)}
                               rows={2}
-                              placeholder="e.g. Replace pads within 6 months — used in Marketing"
+                              placeholder="Например, заменить колодки в течение 6 месяцев — используется в маркетинге"
                               className="w-full resize-y rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none ring-[var(--accent)] focus:ring-2"
                             />
                           </label>
@@ -2432,8 +2433,8 @@ export function CustomerDetailContent({
                           {filledLines.length > 0 ? (
                             <>
                               <span className="font-medium text-slate-800">
-                                {filledLines.length} service
-                                {filledLines.length === 1 ? "" : "s"}
+                                {filledLines.length} услуга
+                                {filledLines.length === 1 ? "" : ""}
                               </span>
                               <span className="mx-1.5 text-[var(--line)]">·</span>
                               <span className="tabular-nums font-semibold text-slate-900">
@@ -2441,7 +2442,7 @@ export function CustomerDetailContent({
                               </span>
                             </>
                           ) : (
-                            "Select at least one service to save"
+                            "Выберите хотя бы одну услугу для сохранения"
                           )}
                         </p>
                         <div className="flex flex-row justify-end gap-2">
@@ -2452,7 +2453,7 @@ export function CustomerDetailContent({
                             className="btn-ghost inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-sm disabled:opacity-60"
                           >
                             <IconCancel />
-                            Cancel
+                            Отмена
                           </button>
                           <button
                             type="submit"
@@ -2464,7 +2465,7 @@ export function CustomerDetailContent({
                             className="btn-primary inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             {!repairSaving && <IconSave />}
-                            {repairSaving ? "Saving…" : "Save"}
+                            {repairSaving ? "Сохранение…" : "Сохранить"}
                           </button>
                         </div>
                       </div>
@@ -2505,7 +2506,7 @@ export function CustomerDetailContent({
                     id="delete-repair-title"
                     className="text-lg font-semibold tracking-tight text-slate-900"
                   >
-                    Delete repair history?
+                    Удалить историю ремонта?
                   </h2>
                 </div>
               </div>
@@ -2523,7 +2524,7 @@ export function CustomerDetailContent({
                       <span>{deleteRepairTarget.vehicle_label}</span>
                       {deleteRepairTarget.created_at ? (
                         <span>
-                          {new Date(deleteRepairTarget.created_at).toLocaleDateString()}
+                          {new Date(deleteRepairTarget.created_at).toLocaleDateString("ru-RU")}
                         </span>
                       ) : null}
                       <span className="tabular-nums">${deleteRepairTarget.cost}</span>
@@ -2537,8 +2538,7 @@ export function CustomerDetailContent({
                 </div>
 
                 <p className="text-sm leading-relaxed text-[var(--muted)]">
-                  This cannot be undone. The service record will be permanently removed
-                  from this customer&apos;s history.
+                  Это действие нельзя отменить. Запись об обслуживании будет навсегда удалена из истории клиента.
                 </p>
 
                 {error && (
@@ -2546,7 +2546,7 @@ export function CustomerDetailContent({
                     className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                     role="alert"
                   >
-                    {error}
+                    {ruError(error)}
                   </p>
                 )}
 
@@ -2557,7 +2557,7 @@ export function CustomerDetailContent({
                     disabled={!!deletingRepairId}
                     className="btn-ghost px-4 py-2 text-sm disabled:opacity-60"
                   >
-                    No
+                    Нет
                   </button>
                   <button
                     type="button"
@@ -2565,7 +2565,7 @@ export function CustomerDetailContent({
                     disabled={!!deletingRepairId}
                     className="inline-flex items-center justify-center rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-red-600/20 transition hover:bg-red-700 disabled:opacity-60"
                   >
-                    {deletingRepairId ? "Deleting…" : "Yes"}
+                    {deletingRepairId ? "Удаление…" : "Да"}
                   </button>
                 </div>
               </div>
@@ -2603,23 +2603,23 @@ export function CustomerDetailContent({
                     className="text-lg font-semibold tracking-tight text-slate-900"
                   >
                     {deleteConversationTarget.kind === "call"
-                      ? "Delete call history?"
+                      ? "Удалить историю звонков?"
                       : deleteConversationTarget.kind === "sms"
-                        ? "Delete SMS conversation?"
-                        : "Delete message?"}
+                        ? "Удалить переписку SMS?"
+                        : "Удалить сообщение?"}
                   </h2>
                 </div>
               </div>
 
               <div className="space-y-4 px-5 py-5">
                 <p className="text-sm leading-relaxed text-[var(--muted)]">
-                  This cannot be undone. The{" "}
+                  Это действие нельзя отменить.{" "}
                   {deleteConversationTarget.kind === "call"
-                    ? "call history"
+                    ? "история звонков"
                     : deleteConversationTarget.kind === "sms"
-                      ? "SMS conversation"
+                      ? "Переписка SMS"
                       : "message"}{" "}
-                  will be permanently removed from this customer&apos;s history.
+                  будет навсегда удалено из истории клиента.
                 </p>
 
                 {error && (
@@ -2627,7 +2627,7 @@ export function CustomerDetailContent({
                     className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                     role="alert"
                   >
-                    {error}
+                    {ruError(error)}
                   </p>
                 )}
 
@@ -2638,7 +2638,7 @@ export function CustomerDetailContent({
                     disabled={deletingConversation}
                     className="btn-ghost px-4 py-2 text-sm disabled:opacity-60"
                   >
-                    No
+                    Нет
                   </button>
                   <button
                     type="button"
@@ -2646,7 +2646,7 @@ export function CustomerDetailContent({
                     disabled={deletingConversation}
                     className="inline-flex items-center justify-center rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-red-600/20 transition hover:bg-red-700 disabled:opacity-60"
                   >
-                    {deletingConversation ? "Deleting…" : "Yes"}
+                    {deletingConversation ? "Удаление…" : "Да"}
                   </button>
                 </div>
               </div>
@@ -2683,7 +2683,7 @@ export function CustomerDetailContent({
                     id="delete-vehicle-title"
                     className="text-lg font-semibold tracking-tight text-slate-900"
                   >
-                    Delete this vehicle?
+                    Удалить этот автомобиль?
                   </h2>
                 </div>
               </div>
@@ -2699,7 +2699,7 @@ export function CustomerDetailContent({
                     </p>
                     <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--muted)]">
                       {deleteVehicleTarget.license_plate ? (
-                        <span>Plate {deleteVehicleTarget.license_plate}</span>
+                        <span>Госномер {deleteVehicleTarget.license_plate}</span>
                       ) : null}
                       {deleteVehicleTarget.vin ? (
                         <span className="font-mono tracking-wide">
@@ -2707,15 +2707,14 @@ export function CustomerDetailContent({
                         </span>
                       ) : null}
                       {!deleteVehicleTarget.license_plate && !deleteVehicleTarget.vin ? (
-                        <span>No plate or VIN on file</span>
+                        <span>Госномер и VIN не указаны</span>
                       ) : null}
                     </div>
                   </div>
                 </div>
 
                 <p className="text-sm leading-relaxed text-[var(--muted)]">
-                  This cannot be undone. Repair history for this vehicle will also be
-                  removed from your shop.
+                  Это действие нельзя отменить. История ремонта автомобиля также будет удалена из автосервиса.
                 </p>
 
                 {error && (
@@ -2723,7 +2722,7 @@ export function CustomerDetailContent({
                     className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                     role="alert"
                   >
-                    {error}
+                    {ruError(error)}
                   </p>
                 )}
 
@@ -2734,7 +2733,7 @@ export function CustomerDetailContent({
                     disabled={!!deletingVehicleId}
                     className="btn-ghost px-4 py-2 text-sm disabled:opacity-60"
                   >
-                    No
+                    Нет
                   </button>
                   <button
                     type="button"
@@ -2742,7 +2741,7 @@ export function CustomerDetailContent({
                     disabled={!!deletingVehicleId}
                     className="inline-flex items-center justify-center rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-red-600/20 transition hover:bg-red-700 disabled:opacity-60"
                   >
-                    {deletingVehicleId ? "Deleting…" : "Yes"}
+                    {deletingVehicleId ? "Удаление…" : "Да"}
                   </button>
                 </div>
               </div>
@@ -2780,15 +2779,14 @@ export function CustomerDetailContent({
                     id="delete-customer-title"
                     className="text-lg font-semibold tracking-tight text-slate-900"
                   >
-                    Delete this customer?
+                    Удалить этого клиента?
                   </h2>
                 </div>
               </div>
 
               <div className="space-y-4 px-5 py-5">
                 <p className="text-sm leading-relaxed text-[var(--muted)]">
-                  This cannot be undone. All linked records for this person will be
-                  removed from your shop.
+                  Это действие нельзя отменить. Все связанные записи клиента будут удалены из автосервиса.
                 </p>
 
                 {error && (
@@ -2796,7 +2794,7 @@ export function CustomerDetailContent({
                     className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                     role="alert"
                   >
-                    {error}
+                    {ruError(error)}
                   </p>
                 )}
 
@@ -2807,7 +2805,7 @@ export function CustomerDetailContent({
                     disabled={deletingCustomer}
                     className="btn-ghost px-4 py-2 text-sm disabled:opacity-60"
                   >
-                    No
+                    Нет
                   </button>
                   <button
                     type="button"
@@ -2815,7 +2813,7 @@ export function CustomerDetailContent({
                     disabled={deletingCustomer}
                     className="inline-flex items-center justify-center rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-red-600/20 transition hover:bg-red-700 disabled:opacity-60"
                   >
-                    {deletingCustomer ? "Deleting…" : "Yes"}
+                    {deletingCustomer ? "Удаление…" : "Да"}
                   </button>
                 </div>
               </div>
@@ -2840,7 +2838,7 @@ export function CustomerDetailContent({
             <button
               type="button"
               tabIndex={-1}
-              aria-label="Close vehicle dialog"
+              aria-label="Закрыть окно автомобиля"
               className="absolute inset-0 cursor-default bg-slate-950/55 backdrop-blur-[2px]"
               disabled={vehicleSaving || Boolean(deletingVehicleId)}
               onPointerDown={(e) => {
@@ -2871,7 +2869,7 @@ export function CustomerDetailContent({
                     id="vehicle-modal-title"
                     className="text-lg font-semibold tracking-tight text-[var(--ink)]"
                   >
-                    {vehicleModal === "edit" ? "Edit vehicle" : "Add vehicle"}
+                    {vehicleModal === "edit" ? "Изменить автомобиль" : "Добавить автомобиль"}
                   </h2>
                 </div>
               </div>
@@ -2888,29 +2886,29 @@ export function CustomerDetailContent({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-slate-900">
                         {[year, make, model].map((v) => v.trim()).filter(Boolean).join(" ") ||
-                          (vehicleModal === "edit" ? "Vehicle" : "New vehicle")}
+                          (vehicleModal === "edit" ? "Автомобиль" : "Новый автомобиль")}
                       </p>
                       <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-[var(--muted)]">
-                        {plate.trim() ? <span>Plate {plate.trim()}</span> : null}
+                        {plate.trim() ? <span>Госномер {plate.trim()}</span> : null}
                         {vin.trim() ? (
                           <span className="font-mono tracking-wide">
                             VIN {vin.trim().toUpperCase()}
                           </span>
                         ) : (
-                          <span>VIN optional — temp VIN if blank</span>
+                          <span>VIN необязателен — при отсутствии будет создан временный</span>
                         )}
                         {(() => {
                           const n = Number(mileage.replace(/,/g, "").trim());
                           return Number.isFinite(n) && n > 0 ? (
                             <span className="tabular-nums">
-                              {n.toLocaleString()} mi
+                              {n.toLocaleString("ru-RU")} миль
                             </span>
                           ) : null;
                         })()}
                       </div>
                       {(vinLooking || vinStatus) && (
                         <p className="mt-1.5 text-xs text-[var(--muted)]">
-                          {vinLooking ? "Looking up VIN…" : vinStatus}
+                          {vinLooking ? "Поиск VIN…" : vinStatus}
                         </p>
                       )}
                     </div>
@@ -2921,7 +2919,7 @@ export function CustomerDetailContent({
                       className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700"
                       role="alert"
                     >
-                      {error}
+                      {ruError(error)}
                     </p>
                   )}
 
@@ -2934,45 +2932,45 @@ export function CustomerDetailContent({
                       required={vehicleModal === "edit"}
                     />
                     <Field
-                      label="License plate"
+                      label="Госномер"
                       value={plate}
                       onChange={setPlate}
-                      placeholder="Optional"
+                      placeholder="Необязательно"
                     />
                   </div>
 
                   <div className="space-y-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                      Specs
+                      Характеристики
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                       <Field
-                        label="Year"
+                        label="Год"
                         value={year}
                         onChange={setYear}
                         required={vehicleModal === "edit"}
-                        placeholder={vehicleModal === "add" ? "e.g. 2018" : undefined}
+                        placeholder={vehicleModal === "add" ? "Например, 2018" : undefined}
                       />
                       <Field
-                        label="Make"
+                        label="Марка"
                         value={make}
                         onChange={setMake}
                         required={vehicleModal === "edit"}
-                        placeholder={vehicleModal === "add" ? "e.g. Toyota" : undefined}
+                        placeholder={vehicleModal === "add" ? "Например, Toyota" : undefined}
                       />
                       <Field
-                        label="Model"
+                        label="Модель"
                         value={model}
                         onChange={setModel}
                         required={vehicleModal === "edit"}
-                        placeholder={vehicleModal === "add" ? "e.g. Camry" : undefined}
+                        placeholder={vehicleModal === "add" ? "Например, Camry" : undefined}
                       />
                       <Field
-                        label="Mileage"
+                        label="Пробег"
                         value={mileage}
                         onChange={setMileage}
                         required={vehicleModal === "edit"}
-                        placeholder={vehicleModal === "add" ? "Optional" : undefined}
+                        placeholder={vehicleModal === "add" ? "Необязательно" : undefined}
                       />
                     </div>
                   </div>
@@ -2986,7 +2984,7 @@ export function CustomerDetailContent({
                     className="btn-ghost inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm disabled:opacity-60"
                   >
                     <IconCancel />
-                    Cancel
+                    Отмена
                   </button>
                   <button
                     type="submit"
@@ -3003,10 +3001,10 @@ export function CustomerDetailContent({
                   >
                     {!vehicleSaving && <IconSave />}
                     {vehicleSaving
-                      ? "Saving…"
+                      ? "Сохранение…"
                       : openRepairAfterVehicle
-                        ? "Save & continue"
-                        : "Save"}
+                        ? "Сохранить и продолжить"
+                        : "Сохранить"}
                   </button>
                 </div>
               </form>

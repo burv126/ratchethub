@@ -741,9 +741,7 @@ class DecisionExecutor:
 
         customer_id = decision.customer_id or context.customer_id
         summary = (
-            f"Purchase recommended: {decision.quantity}x {decision.part_name or decision.sku} "
-            f"via {decision.supplier_name or 'supplier'} "
-            f"(~${decision.estimated_cost}, lead {decision.lead_time_days}d)"
+            f"Рекомендуется закупка: {decision.quantity} шт. {decision.part_name or decision.sku} у {decision.supplier_name or 'supplier'} (~${decision.estimated_cost}, срок {decision.lead_time_days} дн.)"
         )
         if customer_id:
             try:
@@ -1289,7 +1287,7 @@ class DecisionExecutor:
                 customer_id=decision.primary_id,
             )
             if existing is None:
-                raise LookupError("Customer not found for update")
+                raise LookupError('Клиент для обновления не найден')
             for key, value in decision.profile_patch.items():
                 if hasattr(existing, key) and value is not None:
                     setattr(existing, key, value)
@@ -1316,7 +1314,7 @@ class DecisionExecutor:
 
         if decision.action == "create":
             if not decision.vin or not decision.year or not decision.make or not decision.model:
-                raise ValueError("VIN, year, make, and model required to create vehicle")
+                raise ValueError('Для создания автомобиля нужны VIN, год, марка и модель')
             vehicle = VehicleRecord(
                 id=uuid4(),
                 shop_id=shop_id,
@@ -1365,7 +1363,7 @@ class DecisionExecutor:
                 vehicle_id=decision.vehicle_id,
             )
             if vehicle is None:
-                raise LookupError("Vehicle not found")
+                raise LookupError('Автомобиль не найден')
             mileage = decision.mileage if decision.mileage is not None else vehicle.mileage
             updated = VehicleRecord(
                 id=vehicle.id,
@@ -1534,7 +1532,7 @@ class DecisionExecutor:
                     return SchedulingResult(
                         action="book",
                         success=False,
-                        message="Preferred start required to book",
+                        message='Для записи укажите желаемое время начала',
                     )
                 slots = await self._invoke_cap(
                     Capability.FIND_AVAILABLE_SLOT.value,
@@ -1546,7 +1544,7 @@ class DecisionExecutor:
                     repair_type=decision.required_skill,
                 )
                 if not slots:
-                    return SchedulingResult(action="book", success=False, message="No available slots")
+                    return SchedulingResult(action="book", success=False, message='Нет свободного времени')
                 # Exact preferred minute only (shop-local, ignore sub-minute noise).
                 from app.agents.scheduling.service import SchedulingAgent
 
@@ -1617,7 +1615,7 @@ class DecisionExecutor:
             if isinstance(validation, dict) and not validation.get("valid", True):
                 errs = list(validation.get("errors") or ["conflict"])
                 return _unavailable(
-                    "Slot not available: " + "; ".join(errs),
+                    'Время недоступно: ' + "; ".join(errs),
                     errors=errs,
                 )
             notes = decision.reason
@@ -1643,7 +1641,7 @@ class DecisionExecutor:
                     estimated_revenue=decision.estimated_revenue,
                 )
             except Exception as exc:  # noqa: BLE001 — surface capacity race as unavailable
-                return _unavailable(str(exc) or "Unable to book requested slot")
+                return _unavailable(str(exc) or 'Не удалось записать на выбранное время')
             from app.plugins.scheduling.plugin import reminders_for
 
             reminders = reminders_for(appt)
@@ -1666,7 +1664,7 @@ class DecisionExecutor:
                 success=True,
                 appointment=appt,
                 reminders=reminders,
-                message="Appointment booked",
+                message='Запись создана',
                 metadata={
                     "service_id": str(decision.service_id) if decision.service_id else None,
                     "service_name": decision.service_name,
@@ -1689,7 +1687,7 @@ class DecisionExecutor:
                     action="reschedule",
                     success=False,
                     available_slots=slots,
-                    message="appointment_id required to reschedule; slots provided",
+                    message='Для переноса требуется appointment_id; варианты времени предоставлены',
                 )
             start = decision.recommended_slot_start
             end = decision.recommended_slot_end
@@ -1784,7 +1782,7 @@ class DecisionExecutor:
             if isinstance(validation, dict) and not validation.get("valid", True):
                 errs = list(validation.get("errors") or ["conflict"])
                 return _reschedule_unavailable(
-                    "Slot not available: " + "; ".join(errs),
+                    'Время недоступно: ' + "; ".join(errs),
                     errors=errs,
                 )
             try:
@@ -1804,7 +1802,7 @@ class DecisionExecutor:
                     estimated_revenue=decision.estimated_revenue,
                 )
             except Exception as exc:  # noqa: BLE001 — capacity / hours rejection
-                return _reschedule_unavailable(str(exc) or "Unable to reschedule")
+                return _reschedule_unavailable(str(exc) or 'Не удалось перенести')
             from app.plugins.scheduling.plugin import reminders_for
 
             return SchedulingResult(
@@ -1812,7 +1810,7 @@ class DecisionExecutor:
                 success=True,
                 appointment=appt,
                 reminders=reminders_for(appt),
-                message="Appointment rescheduled",
+                message='Запись перенесена',
                 metadata={
                     "service_id": str(decision.service_id) if decision.service_id else None,
                     "service_name": decision.service_name,
@@ -1822,7 +1820,7 @@ class DecisionExecutor:
 
         if decision.action == "cancel":
             if not decision.appointment_id:
-                return SchedulingResult(action="cancel", success=False, message="appointment_id required")
+                return SchedulingResult(action="cancel", success=False, message='Требуется appointment_id')
             appt = await self._invoke_cap(
                 Capability.CANCEL_APPOINTMENT.value,
                 shop_id=shop_id,
@@ -1838,10 +1836,10 @@ class DecisionExecutor:
                 context.correlation_id,
             )
             return SchedulingResult(
-                action="cancel", success=True, appointment=appt, message="Appointment cancelled"
+                action="cancel", success=True, appointment=appt, message='Запись отменена'
             )
 
-        return SchedulingResult(action="noop", success=True, message="No scheduling action required")
+        return SchedulingResult(action="noop", success=True, message='Действия с расписанием не требуются')
 
     async def _apply_crm(
         self,
@@ -1856,7 +1854,7 @@ class DecisionExecutor:
         if customer_id is None:
             return CrmUpdateResult(
                 customer_id=None,
-                customer_summary="No customer linked; CRM update skipped.",
+                customer_summary='Клиент не привязан; обновление CRM пропущено.',
             )
 
         entries: list[TimelineEntry] = []
@@ -1900,7 +1898,7 @@ class DecisionExecutor:
                     context=context,
                     customer_id=customer_id,
                     kind="intent",
-                    summary=f"Detected intent: {decision.intent}",
+                    summary=f'Определено намерение: {decision.intent}',
                 )
             )
 
@@ -2109,7 +2107,7 @@ class DecisionExecutor:
                 shop_id=shop_id,
                 ports=ports,
                 context=context,
-                content=decision.content or "Vehicle history note",
+                content=decision.content or 'Заметка истории автомобиля',
                 category="vehicle_history",
                 memory_type="vehicle",
                 vehicle_id=vehicle_id,
@@ -2139,7 +2137,7 @@ class DecisionExecutor:
                     shop_id=shop_id,
                     ports=ports,
                     context=context,
-                    content=f"Shop preference {key}={value}",
+                    content=f'Предпочтение автосервиса {key}={value}',
                     category="shop_preferences",
                     memory_type="shop",
                     importance=0.75,
@@ -2222,7 +2220,7 @@ class DecisionExecutor:
                     shop_id=shop_id,
                     ports=ports,
                     context=context,
-                    content=decision.plan or "Retention plan",
+                    content=decision.plan or 'План удержания',
                     category="customer_history",
                     memory_type="customer",
                     customer_id=customer_id,
@@ -2340,7 +2338,7 @@ class DecisionExecutor:
                     shop_id=shop_id,
                     ports=ports,
                     context=context,
-                    content=f"Preferred contact: {decision.channel} @ {decision.preferred_window}",
+                    content=f'Предпочтительная связь: {decision.channel} @ {decision.preferred_window}',
                     category="customer_preferences",
                     memory_type="customer",
                     customer_id=customer_id,
@@ -2460,7 +2458,7 @@ class DecisionExecutor:
                 shop_id=shop_id,
                 ports=ports,
                 context=context,
-                content=decision.summary or "Learning feedback",
+                content=decision.summary or 'Отзыв для обучения',
                 category="general",
                 memory_type="semantic",
                 customer_id=customer_id,
@@ -2544,7 +2542,7 @@ class DecisionExecutor:
                 ports=ports,
                 context=context,
                 content=(
-                    f"Optimization for {decision.target}: "
+                    f'Оптимизация для {decision.target}: '
                     + "; ".join(decision.suggestions[:5])
                 ),
                 category="general",
@@ -2605,7 +2603,7 @@ class DecisionExecutor:
                 shop_id=shop_id,
                 ports=ports,
                 context=context,
-                content=decision.description or f"Pattern {decision.pattern_key}",
+                content=decision.description or f'Закономерность {decision.pattern_key}',
                 category="general",
                 memory_type="semantic",
                 tags=["learning", "pattern", decision.pattern_key],
@@ -2653,13 +2651,13 @@ def _reminders_for(appointment: AppointmentRecord) -> list[Reminder]:
             appointment_id=appointment.id,
             channel="sms",
             send_at=appointment.start - timedelta(hours=24),
-            message="Reminder: your appointment is tomorrow.",
+            message='Напоминание: ваша запись завтра.',
         ),
         Reminder(
             appointment_id=appointment.id,
             channel="sms",
             send_at=appointment.start - timedelta(hours=2),
-            message="Reminder: your appointment is in 2 hours.",
+            message='Напоминание: ваша запись через 2 часа.',
         ),
     ]
 
@@ -2667,12 +2665,12 @@ def _reminders_for(appointment: AppointmentRecord) -> list[Reminder]:
 def _crm_summary(
     customer_id: UUID, timeline: list[TimelineEntry], intent: str | None
 ) -> str:
-    parts = [f"Customer {customer_id}: {len(timeline)} timeline events."]
+    parts = [f'Клиент {customer_id}: событий в истории — {len(timeline)}.']
     if intent:
-        parts.append(f"Latest intent: {intent}.")
+        parts.append(f'Последнее намерение: {intent}.')
     if timeline:
         last = timeline[-1]
-        parts.append(f"Last activity ({last.kind}): {last.summary}")
+        parts.append(f'Последняя активность ({last.kind}): {last.summary}')
     return " ".join(parts)
 
 
@@ -2706,7 +2704,7 @@ def _maintenance_timeline(vehicle: VehicleRecord, repairs: list[Any]) -> list[An
                 due_mileage=due,
                 due_date=now,
                 status=status,
-                notes=f"Every {interval} miles",
+                notes=f'Каждые {interval} миль',
             )
         )
     return items

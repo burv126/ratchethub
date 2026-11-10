@@ -73,7 +73,7 @@ async def test_shop_login_rejects_platform_admin(admin_username: str) -> None:
             json={"phone": phone, "password": password, "shop_slug": "any-shop"},
         )
     assert res.status_code == 401
-    assert "admin sign-in" in res.json()["detail"].lower()
+    assert 'вход администратора' in res.json()["detail"].lower()
 
 
 @pytest.mark.asyncio
@@ -92,7 +92,7 @@ async def test_admin_login_rejects_shop_user(admin_username: str) -> None:
             },
         )
     assert res.status_code == 401
-    assert res.json()["detail"] == "Login failed"
+    assert res.json()["detail"] == 'Не удалось войти'
 
 
 @pytest.mark.asyncio
@@ -108,12 +108,12 @@ async def test_admin_login_lockout_after_three_failures(admin_username: str) -> 
         for _ in range(2):
             res = await client.post("/v1/auth/admin/login", json=payload)
             assert res.status_code == 401
-            assert res.json()["detail"] == "Login failed"
+            assert res.json()["detail"] == 'Не удалось войти'
 
         res = await client.post("/v1/auth/admin/login", json=payload)
         assert res.status_code == 429
         detail = res.json()["detail"]
-        assert detail["message"] == "Too many failed attempts. Try again later."
+        assert detail["message"] == 'Слишком много неудачных попыток. Повторите позже.'
         assert 590 <= detail["retry_after"] <= 600
         assert res.headers.get("Retry-After") == str(detail["retry_after"])
 
@@ -123,7 +123,7 @@ async def test_admin_login_lockout_after_three_failures(admin_username: str) -> 
         )
         assert res.status_code == 429
         detail = res.json()["detail"]
-        assert detail["message"] == "Too many failed attempts. Try again later."
+        assert detail["message"] == 'Слишком много неудачных попыток. Повторите позже.'
         assert detail["retry_after"] > 0
 
 

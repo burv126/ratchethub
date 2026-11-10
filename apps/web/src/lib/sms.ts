@@ -1,3 +1,5 @@
+
+import { readApiError } from "@/lib/ru-errors";
 import { AuthSession, getApiUrl, loadSession, refresh, saveSession, clearSession } from "@/lib/api";
 
 export type SmsConversation = {
@@ -48,18 +50,12 @@ export type SmsMetrics = {
 };
 
 async function parseError(res: Response): Promise<string> {
-  try {
-    const body = await res.json();
-    if (typeof body.detail === "string") return body.detail;
-    return res.statusText || "Request failed";
-  } catch {
-    return res.statusText || "Request failed";
-  }
+  return readApiError(res);
 }
 
 async function authFetch(path: string, init: RequestInit = {}, session?: AuthSession | null) {
   let current = session ?? loadSession();
-  if (!current) throw new Error("Not authenticated");
+  if (!current) throw new Error("Вход не выполнен");
 
   const doFetch = (accessToken: string) =>
     fetch(`${getApiUrl()}${path}`, {
@@ -75,9 +71,9 @@ async function authFetch(path: string, init: RequestInit = {}, session?: AuthSes
   try {
     res = await doFetch(current.accessToken);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Network error";
+    const msg = err instanceof Error ? err.message : "Ошибка сети";
     if (msg === "Failed to fetch") {
-      throw new Error(`Cannot reach API at ${getApiUrl()}. Is the backend running?`);
+      throw new Error(`Нет связи с API по адресу ${getApiUrl()}. Проверьте, запущен ли сервер.`);
     }
     throw err instanceof Error ? err : new Error(msg);
   }
@@ -88,7 +84,7 @@ async function authFetch(path: string, init: RequestInit = {}, session?: AuthSes
       res = await doFetch(current.accessToken);
     } catch {
       clearSession();
-      throw new Error("Session expired");
+      throw new Error("Сессия истекла");
     }
   }
   return res;

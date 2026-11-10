@@ -14,7 +14,7 @@ function RedirectToCustomerList() {
     router.replace(`/dashboard/customer?${qs.toString()}`);
   }, [params.id, router, searchParams]);
 
-  return <p className="text-sm text-[var(--muted)]">Loading customer…</p>;
+  return <p className="text-sm text-[var(--muted)]">Загрузка клиента…</p>;
 }
 
 /** Deep links `/dashboard/customer/[id]` open the list + selected detail panel. */
@@ -22,7 +22,7 @@ export default function CustomerDetailPage() {
   return (
     <Suspense
       fallback={
-        <p className="text-sm text-[var(--muted)]">Loading customer…</p>
+        <p className="text-sm text-[var(--muted)]">Загрузка клиента…</p>
       }
     >
       <RedirectToCustomerList />

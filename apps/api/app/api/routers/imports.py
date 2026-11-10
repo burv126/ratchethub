@@ -223,7 +223,7 @@ async def list_sources(_: CurrentUser = Depends(get_current_user)) -> list[Sourc
         ImportSource.EXCEL: "Excel",
         ImportSource.PDF: "PDF",
         ImportSource.OCR: "OCR",
-        ImportSource.MANUAL: "Manual Entry",
+        ImportSource.MANUAL: 'Ввод вручную',
     }
     upload = {ImportSource.CSV, ImportSource.EXCEL, ImportSource.PDF, ImportSource.OCR}
     creds = {
@@ -388,5 +388,5 @@ async def get_import_report(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     out = _job_out(job)
     if out.report is None:
-        raise HTTPException(status_code=404, detail="Report not available yet")
+        raise HTTPException(status_code=404, detail='Отчёт пока недоступен')
     return out.report

@@ -15,7 +15,7 @@ class QuickBooksAdapter(BaseAdapter):
     provider = IntegrationProvider.QUICKBOOKS
     category = IntegrationCategory.ACCOUNTING
     display_name = "QuickBooks"
-    description = "Accounting sync — invoices and payments."
+    description = 'Синхронизация бухгалтерии — счета и платежи.'
     auth_method = AuthMethod.OAUTH2
     docs_url = "https://developer.intuit.com"
     credential_fields = ["client_id", "client_secret", "realm_id"]

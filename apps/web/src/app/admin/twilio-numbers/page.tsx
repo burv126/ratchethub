@@ -1,4 +1,8 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
+
+import { ruLabel } from "@/lib/ru";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -84,7 +88,7 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
         setAutoProvision(Boolean(settings.editable.twilio_auto_provision_numbers));
       } catch (err) {
         if (!quiet) {
-          setError(err instanceof Error ? err.message : "Failed to load settings");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить настройки");
         }
       }
     },
@@ -102,7 +106,7 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
       } catch (err) {
         if (!quiet) {
           setLive(false);
-          setError(err instanceof Error ? err.message : "Failed to load Twilio numbers");
+          setError(err instanceof Error ? err.message : "Не удалось загрузить номера Twilio");
         }
       } finally {
         if (!quiet) setBusy(false);
@@ -199,12 +203,12 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
       setAutoProvision(Boolean(result.editable.twilio_auto_provision_numbers));
       setMessage(
         next
-          ? "Auto-create Twilio number on account creation enabled"
-          : "Auto-create Twilio number on account creation disabled",
+          ? "Автоматическое создание номера Twilio при регистрации включено"
+          : "Автоматическое создание номера Twilio при регистрации отключено",
       );
     } catch (err) {
       setAutoProvision(previous);
-      setError(err instanceof Error ? err.message : "Failed to update setting");
+      setError(err instanceof Error ? err.message : "Не удалось изменить настройку");
     } finally {
       setAutoProvisionBusy(false);
     }
@@ -213,11 +217,11 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
   async function onAssignManual(shopId: string) {
     const phone = (manualPhone[shopId] || "").trim();
     if (!phone) {
-      setError("Enter an E.164 number (e.g. +12065550100)");
+      setError("Введите номер в формате E.164 (например, +12065550100)");
       setCenterAlert({
         tone: "error",
-        title: "Missing number",
-        body: "Enter an E.164 number already on the Twilio account (e.g. +12065550100).",
+        title: "Номер не указан",
+        body: "Введите номер E.164 из аккаунта Twilio (например, +12065550100).",
       });
       return;
     }
@@ -227,11 +231,11 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
     try {
       const result = await assignAdminOrganizationTwilioNumber(accessToken, shopId, phone);
       const assigned = result.twilio_phone_e164 || phone;
-      let okMsg = `Assigned ${assigned}`;
+      let okMsg = `Назначено ${assigned}`;
       if (result.webhooks_configured === false && result.webhooks_error) {
-        okMsg += ` (webhook warning: ${result.webhooks_error})`;
+        okMsg += ` (предупреждение вебхука: ${ruError(result.webhooks_error)})`;
       } else if (result.webhooks_configured) {
-        okMsg += " — Twilio Voice/SMS webhooks linked to this API";
+        okMsg += " — вебхуки звонков и SMS Twilio подключены к этому API";
       }
       setMessage(okMsg);
       setManualPhone((prev) => {
@@ -241,17 +245,17 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
       });
       setCenterAlert({
         tone: "success",
-        title: "Number assigned",
+        title: "Номер назначен",
         body: okMsg,
       });
       await load(true);
       window.dispatchEvent(new Event("admin:shops-refresh"));
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Assign failed";
+      const errMsg = err instanceof Error ? err.message : "Не удалось назначить";
       setError(errMsg);
       setCenterAlert({
         tone: "error",
-        title: "Assign failed",
+        title: "Не удалось назначить",
         body: errMsg,
       });
     } finally {
@@ -278,23 +282,23 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
     try {
       const result = await clearAdminOrganizationTwilioNumber(accessToken, shopId);
       const prev = result.previous_twilio_phone_e164 || phone || "number";
-      const okMsg = `Unassigned ${prev} from ${shopName}. Number kept on Twilio account.`;
+      const okMsg = `Отвязано ${prev} от ${shopName}. Номер сохранён в аккаунте Twilio.`;
       setMessage(okMsg);
       setRemoveTarget(null);
       setCenterAlert({
         tone: "success",
-        title: "Number unassigned",
+        title: "Назначение номера отменено",
         body: okMsg,
       });
       await load(true);
       window.dispatchEvent(new Event("admin:shops-refresh"));
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Remove failed";
+      const errMsg = err instanceof Error ? err.message : "Не удалось удалить";
       setError(errMsg);
       setRemoveTarget(null);
       setCenterAlert({
         tone: "error",
-        title: "Remove failed",
+        title: "Не удалось удалить",
         body: errMsg,
       });
     } finally {
@@ -303,10 +307,10 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
   }
 
   if (error && !data) {
-    return <p className="text-sm text-red-700">{error}</p>;
+    return <p className="text-sm text-red-700">{ruError(error)}</p>;
   }
   if (!data) {
-    return <p className="text-sm text-[var(--muted)]">{busy ? "Loading…" : "No data"}</p>;
+    return <p className="text-sm text-[var(--muted)]">{busy ? "Загрузка…" : "Нет данных"}</p>;
   }
 
   const removing = Boolean(removeTarget && actionId === removeTarget.shopId);
@@ -317,17 +321,16 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
       <Panel className="shrink-0">
         <div className="flex flex-wrap items-start justify-between gap-3 px-5 py-4">
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium">Auto-create Twilio number on account creation</p>
+            <p className="text-sm font-medium">Создавать номер Twilio при регистрации</p>
             <p className="mt-1 text-xs text-[var(--muted)]">
-              When enabled, new shop signups automatically receive an SMS/Voice number.
-              Manual assign on this page still works when disabled.
+              При включении новые автосервисы автоматически получают номер для SMS и звонков. Ручное назначение доступно и при отключённой настройке.
             </p>
           </div>
           <button
             type="button"
             role="switch"
             aria-checked={autoOn}
-            aria-label="Auto-create Twilio number on account creation"
+            aria-label="Создавать номер Twilio при регистрации"
             disabled={autoProvision === null || autoProvisionBusy}
             onClick={() => void onToggleAutoProvision(!autoOn)}
             className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors disabled:opacity-50 ${
@@ -346,17 +349,17 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
       </Panel>
 
       <section className="grid shrink-0 gap-3 sm:grid-cols-3">
-        <Stat label="Shops" value={String(stats.total)} />
-        <Stat label="Numbers assigned" value={String(stats.assigned)} />
-        <Stat label="Not assigned" value={String(stats.unassigned)} />
+        <Stat label="Автосервисы" value={String(stats.total)} />
+        <Stat label="Назначенные номера" value={String(stats.assigned)} />
+        <Stat label="Не назначено" value={String(stats.unassigned)} />
       </section>
 
-      {error ? <p className="shrink-0 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="shrink-0 text-sm text-red-700">{ruError(error)}</p> : null}
       {message ? <p className="shrink-0 text-sm text-emerald-700">{message}</p> : null}
 
       <Panel
         className="flex min-h-0 flex-1 flex-col"
-        title={`Twilio numbers (${filtered.length})`}
+        title={`Номера Twilio (${filtered.length})`}
         action={
           <div className="flex flex-nowrap items-center gap-2">
             <LiveBadge live={live} />
@@ -364,16 +367,16 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
               value={filter}
               onChange={(e) => setFilter(e.target.value as NumberFilter)}
               className="shrink-0 rounded-md border border-[var(--line)] bg-white px-2 py-1.5 text-sm"
-              aria-label="Filter by assignment"
+              aria-label="Фильтр по назначению"
             >
-              <option value="all">All shops</option>
-              <option value="assigned">Assigned</option>
-              <option value="unassigned">Not assigned</option>
+              <option value="all">Все автосервисы</option>
+              <option value="assigned">Назначено</option>
+              <option value="unassigned">Не назначено</option>
             </select>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search shop or number…"
+              placeholder="Поиск по автосервису или номеру…"
               className="w-44 shrink-0 rounded-md border border-[var(--line)] px-3 py-1.5 text-sm sm:w-56"
             />
           </div>
@@ -383,13 +386,13 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
           <table className="min-w-full text-left text-sm">
             <thead className="sticky top-0 z-10 border-b border-[var(--line)] bg-[var(--background)] text-[var(--muted)]">
               <tr>
-                <th className="px-5 py-2 font-medium">Shop</th>
-                <th className="px-5 py-2 font-medium">Plan</th>
-                <th className="px-5 py-2 font-medium">Status</th>
-                <th className="px-5 py-2 font-medium">Number status</th>
-                <th className="px-5 py-2 font-medium">Twilio number</th>
-                <th className="px-5 py-2 font-medium">Channels</th>
-                <th className="px-5 py-2 font-medium">Actions</th>
+                <th className="px-5 py-2 font-medium">Автосервис</th>
+                <th className="px-5 py-2 font-medium">Тариф</th>
+                <th className="px-5 py-2 font-medium">Статус</th>
+                <th className="px-5 py-2 font-medium">Статус номера</th>
+                <th className="px-5 py-2 font-medium">Номер Twilio</th>
+                <th className="px-5 py-2 font-medium">Каналы</th>
+                <th className="px-5 py-2 font-medium">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -416,18 +419,18 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
                       </Link>
                       <div className="font-mono text-xs text-[var(--muted)]">{s.shop_slug}</div>
                     </td>
-                    <td className="px-5 py-3">{s.plan_name}</td>
-                    <td className={`px-5 py-3 capitalize ${statusTone(s.status)}`}>{s.status}</td>
+                    <td className="px-5 py-3">{ruLabel(s.plan_name)}</td>
+                    <td className={`px-5 py-3 capitalize ${statusTone(s.status)}`}>{ruLabel(s.status)}</td>
                     <td className="px-5 py-3">
                       {assigned ? (
                         <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          Assigned
+                          Назначено
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-900">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                          Not assigned
+                          Не назначено
                         </span>
                       )}
                     </td>
@@ -440,7 +443,7 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
                             className="rounded border border-[var(--line)] px-1.5 py-0.5 text-[11px] text-[var(--muted)] hover:text-[var(--foreground)]"
                             onClick={() => void navigator.clipboard.writeText(phone)}
                           >
-                            Copy
+                            Копировать
                           </button>
                         </div>
                       ) : (
@@ -451,10 +454,10 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
                       {splitChannels ? (
                         <div className="space-y-0.5">
                           <div>SMS: {s.sms_phone_e164}</div>
-                          <div>Voice: {s.voice_phone_e164}</div>
+                          <div>Звонки: {s.voice_phone_e164}</div>
                         </div>
                       ) : assigned ? (
-                        <span>SMS + Voice</span>
+                        <span>SMS + звонки</span>
                       ) : (
                         "—"
                       )}
@@ -466,9 +469,9 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
                           disabled={rowBusy}
                           onClick={() => openRemoveConfirm(s)}
                           className="rounded-md border border-[var(--line)] px-2 py-1 text-xs text-red-700 disabled:opacity-50"
-                          title="Unassign from shop in the database only (Twilio account keeps the number)"
+                          title="Отвязать номер только в базе данных (номер останется в аккаунте Twilio)"
                         >
-                          {actionId === s.shop_id ? "Removing…" : "Remove"}
+                          {actionId === s.shop_id ? "Удаление…" : "Удалить"}
                         </button>
                       ) : (
                         <div className="flex min-w-[12rem] gap-1">
@@ -495,9 +498,9 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
                             disabled={rowBusy}
                             onClick={() => void onAssignManual(s.shop_id)}
                             className="rounded-md border border-[var(--line)] px-2 py-1 text-xs disabled:opacity-50"
-                            title="Assign an E.164 number already on this Twilio account"
+                            title="Назначить номер E.164 из этого аккаунта Twilio"
                           >
-                            Set
+                            Задать
                           </button>
                         </div>
                       )}
@@ -508,7 +511,7 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-5 py-8 text-center text-[var(--muted)]">
-                    No shops match this filter.
+                    Нет автосервисов по этому фильтру.
                   </td>
                 </tr>
               )}
@@ -534,21 +537,19 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
           >
             <div>
               <h2 id="remove-twilio-title" className="text-base font-semibold">
-                Remove Twilio number?
+                Отвязать номер Twilio?
               </h2>
               <p id="remove-twilio-desc" className="mt-2 text-sm text-[var(--muted)]">
-                Unassign{" "}
+                Отвязать{" "}
                 <span className="font-mono text-[var(--foreground)]">
                   {removeTarget.phone || "—"}
                 </span>{" "}
-                from{" "}
+                от{" "}
                 <span className="font-medium text-[var(--foreground)]">{removeTarget.shopName}</span>
                 .
               </p>
               <p className="mt-2 text-sm text-[var(--muted)]">
-                Unassigns the number from this shop in our database only. The Twilio
-                account is not contacted — the number stays purchased and can be
-                reassigned later.
+                Номер будет отвязан от автосервиса только в нашей базе данных. Запрос в Twilio не отправляется: номер остаётся оплаченным и доступным для повторного назначения.
               </p>
             </div>
             <div className="flex flex-wrap justify-end gap-2">
@@ -558,7 +559,7 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
                 onClick={() => setRemoveTarget(null)}
                 className="rounded-md border border-[var(--line)] px-3 py-1.5 text-sm disabled:opacity-50"
               >
-                Cancel
+                Отмена
               </button>
               <button
                 type="button"
@@ -566,7 +567,7 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
                 onClick={() => void confirmRemove()}
                 className="rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-800 disabled:opacity-50"
               >
-                {removing ? "Removing…" : "Remove"}
+                {removing ? "Удаление…" : "Удалить"}
               </button>
             </div>
           </div>
@@ -605,7 +606,7 @@ function TwilioNumbersBody({ accessToken }: { accessToken: string }) {
                 onClick={() => setCenterAlert(null)}
                 className="rounded-md border border-[var(--line)] bg-[var(--background)] px-3 py-1.5 text-sm font-medium"
               >
-                OK
+                ОК
               </button>
             </div>
           </div>

@@ -38,15 +38,15 @@ class CsvConnector:
 
     async def extract(self, ctx: ConnectorContext) -> NormalizedBatch:
         if not ctx.payload:
-            raise ValueError("CSV import requires an uploaded file")
+            raise ValueError('Для импорта CSV загрузите файл')
         if ctx.payload.startswith(b"PK"):
             raise ValueError(
-                "File looks like Excel (.xlsx). Re-run import with Excel selected, or rename to .xlsx."
+                'Файл похож на Excel (.xlsx). Выберите импорт Excel или переименуйте файл в .xlsx.'
             )
         text = ctx.payload.decode("utf-8-sig", errors="replace")
         reader = csv.DictReader(io.StringIO(text))
         if not reader.fieldnames:
-            raise ValueError("CSV has no header row")
+            raise ValueError('В CSV нет строки заголовков')
 
         sections: dict[str, list[dict[str, Any]]] = defaultdict(list)
         entity_col = None
@@ -68,5 +68,5 @@ class CsvConnector:
             sections[ent].append(cleaned)
 
         if not sections:
-            raise ValueError("CSV contained no data rows")
+            raise ValueError('В CSV нет строк данных')
         return build_batch_from_sections(dict(sections), source=self.source)

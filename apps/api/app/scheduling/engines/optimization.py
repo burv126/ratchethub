@@ -52,12 +52,12 @@ class OptimizationEngine:
             reasons = []
             score = float(skill) * 20.0
             if skill >= 4:
-                reasons.append(f"Strong skill match ({skill}/5) for {repair_type}")
+                reasons.append(f'Высокое соответствие квалификации ({skill}/5) для {repair_type}')
             elif skill > 0:
-                reasons.append(f"Capable for {repair_type} ({skill}/5)")
+                reasons.append(f'Подходит для {repair_type} ({skill}/5)')
             else:
                 score -= 30
-                reasons.append("No listed skill — backup assignment")
+                reasons.append('Квалификация не указана — резервное назначение')
 
             load = sum(
                 1
@@ -67,24 +67,24 @@ class OptimizationEngine:
                 == self._availability.local_date(start)
             )
             score -= load * 8
-            reasons.append(f"Current day load: {load}")
+            reasons.append(f'Текущая загрузка дня: {load}')
             # Soft tie-break: prefer floor staff over owner when otherwise equal
             # so Auto assign does not dump every first booking on the owner.
             if (m.role or "").strip().lower() == "owner":
                 score -= 0.5
             if priority == "emergency" and skill >= 4:
                 score += 25
-                reasons.append("Preferred for emergency")
+                reasons.append('Предпочтительно для экстренных работ')
             ranked.append((score, m, reasons))
 
         if not ranked:
             if require_skill:
-                return None, [f"No available mechanic with required skill '{repair_type}'"]
-            return None, ["No available mechanic for this time window"]
+                return None, [f"Нет свободного механика с квалификацией '{repair_type}'"]
+            return None, ['Нет свободного механика в этом интервале']
         # Highest score first; name ASC breaks remaining ties deterministically.
         ranked.sort(key=lambda x: (-x[0], x[1].name.lower()))
         best_score, best, reasons = ranked[0]
-        reasons.append(f"Score {best_score:.1f}")
+        reasons.append(f'Оценка {best_score:.1f}')
         return best, reasons
 
     def recommend_bay(
@@ -127,12 +127,12 @@ class OptimizationEngine:
             reasons: list[str] = []
             if b.bay_type == preferred_type:
                 score += 40
-                reasons.append(f"Bay type matches preferred ({b.bay_type})")
+                reasons.append(f'Тип поста соответствует пожеланию ({b.bay_type})')
             elif b.bay_type == "general":
                 score += 15
-                reasons.append("General bay fallback")
+                reasons.append('Резервный универсальный пост')
             else:
-                reasons.append(f"Alternate bay type ({b.bay_type})")
+                reasons.append(f'Другой тип поста ({b.bay_type})')
             load = sum(
                 1
                 for a in existing
@@ -141,11 +141,11 @@ class OptimizationEngine:
                 == self._availability.local_date(start)
             )
             score -= load * 6
-            reasons.append(f"Bay day load: {load}")
+            reasons.append(f'Загрузка поста за день: {load}')
             ranked.append((score, b, reasons))
 
         if not ranked:
-            return None, ["No available bay for this time"]
+            return None, ['Нет свободного поста на это время']
         ranked.sort(key=lambda x: x[0], reverse=True)
         _, best, reasons = ranked[0]
         return best, reasons
@@ -229,10 +229,10 @@ class OptimizationEngine:
                 reasons.append(f"{delta_h:.1f}h from preferred time")
             if priority == "emergency":
                 score += max(0, 40 - (start - datetime.now(timezone.utc)).total_seconds() / 3600)
-                reasons.append("Emergency urgency boost")
+                reasons.append('Повышенный приоритет экстренной работы')
             wait = self.predict_wait_minutes(existing, start)
             score -= wait * 0.5
-            reasons.append(f"Predicted wait ~{wait} min")
+            reasons.append(f'Ожидаемое ожидание ~{wait} мин')
 
             candidates.append(
                 SlotCandidate(
@@ -334,7 +334,7 @@ class OptimizationEngine:
         # Re-score assignments and suggest swaps for weak skill matches
         for a in day_appts:
             if not a.mechanic_id:
-                improvements.append(f"Assign mechanic to appointment {a.id}")
+                improvements.append(f'Назначить механика на запись {a.id}')
                 continue
             current = next((m for m in mechanics if m.id == a.mechanic_id), None)
             better, reasons = self.recommend_mechanic(
@@ -350,13 +350,12 @@ class OptimizationEngine:
                 new_skill = self._availability.skill_match(better, a.repair_type)
                 if new_skill > cur_skill:
                     improvements.append(
-                        f"Move {a.repair_type} from {current.name} to {better.name} "
-                        f"(skill {cur_skill}→{new_skill})"
+                        f'Перенести {a.repair_type} с {current.name} на {better.name} (квалификация {cur_skill}→{new_skill})'
                     )
 
         conflicts = self._conflict.detect_schedule_conflicts(day_appts)
         if conflicts:
-            improvements.append("Resolve detected conflicts before peak hours")
+            improvements.append('Устраните конфликты до пиковых часов')
 
         mech_util: dict[str, float] = {}
         window = self._availability.day_window(hours, day)
@@ -378,13 +377,13 @@ class OptimizationEngine:
 
         # Packing suggestion
         if any(u < 0.4 for u in mech_util.values()) and any(u > 0.85 for u in mech_util.values()):
-            improvements.append("Balance load: some mechanics under 40% while others over 85%")
+            improvements.append('Распределите нагрузку: у одних механиков менее 40%, у других более 85%')
 
         forecast = self.forecast_day(
             day=day, hours=hours, mechanics=mechanics, bays=bays, appointments=appointments
         )
         if forecast.overbook_risk > 0.5:
-            improvements.append("High overbook risk — protect emergency buffer slots")
+            improvements.append('Высокий риск переполнения — сохраните резерв для экстренных работ')
 
         return OptimizedSchedule(
             shop_id=shop_id,

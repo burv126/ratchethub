@@ -242,7 +242,7 @@ async def get_connection(
 ) -> ConnectionOut:
     conn = rt.service.connections.get(user.shop_id, connection_id)
     if conn is None:
-        raise HTTPException(status_code=404, detail="Connection not found")
+        raise HTTPException(status_code=404, detail='Подключение не найдено')
     return _connection_out(conn)
 
 
@@ -303,7 +303,7 @@ async def delete_connection(
 ) -> dict[str, bool]:
     ok = rt.service.connections.delete(user.shop_id, connection_id)
     if not ok:
-        raise HTTPException(status_code=404, detail="Connection not found")
+        raise HTTPException(status_code=404, detail='Подключение не найдено')
     return {"deleted": True}
 
 

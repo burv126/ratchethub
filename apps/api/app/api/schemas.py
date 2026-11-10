@@ -16,9 +16,9 @@ class SendOtpRequest(BaseModel):
     @model_validator(mode="after")
     def require_channel_target(self) -> "SendOtpRequest":
         if self.channel == "phone" and not self.phone:
-            raise ValueError("phone is required for phone channel")
+            raise ValueError('Для телефонного канала укажите phone')
         if self.channel == "email" and not self.email:
-            raise ValueError("email is required for email channel")
+            raise ValueError('Для почтового канала укажите email')
         return self
 
 
@@ -32,7 +32,7 @@ class SendOtpResponse(BaseModel):
     phone: str | None = None
     email: str | None = None
     dev_code: str | None = None
-    message: str = "Verification code sent"
+    message: str = 'Код подтверждения отправлен'
 
 
 class VerifyOtpRequest(BaseModel):
@@ -67,9 +67,9 @@ class RegisterShopRequest(BaseModel):
     @model_validator(mode="after")
     def require_primary_identifier(self) -> "RegisterShopRequest":
         if self.auth_method == "phone" and not self.owner_phone:
-            raise ValueError("owner_phone is required when auth_method=phone")
+            raise ValueError('При auth_method=phone укажите owner_phone')
         if self.auth_method == "email" and not self.owner_email:
-            raise ValueError("owner_email is required when auth_method=email")
+            raise ValueError('При auth_method=email укажите owner_email')
         return self
 
 
@@ -84,11 +84,11 @@ class LoginRequest(BaseModel):
     @model_validator(mode="after")
     def require_phone_or_email(self) -> "LoginRequest":
         if not self.phone and not self.email:
-            raise ValueError("phone or email is required")
+            raise ValueError('Укажите телефон или почту')
         if not (self.shop_name and self.shop_name.strip()) and not (
             self.shop_slug and self.shop_slug.strip()
         ):
-            raise ValueError("shop_name is required")
+            raise ValueError('Укажите название автосервиса')
         return self
 
 
@@ -105,7 +105,7 @@ class AdminLoginRequest(BaseModel):
     @classmethod
     def require_password(cls, value: str) -> str:
         if not value:
-            raise ValueError("password is required")
+            raise ValueError('Введите пароль')
         return value
 
 

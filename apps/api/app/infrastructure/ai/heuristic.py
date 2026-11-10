@@ -28,16 +28,14 @@ class HeuristicSpeechToText(SpeechToTextPort):
                 text = audio_bytes.decode("utf-8").strip()
             except UnicodeDecodeError as exc:
                 raise AIProviderUnavailable(
-                    "Text note is not valid UTF-8; re-upload as plain text or use audio STT"
+                    'Текстовая заметка не в UTF-8; загрузите обычный текст или используйте распознавание аудио'
                 ) from exc
             if text:
                 return text
-            raise AIProviderUnavailable("Text note is empty")
+            raise AIProviderUnavailable('Текстовая заметка пуста')
 
         raise AIProviderUnavailable(
-            "Audio speech-to-text is not configured. "
-            "Run Local Whisper (LOCAL_WHISPER_URL) or set AI_PROVIDER=openai, "
-            "or upload a .txt note."
+            'Распознавание речи не настроено. Запустите Local Whisper (LOCAL_WHISPER_URL), задайте AI_PROVIDER=openai или загрузите заметку .txt.'
         )
 
 
@@ -62,14 +60,14 @@ class HeuristicRepairExtraction(RepairExtractionPort):
         if not text:
             return RepairExtractionResult(
                 service="Inspection",
-                condition="No transcript content",
+                condition='Нет текста расшифровки',
                 recommendation=None,
                 mileage=None,
             )
 
         mileage = None
         mileage_match = re.search(
-            r"(?:mileage|odometer|miles?)\s*(?:is|=|:)?\s*([\d,]+)",
+            r"(?:пробег|одометр|mileage|odometer|miles?)\s*(?:is|=|:)?\s*([\d,]+)",
             text,
             flags=re.IGNORECASE,
         )
@@ -82,20 +80,20 @@ class HeuristicRepairExtraction(RepairExtractionPort):
 
         recommendation = None
         rec_match = re.search(
-            r"(?:recommend(?:ed|ation)?|suggest(?:ed)?)\s+(.+?)(?:\.|$)",
+            r"(?:рекомендую|рекомендуется|рекомендация:?|recommend(?:ed|ation)?|suggest(?:ed)?)\s+(.+?)(?:\.|$)",
             text,
             flags=re.IGNORECASE,
         )
         if rec_match:
             recommendation = rec_match.group(1).strip(" .")
 
-        service = "General service"
+        service = 'Общие работы'
         service_patterns = [
-            (r"oil\s*change", "Oil Change"),
-            (r"brake\s*pad", "Brake Service"),
-            (r"tire|rotation", "Tire Service"),
-            (r"diagnostic|check\s*engine", "Diagnostics"),
-            (r"inspection", "Inspection"),
+            (r"oil\s*change|замена\s+масла", "Oil Change"),
+            (r"brake\s*pad|тормозн\w*\s+колод\w*", "Brake Service"),
+            (r"tire|rotation|шины|перестановка\s+шин", "Tire Service"),
+            (r"diagnostic|check\s*engine|диагностика", "Diagnostics"),
+            (r"inspection|осмотр", "Inspection"),
         ]
         for pattern, label in service_patterns:
             if re.search(pattern, text, flags=re.IGNORECASE):
@@ -105,7 +103,7 @@ class HeuristicRepairExtraction(RepairExtractionPort):
         sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
         condition = sentences[0] if sentences else text
         for sentence in sentences:
-            if re.search(r"percent|%|worn|completed|condition", sentence, flags=re.IGNORECASE):
+            if re.search(r"percent|%|worn|completed|condition|износ|состояние|выполнено", sentence, flags=re.IGNORECASE):
                 condition = sentence.rstrip(".")
                 break
 

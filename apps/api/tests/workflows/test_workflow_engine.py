@@ -54,7 +54,7 @@ async def test_appointment_booked_cascade(runtime, shop_id):
     )
     assert event.event_type == DomainEventType.APPOINTMENT_BOOKED
     assert len(runs) >= 1
-    run = next(r for r in runs if "booked cascade" in r.workflow_name.lower())
+    run = next(r for r in runs if "цепочка создания записи" in r.workflow_name.lower())
     assert run.status == RunStatus.COMPLETED
     assert len(run.steps) == 4
     assert all(s.status == StepStatus.SUCCEEDED for s in run.steps)
@@ -142,7 +142,7 @@ async def test_rollback_compensates_steps(runtime, shop_id):
         event_type=DomainEventType.APPOINTMENT_BOOKED,
         payload={"appointment_id": str(uuid4()), "estimated_revenue": "100"},
     )
-    run = next(r for r in runs if "booked cascade" in r.workflow_name.lower())
+    run = next(r for r in runs if "цепочка создания записи" in r.workflow_name.lower())
     assert run.status == RunStatus.COMPLETED
     assert runtime.executor.side_effects["reminders"]
     assert runtime.executor.side_effects["crm"]

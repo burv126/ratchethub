@@ -16,15 +16,15 @@ type AdminNavItem = {
 };
 
 export const ADMIN_NAV: AdminNavItem[] = [
-  { href: "/admin", label: "Dashboard", exact: true, Icon: IconGauge },
-  { href: "/admin/shops", label: "Shops", Icon: IconBuilding },
-  { href: "/admin/users", label: "Users", Icon: IconUsers },
-  { href: "/admin/twilio-numbers", label: "Twilio Numbers", Icon: IconPhone },
-  { href: "/admin/billing", label: "Billing", Icon: IconCard },
-  { href: "/admin/ai-usage", label: "AI Usage", Icon: IconSpark },
-  { href: "/admin/notifications", label: "Notifications", Icon: IconBell },
-  { href: "/admin/system-health", label: "System Health", Icon: IconPulse },
-  { href: "/admin/settings", label: "Setting", Icon: IconGear },
+  { href: "/admin", label: "Панель управления", exact: true, Icon: IconGauge },
+  { href: "/admin/shops", label: "Автосервисы", Icon: IconBuilding },
+  { href: "/admin/users", label: "Пользователи", Icon: IconUsers },
+  { href: "/admin/twilio-numbers", label: "Номера Twilio", Icon: IconPhone },
+  { href: "/admin/billing", label: "Оплата", Icon: IconCard },
+  { href: "/admin/ai-usage", label: "Использование ИИ", Icon: IconSpark },
+  { href: "/admin/notifications", label: "Уведомления", Icon: IconBell },
+  { href: "/admin/system-health", label: "Состояние системы", Icon: IconPulse },
+  { href: "/admin/settings", label: "Настройки", Icon: IconGear },
 ];
 
 type AdminSidebarProps = {
@@ -77,7 +77,7 @@ export function AdminSidebar({
     <aside
       id="admin-nav"
       className={shellClass}
-      aria-label="Admin navigation"
+      aria-label="Навигация администратора"
       aria-hidden={hiddenFromA11y}
     >
       <div className="relative shrink-0 border-b border-[var(--rail-line)] px-3.5 pb-3 pt-3.5 md:px-4 md:pb-4 md:pt-5">
@@ -96,7 +96,7 @@ export function AdminSidebar({
               className="block rounded-md outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
               <p className="font-display truncate text-sm font-semibold leading-snug tracking-tight text-white transition-colors hover:text-[var(--rail-active-fg)] md:text-[15px]">
-                Admin Console
+                Консоль администратора
               </p>
             </Link>
           </div>
@@ -106,9 +106,9 @@ export function AdminSidebar({
             <IconUsers className="h-3.5 w-3.5" />
           </span>
           <p className="min-w-0 flex-1 truncate text-xs text-[var(--rail-muted)]">
-            <span className="text-white/90">{username || "Admin"}</span>
+            <span className="text-white/90">{username || "Администратор"}</span>
             <span className="mx-1.5 text-white/25">·</span>
-            <span>Admin</span>
+            <span>Администратор</span>
           </p>
         </div>
       </div>
@@ -160,7 +160,7 @@ export function AdminSidebar({
           <span className="asa-rail-icon text-[var(--rail-muted)] group-hover:text-white">
             <IconLogout className="h-4 w-4" />
           </span>
-          <span>Sign out</span>
+          <span>Выйти</span>
         </button>
       </div>
     </aside>

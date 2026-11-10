@@ -17,8 +17,7 @@ WORKFLOW_ID = UUID("a1111111-1111-4111-8111-111111111103")
 SPEC = meta(
     workflow_id=str(WORKFLOW_ID),
     purpose=(
-        "After an inspection finishes, produce customer explanation, estimate recommendation, "
-        "and route an approval request with CRM + revenue updates."
+        'После осмотра формирует объяснение клиенту, рекомендацию сметы и запрос согласования с обновлением CRM и выручки.'
     ),
     trigger=DomainEventType.REPAIR_FINISHED.value,
     capabilities=[
@@ -46,11 +45,10 @@ SPEC = meta(
         DomainEventType.HUMAN_ESCALATION_REQUESTED.value,
     ],
     failure_handling=(
-        "Retry estimate/CRM steps; approval notify continue_on_error; "
-        "rollback reverses CRM/revenue side-effects."
+        'Повторяет шаги сметы и CRM; уведомление о согласовании продолжает при ошибке; откат отменяет изменения CRM и выручки.'
     ),
     human_escalation=(
-        "Pending approvals notify owner/manager; escalate when estimate exceeds shop threshold."
+        'Ожидающие согласования уведомляют владельца или руководителя; превышение порога сметы требует передачи сотруднику.'
     ),
 )
 
@@ -58,7 +56,7 @@ SPEC = meta(
 def build() -> WorkflowDefinition:
     return build_definition(
         workflow_id=WORKFLOW_ID,
-        name="Automotive: Inspection completed",
+        name='Автосервис: осмотр завершён',
         description=SPEC["purpose"],
         trigger=DomainEventType.REPAIR_FINISHED,
         conditions=[
@@ -69,7 +67,7 @@ def build() -> WorkflowDefinition:
         actions=[
             action(
                 ActionType.SET_CONTEXT,
-                "Bind inspection scenario",
+                'Привязать сценарий осмотра',
                 1,
                 config={
                     "values": {
@@ -81,19 +79,19 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.LOG,
-                "Inspection analysis",
+                'Анализ осмотра',
                 2,
                 config={
-                    "message": "Advisor AnalyzeConversation / vehicle inspection findings",
+                    "message": 'AnalyzeConversation консультанта / результаты осмотра автомобиля',
                     "capability": "AnalyzeConversation|GenerateRepairRecommendation",
                 },
             ),
             action(
                 ActionType.UPDATE_CRM,
-                "Customer explanation on timeline",
+                'Объяснение клиенту в истории',
                 3,
                 config={
-                    "note": "Inspection completed — customer explanation prepared",
+                    "note": 'Осмотр завершён — объяснение клиенту подготовлено',
                     "fields": {
                         "capability": "GenerateCustomerExplanation",
                         "ai_decision": "CustomerCommunicationDecision",
@@ -103,7 +101,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Publish estimate recommendation",
+                'Опубликовать рекомендацию сметы',
                 4,
                 config={
                     "event_type": DomainEventType.ESTIMATE_SENT.value,
@@ -112,10 +110,10 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_CRM,
-                "Estimate recommendation recorded",
+                'Рекомендация сметы записана',
                 5,
                 config={
-                    "note": "Estimate recommendation from inspection",
+                    "note": 'Рекомендация сметы по осмотру',
                     "fields": {
                         "capability": "GenerateEstimateSummary",
                         "ai_decision": "EstimateExplanationDecision",
@@ -125,24 +123,24 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_REVENUE,
-                "Open estimate revenue opportunity",
+                'Открыть возможность выручки по смете',
                 6,
                 config={"category": "inspection_estimate"},
                 compensate={"type": "undo_revenue"},
             ),
             action(
                 ActionType.NOTIFY,
-                "Approval request to owner/manager",
+                'Запросить согласование владельца / руководителя',
                 7,
                 config={
                     "channel": "in_app",
-                    "message": "Inspection estimate awaiting customer/owner approval",
+                    "message": 'Смета по осмотру ожидает согласования клиента / владельца',
                     "ai_decision": "ApprovalRequestDecision",
                 },
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Human escalation for approval",
+                'Передача сотруднику для согласования',
                 8,
                 config={
                     "event_type": DomainEventType.HUMAN_ESCALATION_REQUESTED.value,
@@ -155,7 +153,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_DASHBOARD,
-                "Refresh approvals widget",
+                'Обновить виджет согласований',
                 9,
                 config={
                     "widget": "overview",

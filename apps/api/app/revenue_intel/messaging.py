@@ -26,48 +26,37 @@ def recommend_channel(customer: CustomerSnapshot, kind: OpportunityKind) -> Cont
 
 _TEMPLATES: dict[OpportunityKind, str] = {
     OpportunityKind.LOST_CUSTOMER: (
-        "Hi {name}, we miss you at the shop. Book a complimentary multi-point inspection "
-        "this week — we're holding a slot for your {vehicle}."
+        'Здравствуйте, {name}! Будем рады снова видеть вас в автосервисе. Запишитесь на бесплатный комплексный осмотр на этой неделе — найдём время для вашего {vehicle}.'
     ),
     OpportunityKind.LIKELY_RETURN: (
-        "Hi {name}, based on your visit pattern you're due for a check-in. "
-        "Want us to reserve a convenient time for your {vehicle}?"
+        'Здравствуйте, {name}! Судя по истории визитов, вашему {vehicle} пора на проверку. Подобрать удобное время?'
     ),
     OpportunityKind.LIKELY_ACCEPT: (
-        "Hi {name}, we can still honor your previous estimate for {service} on your {vehicle}. "
-        "Reply YES to schedule."
+        'Здравствуйте, {name}! Предыдущая смета на {service} для вашего {vehicle} ещё актуальна. Ответьте YES для записи.'
     ),
     OpportunityKind.MAINTENANCE_OVERDUE: (
-        "Hi {name}, maintenance on your {vehicle} is overdue ({service}). "
-        "Scheduling now helps avoid larger repairs."
+        'Здравствуйте, {name}! Для вашего {vehicle} просрочено обслуживание: {service}. Запись сейчас поможет избежать более серьёзного ремонта.'
     ),
     OpportunityKind.BATTERY: (
-        "Hi {name}, winter/seasonal conditions make battery failures more likely. "
-        "We recommend testing/replacing the battery on your {vehicle}."
+        'Здравствуйте, {name}! В холодный сезон повышается риск отказа аккумулятора. Рекомендуем проверить или заменить аккумулятор вашего {vehicle}.'
     ),
     OpportunityKind.BRAKES: (
-        "Hi {name}, your {vehicle} is due for brake service based on mileage/history. "
-        "Safety first — can we schedule an inspection?"
+        'Здравствуйте, {name}! По пробегу и истории вашему {vehicle} пора обслужить тормоза. Безопасность прежде всего — записать на осмотр?'
     ),
     OpportunityKind.OIL_CHANGE: (
-        "Hi {name}, your {vehicle} is due for an oil change. "
-        "We have openings this week — reply to book."
+        'Здравствуйте, {name}! Вашему {vehicle} пора заменить масло. На этой неделе есть свободное время — ответьте для записи.'
     ),
     OpportunityKind.TIRES: (
-        "Hi {name}, tire wear/mileage suggests it's time to evaluate tires on your {vehicle}. "
-        "Ask about current packages."
+        'Здравствуйте, {name}! По износу и пробегу пора проверить шины вашего {vehicle}. Уточните текущие предложения.'
     ),
     OpportunityKind.ALIGNMENT: (
-        "Hi {name}, an alignment on your {vehicle} can improve tire life and handling. "
-        "Book a quick alignment slot."
+        'Здравствуйте, {name}! Регулировка углов установки колёс вашего {vehicle} поможет продлить срок службы шин и улучшить управляемость. Запишитесь на удобное время.'
     ),
     OpportunityKind.FLUIDS: (
-        "Hi {name}, fluid service is due on your {vehicle}. "
-        "Keeping fluids fresh protects major components."
+        'Здравствуйте, {name}! Вашему {vehicle} пора заменить технические жидкости. Своевременная замена защищает основные узлы.'
     ),
     OpportunityKind.DECLINED_ESTIMATE: (
-        "Hi {name}, following up on the {service} estimate for your {vehicle}. "
-        "We can revisit options that fit your budget."
+        'Здравствуйте, {name}! Хотим вернуться к смете на {service} для вашего {vehicle}. Можем подобрать варианты под ваш бюджет.'
     ),
 }
 
@@ -79,7 +68,7 @@ def recommend_message(
     vehicle_label: str | None,
     service: str | None = None,
 ) -> str:
-    tmpl = _TEMPLATES.get(kind, "Hi {name}, we have a recommended service for your {vehicle}.")
+    tmpl = _TEMPLATES.get(kind, "Здравствуйте, {name}! Для вашего {vehicle} есть рекомендуемая услуга.")
     return tmpl.format(
         name=customer.name.split()[0] if customer.name else "there",
         vehicle=vehicle_label or "vehicle",

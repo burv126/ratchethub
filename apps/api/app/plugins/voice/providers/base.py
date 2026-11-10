@@ -87,7 +87,7 @@ class TwilioBridgeProvider:
             "call_sid": call_sid,
             "to_number": to_number,
             "reason": reason,
-            "note": "Transfer signaled — Workflow/human queue handles business routing",
+            "note": 'Сигнал передачи отправлен — маршрутизацию выполняет процесс или очередь сотрудников',
         }
 
     async def hangup(self, *, call_sid: str) -> dict[str, Any]:

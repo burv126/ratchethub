@@ -18,17 +18,17 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", Icon: IconGauge },
-  { href: "/dashboard/customer", label: "Customer", Icon: IconUsers },
-  { href: "/dashboard/appointments", label: "Schedule", Icon: IconCalendar },
-  { href: "/dashboard/walk-ins", label: "Walk-ins", Icon: IconDoorOpen },
-  { href: "/dashboard/calls", label: "Calls", Icon: IconPhone, capability: "customer_communication" },
-  { href: "/dashboard/marketing", label: "Marketing", Icon: IconMarketing },
-  { href: "/dashboard/import", label: "Import", Icon: IconImport, ownerOnly: true },
+  { href: "/dashboard", label: "Панель управления", Icon: IconGauge },
+  { href: "/dashboard/customer", label: "Клиент", Icon: IconUsers },
+  { href: "/dashboard/appointments", label: "Расписание", Icon: IconCalendar },
+  { href: "/dashboard/walk-ins", label: "Живая очередь", Icon: IconDoorOpen },
+  { href: "/dashboard/calls", label: "Звонки", Icon: IconPhone, capability: "customer_communication" },
+  { href: "/dashboard/marketing", label: "Маркетинг", Icon: IconMarketing },
+  { href: "/dashboard/import", label: "Импорт", Icon: IconImport, ownerOnly: true },
   // Hidden: Connected Services (keep for easy restore)
   // { href: "/dashboard/external", label: "Connected Services", Icon: IconLink, ownerOnly: true },
-  { href: "/dashboard/billing", label: "Billing", Icon: IconCard, capability: "payment_handling" },
-  { href: "/dashboard/settings", label: "Setting", Icon: IconSetting },
+  { href: "/dashboard/billing", label: "Оплата", Icon: IconCard, capability: "payment_handling" },
+  { href: "/dashboard/settings", label: "Настройки", Icon: IconSetting },
 ];
 
 type SidebarProps = {
@@ -95,7 +95,7 @@ export function Sidebar({ mobileOpen = false, onNavigate, navLocked = false }: S
   if (loading || !session) {
     return (
       <aside id="dashboard-nav" className={shellClass} aria-hidden={hiddenFromA11y}>
-        <p className="p-6 text-sm text-[var(--rail-muted)]">Loading…</p>
+        <p className="p-6 text-sm text-[var(--rail-muted)]">Загрузка…</p>
       </aside>
     );
   }
@@ -134,7 +134,7 @@ export function Sidebar({ mobileOpen = false, onNavigate, navLocked = false }: S
 
       <nav
         className="asa-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-2.5 py-3 md:py-4"
-        aria-label="Shop navigation"
+        aria-label="Навигация автосервиса"
         aria-disabled={navLocked || undefined}
       >
         <div className={`flex flex-col gap-0.5 ${navLocked ? "pointer-events-none opacity-45" : ""}`}>
@@ -194,7 +194,7 @@ export function Sidebar({ mobileOpen = false, onNavigate, navLocked = false }: S
           <span className="asa-rail-icon text-[var(--rail-muted)] group-hover:text-white">
             <IconLogout className="h-4 w-4" />
           </span>
-          <span>Sign out</span>
+          <span>Выйти</span>
         </button>
       </div>
     </aside>

@@ -106,7 +106,7 @@ def normalize_user_role(value: UserRole | str) -> UserRole:
 
         return UserRole.STAFF
 
-    raise ValueError("Invalid role")
+    raise ValueError('Некорректная роль')
 
 
 

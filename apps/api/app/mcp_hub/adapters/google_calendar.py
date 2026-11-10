@@ -9,7 +9,7 @@ from app.mcp_hub.enums import AuthMethod, IntegrationCategory, IntegrationProvid
 class GoogleCalendarAdapter(BaseAdapter):
     provider = IntegrationProvider.GOOGLE_CALENDAR
     display_name = "Google Calendar"
-    description = "Sync shop appointments and technician calendars."
+    description = 'Синхронизация записей автосервиса и календарей специалистов.'
     category = IntegrationCategory.CALENDAR
     auth_method = AuthMethod.OAUTH2
     api_version = "v3"
@@ -20,7 +20,7 @@ class GoogleCalendarAdapter(BaseAdapter):
     tool_defs = [
         (
             "google_calendar.list_events",
-            "List calendar events in a range",
+            'События календаря за период',
             {
                 "type": "object",
                 "properties": {"calendar_id": {"type": "string"}, "time_min": {"type": "string"}, "time_max": {"type": "string"}},
@@ -29,7 +29,7 @@ class GoogleCalendarAdapter(BaseAdapter):
         ),
         (
             "google_calendar.create_event",
-            "Create a calendar event",
+            'Создать событие календаря',
             {
                 "type": "object",
                 "properties": {

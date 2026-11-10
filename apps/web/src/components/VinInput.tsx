@@ -1,4 +1,5 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
@@ -508,25 +509,25 @@ function waitForVideoElement(
 
 function cameraErrorMessage(err: unknown): string {
   if (typeof window !== "undefined" && !window.isSecureContext) {
-    return "Camera needs HTTPS (or localhost). Open this page over a secure connection, or type the VIN.";
+    return "Для камеры требуется HTTPS (или localhost). Откройте защищённую страницу или введите VIN.";
   }
   const name = err instanceof DOMException || err instanceof Error ? err.name : "";
-  const message = err instanceof Error ? err.message : "Camera access failed";
+  const message = err instanceof Error ? err.message : "Не удалось получить доступ к камере";
   if (name === "NotAllowedError" || /NotAllowedError|Permission/i.test(message)) {
-    return "Camera permission denied. Allow camera access or type the VIN.";
+    return "Доступ к камере запрещён. Разрешите его или введите VIN.";
   }
   if (name === "NotFoundError" || /NotFoundError|no.*camera|Requested device not found/i.test(message)) {
-    return "No camera found. Type the VIN manually instead.";
+    return "Камера не найдена. Введите VIN вручную.";
   }
   if (
     name === "OverconstrainedError" ||
     name === "ConstraintNotSatisfiedError" ||
     /Overconstrained|Could not start video source/i.test(message)
   ) {
-    return "Could not open the rear camera. Close other apps using the camera, or type the VIN.";
+    return "Не удалось открыть заднюю камеру. Закройте другие приложения с камерой или введите VIN.";
   }
   if (name === "NotReadableError" || /NotReadableError|in use/i.test(message)) {
-    return "Camera is in use by another app. Close it and try again, or type the VIN.";
+    return "Камера используется другим приложением. Закройте его или введите VIN.";
   }
   return message;
 }
@@ -795,7 +796,7 @@ async function openRearCamera(): Promise<MediaStream> {
     }
   }
 
-  throw primaryErr ?? new Error("Camera access failed");
+  throw primaryErr ?? new Error("Не удалось получить доступ к камере");
 }
 
 function buildGrayHistogram(grays: Uint8Array): number[] {
@@ -1164,7 +1165,7 @@ async function setOcrPageSeg(worker: OcrWorker, sparse: boolean): Promise<void> 
       tessedit_pageseg_mode: sparse ? PSM.SPARSE_TEXT : PSM.SINGLE_LINE,
     });
   } catch {
-    // Optional — keep previous page-seg mode.
+    // Optional — keep previous page-seg mode / ignore terminated worker.
   }
 }
 
@@ -1224,7 +1225,7 @@ function notifyScanSuccess(): void {
 export function VinInput({ value, onChange, status, looking, required = true }: VinInputProps) {
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [scanHint, setScanHint] = useState("Starting camera…");
+  const [scanHint, setScanHint] = useState("Запуск камеры…");
   const [torchOn, setTorchOn] = useState(false);
   const [torchAvailable, setTorchAvailable] = useState(false);
   const [capturing, setCapturing] = useState(false);
@@ -1276,6 +1277,8 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
     let ocrTick = 0;
     let busyBarcode = false;
     let busyOcr = false;
+    /** False once terminate starts — blocks in-flight OCR from calling postMessage. */
+    let ocrWorkerAlive = false;
     let prevProbeGray: Uint8Array | null = null;
     const fuseHistory: Uint8Array[] = [];
     const ocrVotes = new Map<string, number>();
@@ -1284,6 +1287,9 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
     let code39Reader: ZxingReader | null = null;
     let zoomReader: ZxingReader | null = null;
     let successCloseTimer: number | null = null;
+
+    const isOcrLive = (worker: OcrWorker) =>
+      ocrWorkerAlive && !cancelled && !settled && ocrWorkerRef.current === worker;
 
     const stopEverything = () => {
       if (ocrTimer !== null) {
@@ -1306,6 +1312,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
       releaseZxingStreams();
+      ocrWorkerAlive = false;
       const worker = ocrWorkerRef.current;
       ocrWorkerRef.current = null;
       void worker?.terminate();
@@ -1329,7 +1336,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
       notifyScanSuccess();
       setScanSuccess(vin);
       setOcrSuggestions([]);
-      setScanHint(`Scanned ${vin}`);
+      setScanHint(`Считано ${vin}`);
       onChangeRef.current(vin);
       stopEverything();
       if (successCloseTimer !== null) window.clearTimeout(successCloseTimer);
@@ -1344,7 +1351,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
       const vin = extractVin(raw);
       if (!vin || cancelled || settled) {
         if (raw && !cancelled && !settled && raw.replace(/\s/g, "").length >= 8) {
-          setScanHint("Barcode found — no 17-char VIN inside, aim at VIN barcode");
+          setScanHint("Штрихкод найден, но VIN из 17 символов в нём нет. Наведите камеру на штрихкод VIN");
         }
         return false;
       }
@@ -1361,7 +1368,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
         acceptVin(vin);
         return true;
       }
-      setScanHint(`Barcode ${vin.slice(0, 8)}… hold steady to confirm`);
+      setScanHint(`Штрихкод ${vin.slice(0, 8)}… держите неподвижно для подтверждения`);
       return false;
     };
 
@@ -1398,7 +1405,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
         return true;
       }
 
-      setScanHint(`Candidate ${key.slice(0, 11)}… — tap below or Capture`);
+      setScanHint(`Вариант ${key.slice(0, 11)}… — нажмите ниже или «Снимок»`);
       return false;
     };
 
@@ -1409,6 +1416,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
       quality: FrameQuality,
       opts?: { fromCapture?: boolean },
     ): Promise<boolean> => {
+      if (!isOcrLive(worker)) return false;
       const cropZoom = hwZoomRef.current ? 1 : zoomRef.current;
       const band = captureScanBand(
         video,
@@ -1417,7 +1425,17 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
         cropZoom,
       );
       if (!band) return false;
-      const { data } = await worker.recognize(band);
+      if (!isOcrLive(worker)) return false;
+
+      let data: { text: string };
+      try {
+        ({ data } = await worker.recognize(band));
+      } catch {
+        // Worker terminated mid-flight (acceptVin / close / effect cleanup).
+        return false;
+      }
+      if (!isOcrLive(worker)) return false;
+
       const hit = extractVinFromOcr(data.text);
       if (hit) return noteOcrCandidate(hit, quality, opts);
 
@@ -1448,10 +1466,10 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
         for (const c of candidates.slice(0, 5)) addFuzzyOcrVote(ocrVotes, c, 1);
         const suggestions = topOcrVotes(ocrVotes, 3);
         setOcrSuggestions(suggestions);
-        setScanHint(`Saw ${candidates[0].slice(0, 11)}… — tap it below or Capture`);
+        setScanHint(`Найдено ${candidates[0].slice(0, 11)}… — выберите ниже или нажмите «Снимок»`);
       } else if (compact.length >= 8) {
         setScanHint(
-          `Reading… ${compact.slice(0, 14)}${compact.length > 14 ? "…" : ""} — need clearer 17`,
+          `Распознавание… ${compact.slice(0, 14)}${compact.length > 14 ? "…" : ""} — нужны 17 чётких символов`,
         );
       }
       return false;
@@ -1498,7 +1516,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
     };
 
     (async () => {
-      setScanHint("Starting camera…");
+      setScanHint("Запуск камеры…");
       setTorchOn(false);
       setTorchAvailable(false);
       setCapturing(false);
@@ -1524,7 +1542,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
         }
       }
       if (!stream) {
-        if (!cancelled) setScanError("Camera could not be started. Type the VIN instead.");
+        if (!cancelled) setScanError("Не удалось запустить камеру. Введите VIN.");
         return;
       }
       if (cancelled) {
@@ -1539,7 +1557,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
       }
       if (!video) {
         stream.getTracks().forEach((t) => t.stop());
-        setScanError("Camera preview failed to load. Close and try again, or type the VIN.");
+        setScanError("Не удалось загрузить изображение камеры. Закройте и повторите или введите VIN.");
         return;
       }
 
@@ -1562,12 +1580,12 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
         const ready = await waitForVideoReady(video, () => cancelled);
         if (cancelled) return;
         if (!ready) {
-          setScanError("Camera preview has no video frames. Close and try again.");
+          setScanError("Камера не передаёт кадры. Закройте и повторите попытку.");
           stopEverything();
           return;
         }
         setCameraReady(true);
-        setScanHint("Point at the VIN barcode or printed VIN — keep inside the box");
+        setScanHint("Наведите на штрихкод или напечатанный VIN — держите его внутри рамки");
 
         try {
           const readers = await createReadersSafe();
@@ -1575,7 +1593,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
           code39Reader = readers.code39;
           zoomReader = readers.zoom;
           if (!liveReader && !code39Reader && !zoomReader) {
-            setScanHint("Barcode engine slow to load — try Capture, or type the VIN");
+            setScanHint("Сканер штрихкодов загружается медленно — нажмите «Снимок» или введите VIN");
           }
         } catch {
           // Native + OCR paths still work without ZXing.
@@ -1648,7 +1666,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
             for (let burst = 0; burst < CAPTURE_BURST_FRAMES; burst++) {
               if (cancelled || settled) return;
               if (burst > 0) await sleep(CAPTURE_BURST_GAP_MS);
-              setScanHint(`Capturing ${burst + 1}/${CAPTURE_BURST_FRAMES}… hold still`);
+              setScanHint(`Снимок ${burst + 1}/${CAPTURE_BURST_FRAMES}… держите неподвижно`);
 
               if (scanBarcodeCrops(video, BARCODE_ZOOM_PRESETS.length)) return;
 
@@ -1671,25 +1689,27 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
               if (probe) prevProbeGray = probe.gray;
               if (!q.stable) fuseHistory.length = 0;
 
+              if (!isOcrLive(worker)) continue;
               await setOcrPageSeg(worker, false);
               // Two near presets per burst frame — rotates across the burst.
               for (let i = 0; i < 2; i++) {
-                if (cancelled || settled) return;
+                if (!isOcrLive(worker)) return;
                 const preset = pickPresetsForQuality(NEAR_OCR_PRESETS, q, burst * 2 + i);
                 if (await recognizePreset(worker, video, preset, q, { fromCapture: true })) return;
               }
 
               if (burst === CAPTURE_BURST_FRAMES - 1) {
+                if (!isOcrLive(worker)) return;
                 await setOcrPageSeg(worker, true);
                 for (let i = 0; i < FAR_OCR_PRESETS.length; i++) {
-                  if (cancelled || settled) return;
+                  if (!isOcrLive(worker)) return;
                   const preset = pickPresetsForQuality(FAR_OCR_PRESETS, q, i);
                   if (await recognizePreset(worker, video, preset, q, { fromCapture: true })) return;
                 }
               }
             }
             if (!worker) {
-              setScanHint("No VIN yet — try closer, tap a suggestion, or type it.");
+              setScanHint("VIN пока не найден — приблизьте камеру, выберите вариант или введите VIN.");
             } else {
               const top = topOcrVotes(ocrVotes, 1)[0];
               if (top) {
@@ -1698,8 +1718,8 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
               }
               setScanHint(
                 ocrSuggestions.length || topOcrVotes(ocrVotes, 1).length
-                  ? "Tap a candidate below, or move closer and Capture again"
-                  : "Couldn’t lock VIN — fill the box, Capture again, or type it",
+                  ? "Выберите вариант ниже или приблизьте камеру и сделайте снимок"
+                  : "Не удалось распознать VIN — заполните рамку, повторите снимок или введите VIN",
               );
               setOcrSuggestions(topOcrVotes(ocrVotes, 3));
             }
@@ -1717,18 +1737,19 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
             return;
           }
           ocrWorkerRef.current = worker;
+          ocrWorkerAlive = true;
           ocrReady = true;
-          setScanHint("Printed VIN — fill the box, hold still, or tap Capture");
+          setScanHint("Напечатанный VIN — заполните рамку, держите неподвижно или нажмите «Снимок»");
 
           const scheduleOcr = (delay = OCR_LOOP_MS) => {
-            if (cancelled || settled) return;
+            if (!isOcrLive(worker)) return;
             ocrTimer = window.setTimeout(() => {
               void runOcr();
             }, delay);
           };
 
           const runOcr = async () => {
-            if (cancelled || settled) return;
+            if (!isOcrLive(worker)) return;
             ocrTick += 1;
             if (busyBarcode || busyOcr) {
               scheduleOcr(120);
@@ -1747,19 +1768,19 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
 
                 if (!quality.stable) {
                   fuseHistory.length = 0;
-                  setScanHint("Too shaky — hold still, or tap Capture");
+                  setScanHint("Сильная тряска — держите неподвижно или нажмите «Снимок»");
                   // Still try every 3rd shaky frame — printed VIN often needs the attempt.
                   if (ocrTick % 3 !== 0) return;
                 } else if (!quality.sharpEnough) {
                   setScanHint(
                     canTapFocus
-                      ? "Soft focus — tap the VIN, zoom in, or Capture"
-                      : "Soft focus — move closer, then tap Capture",
+                      ? "Нечёткий фокус — нажмите на VIN, увеличьте масштаб или сделайте снимок"
+                      : "Нечёткий фокус — приблизьте камеру и нажмите «Снимок»",
                   );
                 } else if (quality.glareHeavy) {
-                  setScanHint("Glare — tilt phone or tap Light, then Capture");
+                  setScanHint("Блики — наклоните телефон или включите подсветку и сделайте снимок");
                 } else {
-                  setScanHint("Reading printed VIN… keep letters inside the box");
+                  setScanHint("Распознавание VIN… держите символы внутри рамки");
                 }
               }
 
@@ -1772,12 +1793,13 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
                 glareHeavy: false,
               };
 
+              if (!isOcrLive(worker)) return;
               await setOcrPageSeg(worker, false);
               const nearPreset = pickPresetsForQuality(NEAR_OCR_PRESETS, q, nearIndex);
               nearIndex += 1;
               if (await recognizePreset(worker, video, nearPreset, q)) return;
 
-              if (cancelled || settled) return;
+              if (!isOcrLive(worker)) return;
               if (ocrTick % 2 === 0) {
                 await setOcrPageSeg(worker, true);
                 const farPreset = pickPresetsForQuality(FAR_OCR_PRESETS, q, farIndex);
@@ -1785,7 +1807,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
                 if (await recognizePreset(worker, video, farPreset, q)) return;
               }
             } catch {
-              // Keep scanning; OCR can miss frames.
+              // Keep scanning; OCR can miss frames / terminated worker.
             } finally {
               busyOcr = false;
               scheduleOcr(OCR_LOOP_MS);
@@ -1795,7 +1817,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
             void runOcr();
           }, OCR_START_DELAY_MS);
         } catch {
-          setScanHint("OCR unavailable — tap Capture for barcode, or type the VIN.");
+          setScanHint("OCR недоступно — сделайте снимок штрихкода или введите VIN.");
         }
       } catch (err) {
         if (cancelled) return;
@@ -1821,7 +1843,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
   async function startScanner() {
     if (scanning) return;
     setScanError(null);
-    setScanHint("Starting camera…");
+    setScanHint("Запуск камеры…");
     setTorchOn(false);
     setTorchAvailable(false);
     setCapturing(false);
@@ -1835,14 +1857,14 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
 
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       cameraOpenFailedRef.current = true;
-      setScanError("Camera not supported in this browser. Type the VIN manually instead.");
+      setScanError("Браузер не поддерживает камеру. Введите VIN вручную.");
       setScanning(true);
       return;
     }
     if (!window.isSecureContext) {
       cameraOpenFailedRef.current = true;
       setScanError(
-        "Camera needs HTTPS (or localhost). Open this page over a secure connection, or type the VIN.",
+        "Для камеры требуется HTTPS (или localhost). Откройте защищённую страницу или введите VIN.",
       );
       setScanning(true);
       return;
@@ -1900,7 +1922,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
 
     const track = streamRef.current?.getVideoTracks()[0] ?? null;
     const ok = await tapToFocus(track, nx, ny);
-    if (ok) setScanHint("Focusing… hold steady");
+    if (ok) setScanHint("Фокусировка… держите неподвижно");
   }
 
   async function captureNow() {
@@ -1949,9 +1971,9 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
     ? "error"
     : scanSuccess
       ? "success"
-      : /glare|tilt|light/i.test(scanHint)
+      : /glare|tilt|light|блик|наклон|подсвет/i.test(scanHint)
         ? "warn"
-        : /confirm|barcode|scanned|reading|captur/i.test(scanHint)
+        : /confirm|barcode|scanned|reading|captur|подтвержд|штрихкод|считано|распозна|снимок/i.test(scanHint)
           ? "active"
           : "idle";
 
@@ -1959,7 +1981,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
     <div className="space-y-2 sm:col-span-2 lg:col-span-2">
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
-          VIN{required ? "" : " · optional"}
+          VIN{required ? "" : " · необязательно"}
         </span>
         <span
           className={`font-mono text-[11px] tabular-nums tracking-wider ${
@@ -1980,7 +2002,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
             autoComplete="off"
             spellCheck={false}
             inputMode="text"
-            placeholder={required ? "17-character VIN" : "Scan if available, or skip"}
+            placeholder={required ? "VIN из 17 символов" : "Отсканируйте при наличии или пропустите"}
             onChange={(e) => onChange(e.target.value.toUpperCase())}
             className="w-full rounded-xl border border-[var(--line)] bg-white px-3.5 py-2.5 font-mono text-sm uppercase tracking-[0.12em] outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-glow)]"
           />
@@ -2001,7 +2023,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
           className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_28px_-14px_rgba(240,90,36,0.75)] transition hover:bg-[var(--accent-hover)]"
         >
           <ScanIcon />
-          Scan
+          Сканировать
         </button>
       </div>
 
@@ -2009,10 +2031,10 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
         {looking ? (
           <span className="inline-flex items-center gap-2">
             <span className="vin-status-dot h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-            Looking up VIN…
+            Поиск VIN…
           </span>
         ) : (
-          status || "Camera scan · door-jamb barcode · or type"
+          status || "Камера · штрихкод в дверном проёме · или ввод"
         )}
       </p>
 
@@ -2024,7 +2046,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
             className="fixed inset-0 z-[100] flex items-end justify-center bg-black/65 p-0 backdrop-blur-[2px] sm:items-center sm:p-5"
             role="dialog"
             aria-modal="true"
-            aria-label="Scan VIN"
+            aria-label="Сканировать VIN"
             onClick={closeScanner}
           >
             <div
@@ -2033,7 +2055,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
             >
               <div className="relative flex items-center justify-between gap-3 px-4 pb-2 pt-4 sm:px-5">
                 <div className="min-w-0">
-                  <p className="font-display text-lg font-semibold tracking-tight">Scan VIN</p>
+                  <p className="font-display text-lg font-semibold tracking-tight">Сканировать VIN</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {torchAvailable && (
@@ -2048,7 +2070,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
                           : "border-white/15 bg-white/5 text-white/85 hover:bg-white/10"
                       }`}
                       aria-pressed={torchOn}
-                      aria-label={torchOn ? "Turn light off" : "Turn light on"}
+                      aria-label={torchOn ? "Выключить подсветку" : "Включить подсветку"}
                     >
                       <TorchIcon on={torchOn} />
                     </button>
@@ -2057,7 +2079,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
                     type="button"
                     onClick={closeScanner}
                     className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/85 transition hover:bg-white/10"
-                    aria-label="Close scanner"
+                    aria-label="Закрыть сканер"
                   >
                     <CloseIcon />
                   </button>
@@ -2141,10 +2163,10 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
 
                   <p className="absolute inset-x-0 bottom-[22%] text-center text-[11px] font-medium tracking-[0.14em] text-white/80 uppercase">
                     {scanSuccess
-                      ? "VIN locked"
+                      ? "VIN распознан"
                       : focusOk
-                        ? "Fill box · tap to focus · Capture"
-                        : "Fill box with printed VIN · Capture"}
+                        ? "Заполните рамку · нажмите для фокусировки · сделайте снимок"
+                        : "Заполните рамку напечатанным VIN · сделайте снимок"}
                   </p>
                 </div>
 
@@ -2170,7 +2192,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
                         void nudgeZoom(-DIGITAL_ZOOM_STEP);
                       }}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/90 transition hover:bg-white/10 disabled:opacity-35"
-                      aria-label="Zoom out"
+                      aria-label="Уменьшить"
                     >
                       −
                     </button>
@@ -2185,7 +2207,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
                         void nudgeZoom(DIGITAL_ZOOM_STEP);
                       }}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/90 transition hover:bg-white/10 disabled:opacity-35"
-                      aria-label="Zoom in"
+                      aria-label="Увеличить"
                     >
                       +
                     </button>
@@ -2197,7 +2219,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
                     <div className="flex flex-col items-center gap-3">
                       <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-[var(--accent)]" />
                       <p className="text-xs font-medium tracking-wide text-white/70">
-                        Opening camera…
+                        Открытие камеры…
                       </p>
                     </div>
                   </div>
@@ -2230,13 +2252,13 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
                       aria-hidden
                     />
                   ) : null}
-                  <p className="min-w-0 flex-1">{scanError ?? scanHint}</p>
+                  <p className="min-w-0 flex-1">{scanError ? ruError(scanError) : scanHint}</p>
                 </div>
 
                 {ocrSuggestions.length > 0 && !scanSuccess && !scanError ? (
                   <div className="flex flex-col gap-2">
                     <p className="text-[11px] font-medium tracking-wide text-white/55 uppercase">
-                      Tap to use
+                      Нажмите для выбора
                     </p>
                     <div className="flex flex-col gap-2">
                       {ocrSuggestions.map((vin) => (
@@ -2251,7 +2273,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
                           {vin}
                           {hasValidVinCheckDigit(vin) ? (
                             <span className="ml-2 text-[10px] tracking-normal text-emerald-300">
-                              check OK
+                              проверка пройдена
                             </span>
                           ) : null}
                         </button>
@@ -2268,7 +2290,7 @@ export function VinInput({ value, onChange, status, looking, required = true }: 
                       void captureNow();
                     }}
                     className="group relative inline-flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full bg-gradient-to-b from-white/20 to-white/5 p-[3px] shadow-[0_12px_40px_-12px_rgba(240,90,36,0.65)] transition enabled:hover:scale-[1.03] enabled:active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
-                    aria-label={capturing ? "Reading frame" : "Capture frame"}
+                    aria-label={capturing ? "Распознавание кадра" : "Сделать снимок"}
                   >
                     <span
                       className={`flex h-full w-full items-center justify-center rounded-full transition ${

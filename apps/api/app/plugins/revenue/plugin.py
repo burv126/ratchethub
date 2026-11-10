@@ -42,15 +42,14 @@ class RevenuePlugin:
         return "revenue"
 
     def plugin_name(self) -> str:
-        return "Revenue Intelligence Plugin"
+        return 'Плагин аналитики выручки'
 
     def plugin_version(self) -> str:
         return "1.0.0"
 
     def plugin_description(self) -> str:
         return (
-            "Detect and prioritize revenue opportunities: retention, maintenance, "
-            "upsell/cross-sell, declined estimates, CLV, and capacity optimization."
+            'Выявляет и ранжирует возможности выручки: удержание, обслуживание, дополнительные продажи, отклонённые сметы, ценность клиента и загрузка.'
         )
 
     def supported_capabilities(self) -> list[str]:
@@ -223,7 +222,7 @@ class RevenuePlugin:
         if capability == Capability.CALCULATE_CUSTOMER_LIFETIME_VALUE:
             customer_id = kwargs.get("customer_id")
             if customer_id is None:
-                raise ValueError("customer_id required")
+                raise ValueError('Требуется customer_id')
             return await self._retention.calculate_customer_ltv(shop_id, customer_id)
 
         if capability == Capability.PREDICT_SHOP_CAPACITY:
@@ -259,7 +258,7 @@ class RevenuePlugin:
         if capability == Capability.CREATE_RETENTION_PLAN:
             customer_id = kwargs.get("customer_id")
             if customer_id is None:
-                raise ValueError("customer_id required for CreateRetentionPlan")
+                raise ValueError('Для CreateRetentionPlan требуется customer_id')
             result = await engine.create_retention_plan(shop_id, customer_id)
             decision = result.get("decision")
             return {
@@ -288,7 +287,7 @@ class RevenuePlugin:
                 "auto_send": False,
             }
 
-        raise ValueError(f"Unknown revenue capability: {capability}")
+        raise ValueError(f'Неизвестная возможность выручки: {capability}')
 
     async def _emit_events(
         self, shop_id: UUID, events: list[dict[str, Any]], emit_fn: Any | None

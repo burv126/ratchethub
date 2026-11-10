@@ -156,7 +156,7 @@ class ComplianceService:
 
             await AdminNotificationService().create(
                 event_type=DomainEventType.SAAS_SHOP_DELETED.value,
-                title="Shop deleted",
+                title='Автосервис удалён',
                 message=message,
                 severity="major",
                 source="compliance",

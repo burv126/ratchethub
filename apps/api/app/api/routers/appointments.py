@@ -559,7 +559,7 @@ async def get_appointment(
 ) -> AppointmentOut:
     appt = await runtime.service.get_appointment(user.shop_id, appointment_id)
     if appt is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Appointment not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Запись не найдена')
     return _appt_out(appt)
 
 
@@ -581,7 +581,7 @@ async def reschedule_appointment(
     )
     if result.success:
         runtime.monitor.record_reschedule()
-    if not result.success and result.message == "Appointment not found":
+    if not result.success and result.message == 'Запись не найдена':
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=result.message)
     return {
         "success": result.success,
@@ -622,7 +622,7 @@ async def change_appointment_service(
         estimated_duration_min=booking.estimated_duration_min or service.duration_minutes,
         estimated_revenue=booking.estimated_revenue or Decimal(str(service.price)),
     )
-    if not result.success and result.message == "Appointment not found":
+    if not result.success and result.message == 'Запись не найдена':
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=result.message)
     return {
         "success": result.success,
@@ -646,7 +646,7 @@ async def cancel_appointment(
     except ValidationError as exc:
         raise _http_validation(exc) from exc
     if appt is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Appointment not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Запись не найдена')
     runtime.monitor.record_cancel()
     return _appt_out(appt)
 
@@ -667,7 +667,7 @@ async def complete_appointment(
     except ValidationError as exc:
         raise _http_validation(exc) from exc
     if appt is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Appointment not found")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail='Запись не найдена')
     runtime.monitor.record_complete()
 
     if appt.walk_in_id is not None:

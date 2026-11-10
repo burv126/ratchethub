@@ -133,7 +133,7 @@ class LongTermMemoryService:
                 self.remember(
                     RememberRequest(
                         shop_id=shop_id,
-                        content=f"Communication style: {tone}",
+                        content=f'Стиль общения: {tone}',
                         memory_type=MemoryType.CUSTOMER,
                         category=MemoryCategory.COMMUNICATION_STYLE,
                         customer_id=customer_id,
@@ -189,7 +189,7 @@ class LongTermMemoryService:
             self.remember(
                 RememberRequest(
                     shop_id=shop_id,
-                    content="Shop policy: always confirm appointment time and vehicle before booking.",
+                    content='Правило автосервиса: всегда подтверждайте время и автомобиль до записи.',
                     memory_type=MemoryType.BUSINESS,
                     category=MemoryCategory.GENERAL,
                     importance=0.6,

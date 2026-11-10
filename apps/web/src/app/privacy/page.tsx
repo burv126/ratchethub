@@ -5,21 +5,18 @@ export default function PrivacyPage() {
     <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
         <BrandLogo size={40} wordmarkClassName="text-2xl font-semibold tracking-tight" />
       <h1 className="font-display mt-10 text-3xl font-semibold tracking-tight sm:text-4xl">
-        Privacy Policy
+        Политика конфиденциальности
       </h1>
-      <p className="mt-2 text-sm text-[var(--muted)]">Last updated: July 29, 2026</p>
+      <p className="mt-2 text-sm text-[var(--muted)]">Последнее обновление: 29 июля 2026 г.</p>
       <div className="surface-panel mt-8 space-y-4 p-6 text-sm leading-relaxed text-[var(--muted)]">
         <p>
-          RatchetHub processes shop, customer, vehicle, and communication data to provide
-          multi-tenant repair-shop operations software.
+          АвтоЦентр обрабатывает данные автосервисов, клиентов, автомобилей и коммуникаций для работы платформы управления автосервисами с изоляцией данных.
         </p>
         <p>
-          Shop owners can export their shop data and delete their shop account from Billing. Contact
-          support for additional privacy requests.
+          Владельцы могут экспортировать данные и удалить учётную запись автосервиса в разделе оплаты. По другим вопросам конфиденциальности обратитесь в поддержку.
         </p>
         <p>
-          We use authentication identifiers (phone/email), usage metering for plan limits, and
-          optional third-party providers (Twilio, OpenAI, Stripe) when configured by the operator.
+          Мы используем идентификаторы входа (телефон/почта), учёт использования для ограничений тарифа и при настройке оператором — сторонние сервисы Twilio, OpenAI и Stripe.
         </p>
       </div>
     </main>

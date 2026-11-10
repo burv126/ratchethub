@@ -47,7 +47,7 @@ class SchedulingPlugin:
         return "scheduling"
 
     def plugin_name(self) -> str:
-        return "Scheduling Plugin"
+        return 'Плагин расписания'
 
     def plugin_version(self) -> str:
         return "1.0.0"
@@ -304,7 +304,7 @@ class SchedulingPlugin:
             if start is None or end is None:
                 slots = await self._availability.find_available_slots(shop_id, days_ahead=7)
                 if not slots:
-                    return {"success": False, "message": "No walk-in slots available"}
+                    return {"success": False, "message": 'Нет свободного времени для живой очереди'}
                 start, end = slots[0].start, slots[0].end
             appt = await self._appointments.book(
                 shop_id,
@@ -316,7 +316,7 @@ class SchedulingPlugin:
             )
             return {"success": True, "appointment": appt, "walk_in": True}
 
-        raise ValueError(f"Unknown scheduling capability: {capability}")
+        raise ValueError(f'Неизвестная возможность расписания: {capability}')
 
 
 _AI_APPOINTMENT_SOURCES = frozenset({"agent", "sms", "phone"})
@@ -358,12 +358,12 @@ def reminders_for(appointment: AppointmentRecord) -> list[Reminder]:
             appointment_id=appointment.id,
             channel="sms",
             send_at=appointment.start - timedelta(hours=24),
-            message="Reminder: your appointment is tomorrow.",
+            message='Напоминание: ваша запись завтра.',
         ),
         Reminder(
             appointment_id=appointment.id,
             channel="sms",
             send_at=appointment.start - timedelta(hours=2),
-            message="Reminder: your appointment is in 2 hours.",
+            message='Напоминание: ваша запись через 2 часа.',
         ),
     ]

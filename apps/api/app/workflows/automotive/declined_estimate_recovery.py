@@ -17,8 +17,7 @@ WORKFLOW_ID = UUID("a1111111-1111-4111-8111-111111111104")
 SPEC = meta(
     workflow_id=str(WORKFLOW_ID),
     purpose=(
-        "Recover customers who declined estimates: detect lost revenue, schedule follow-up, "
-        "and drive retention / win-back outreach."
+        'Возвращает клиентов, отклонивших смету: выявляет упущенную выручку, планирует повторную связь и помогает удержанию.'
     ),
     trigger=DomainEventType.ESTIMATE_DECLINED.value,
     capabilities=[
@@ -47,8 +46,7 @@ SPEC = meta(
         DomainEventType.HUMAN_ESCALATION_REQUESTED.value,
     ],
     failure_handling=(
-        "Retry revenue/CRM/reminder; marketing emit continue_on_error; "
-        "rollback undoes CRM/revenue/reminder."
+        'Повторяет шаги выручки, CRM и напоминания; маркетинг продолжает при ошибке; откат отменяет изменения CRM, выручки и напоминания.'
     ),
     human_escalation=(
         "High-value declined estimates notify advisors for personal recovery call."
@@ -59,7 +57,7 @@ SPEC = meta(
 def build() -> WorkflowDefinition:
     return build_definition(
         workflow_id=WORKFLOW_ID,
-        name="Automotive: Declined estimate recovery",
+        name='Автосервис: возврат отклонённых смет',
         description=SPEC["purpose"],
         trigger=DomainEventType.ESTIMATE_DECLINED,
         tags=["estimate", "recovery", "revenue", "scenario-4"],
@@ -67,7 +65,7 @@ def build() -> WorkflowDefinition:
         actions=[
             action(
                 ActionType.SET_CONTEXT,
-                "Bind recovery scenario",
+                'Привязать сценарий возвращения',
                 1,
                 config={
                     "values": {
@@ -79,14 +77,14 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_REVENUE,
-                "Lost revenue detection",
+                'Выявление упущенной выручки',
                 2,
                 config={"category": "declined_estimate"},
                 compensate={"type": "undo_revenue"},
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Flag revenue opportunity / win-back",
+                'Отметить возможность выручки / возвращения',
                 3,
                 config={
                     "event_type": DomainEventType.REVENUE_OPPORTUNITY_DETECTED.value,
@@ -98,7 +96,7 @@ def build() -> WorkflowDefinition:
                 "CRM recovery follow-up plan",
                 4,
                 config={
-                    "note": "Estimate declined — recovery follow-up started",
+                    "note": 'Смета отклонена — повторная связь начата',
                     "fields": {
                         "capability": "GenerateFollowUp|GenerateRetentionPlan",
                         "ai_decision": "RetentionDecision",
@@ -108,7 +106,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.SCHEDULE_REMINDER,
-                "Schedule recovery follow-up contact",
+                'Запланировать повторную связь',
                 5,
                 config={
                     "hours_before": -72,  # ~3 days later (action treats negative specially)
@@ -119,7 +117,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Marketing win-back action",
+                'Маркетинговое действие для возвращения',
                 6,
                 config={
                     "event_type": DomainEventType.MARKETING_ACTION_REQUESTED.value,
@@ -129,7 +127,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Mark customer returned opportunity path",
+                'Отметить возвращение клиента',
                 7,
                 config={
                     "event_type": DomainEventType.CUSTOMER_RETURNED.value,
@@ -139,16 +137,16 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.NOTIFY,
-                "Advisor recovery call",
+                'Звонок консультанта для возвращения',
                 8,
                 config={
                     "channel": "in_app",
-                    "message": "Declined estimate — personal recovery outreach recommended",
+                    "message": 'Смета отклонена — рекомендуется личное обращение',
                 },
             ),
             action(
                 ActionType.EMIT_EVENT,
-                "Human escalation for high-value recovery",
+                'Передача сотруднику важного клиента',
                 9,
                 config={
                     "event_type": DomainEventType.HUMAN_ESCALATION_REQUESTED.value,
@@ -161,7 +159,7 @@ def build() -> WorkflowDefinition:
             ),
             action(
                 ActionType.UPDATE_DASHBOARD,
-                "Refresh declined-estimate widgets",
+                'Обновить виджеты отклонённых смет',
                 10,
                 config={
                     "widget": "overview",

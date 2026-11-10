@@ -1,3 +1,4 @@
+import { ruLabel } from "@/lib/ru";
 import Link from "next/link";
 import { BrandLogo } from "@/components/BrandLogo";
 
@@ -6,45 +7,45 @@ const PLANS = [
     id: "free",
     name: "Free",
     price: "$0",
-    blurb: "14-day trial for independent shops",
+    blurb: "Пробный период 14 дней для независимых автосервисов",
     features: [
-      "Walk-in + VIN decode",
-      "Appointments",
-      "Customer CRM",
-      "Team roles & permissions",
-      "CSV / data import",
-      "10 AI calls / mo",
-      "2 seats",
+      "Живая очередь и расшифровка VIN",
+      "Записи",
+      "CRM клиентов",
+      "Роли и разрешения команды",
+      "Импорт CSV / данных",
+      "10 звонков ИИ / мес.",
+      "2 места",
     ],
   },
   {
     id: "pro",
     name: "Pro",
     price: "$150",
-    blurb: "For growing repair shops",
+    blurb: "Для растущих автосервисов",
     features: [
-      "Walk-in + VIN decode",
-      "Appointments",
-      "Customer CRM",
-      "Team roles & permissions",
-      "CSV / data import",
-      "150 AI calls / mo",
-      "4 seats",
+      "Живая очередь и расшифровка VIN",
+      "Записи",
+      "CRM клиентов",
+      "Роли и разрешения команды",
+      "Импорт CSV / данных",
+      "150 звонков ИИ / мес.",
+      "4 места",
     ],
   },
   {
     id: "enterprise",
     name: "Enterprise",
     price: "$400",
-    blurb: "Multi-location and custom limits",
+    blurb: "Филиалы и индивидуальные лимиты",
     features: [
-      "Walk-in + VIN decode",
-      "Appointments",
-      "Customer CRM",
-      "Team roles & permissions",
-      "CSV / data import",
-      "500 AI calls / mo",
-      "10 seats",
+      "Живая очередь и расшифровка VIN",
+      "Записи",
+      "CRM клиентов",
+      "Роли и разрешения команды",
+      "Импорт CSV / данных",
+      "500 звонков ИИ / мес.",
+      "10 мест",
     ],
   },
 ];
@@ -60,22 +61,22 @@ export default function PricingPage() {
           />
           <div className="flex items-center gap-2 text-sm">
             <Link href="/?login=1" className="rounded-full px-3 py-2 text-[#5c5c5c] hover:text-black">
-              Sign in
+              Войти
             </Link>
             <Link href="/register" className="btn-primary py-2">
-              Start free
+              Начать бесплатно
             </Link>
           </div>
         </div>
       </header>
 
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-        <p className="section-label">Pricing</p>
+        <p className="section-label">Тарифы</p>
         <h1 className="font-display mt-4 max-w-3xl text-4xl font-extrabold tracking-tight sm:text-6xl">
-          Feature-rich packages for every shop.
+          Всё необходимое для любого автосервиса.
         </h1>
         <p className="mt-5 max-w-2xl text-base text-[#5c5c5c]">
-          Simple monthly plans. Upgrade anytime from Billing after you register your shop.
+          Простые ежемесячные тарифы. После регистрации тариф можно повысить в разделе оплаты.
         </p>
 
         <div className="mt-14 grid gap-5 md:grid-cols-3">
@@ -88,10 +89,10 @@ export default function PricingPage() {
                   : "border-black/8"
               }`}
             >
-              <p className="text-sm font-semibold text-[var(--accent)]">{plan.name}</p>
+              <p className="text-sm font-semibold text-[var(--accent)]">{ruLabel(plan.name)}</p>
               <p className="font-display mt-3 text-5xl font-extrabold tracking-tight">
                 {plan.price}
-                <span className="text-base font-medium text-[#5c5c5c]">/mo</span>
+                <span className="text-base font-medium text-[#5c5c5c]">/мес.</span>
               </p>
               <p className="mt-3 text-sm text-[#5c5c5c]">{plan.blurb}</p>
               <ul className="mt-7 flex-1 space-y-3 text-sm text-[#5c5c5c]">
@@ -110,7 +111,7 @@ export default function PricingPage() {
                     : "bg-black text-white hover:bg-[#1a1a1a]"
                 }`}
               >
-                Get started
+                Начать
               </Link>
             </div>
           ))}

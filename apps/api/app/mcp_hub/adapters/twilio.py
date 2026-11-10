@@ -20,7 +20,7 @@ class TwilioAdapter(BaseAdapter):
     tool_defs = [
         (
             "twilio.send_sms",
-            "Send an SMS message",
+            'Отправить SMS',
             {
                 "type": "object",
                 "properties": {"to": {"type": "string"}, "body": {"type": "string"}, "from": {"type": "string"}},
@@ -30,7 +30,7 @@ class TwilioAdapter(BaseAdapter):
         ),
         (
             "twilio.list_messages",
-            "List recent messages",
+            'Список последних сообщений',
             {"type": "object", "properties": {"limit": {"type": "integer"}}},
             ["sms", "read"],
         ),

@@ -49,7 +49,7 @@ def sample_api_payload(provider: str) -> dict[str, list[dict[str, Any]]]:
                 "cost": 320.5,
                 "mileage": 61000,
                 "date": "2025-06-01",
-                "recommendation": "Replace rotors within 6 months",
+                "recommendation": 'Заменить диски в течение 6 месяцев',
                 "customer_external_id": f"{provider}-cust-1",
             }
         ],
@@ -82,7 +82,7 @@ def sample_api_payload(provider: str) -> dict[str, list[dict[str, Any]]]:
                 "phone": "555-0100",
                 "channel": "sms",
                 "direction": "outbound",
-                "message": "Your vehicle is ready for pickup.",
+                "message": 'Ваш автомобиль готов к выдаче.',
                 "date": "2025-06-01T16:30:00",
             }
         ],
@@ -102,7 +102,7 @@ def sample_api_payload(provider: str) -> dict[str, list[dict[str, Any]]]:
                 "external_id": f"{provider}-rec-1",
                 "vin": "1HGCM82633A004352",
                 "customer_external_id": f"{provider}-cust-1",
-                "text": "Replace rotors within 6 months",
+                "text": 'Заменить диски в течение 6 месяцев',
                 "priority": "high",
             }
         ],

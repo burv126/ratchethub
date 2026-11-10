@@ -18,34 +18,34 @@ class CentralDashboardBuilder:
     def build(self, org_id: UUID) -> CentralDashboard:
         org = self._store.get_org(org_id)
         if org is None:
-            raise KeyError(f"Organization not found: {org_id}")
+            raise KeyError(f'Организация не найдена: {org_id}')
         analytics = self._franchise.build(org_id)
         brand = self._store.get_brand(org_id)
         sso = self._store.get_sso(org_id)
         policies = self._store.list_policies(org_id)
         audits = self._store.list_audit(org_id, limit=50)
         kpis = [
-            {"id": "locations", "label": "Locations", "value": len(analytics.locations), "unit": "count"},
-            {"id": "revenue", "label": "Network Revenue", "value": analytics.totals.get("revenue", 0), "unit": "usd"},
+            {"id": "locations", "label": 'Филиалы', "value": len(analytics.locations), "unit": "count"},
+            {"id": "revenue", "label": 'Выручка сети', "value": analytics.totals.get("revenue", 0), "unit": "usd"},
             {
                 "id": "appointments",
-                "label": "Appointments",
+                "label": 'Записи',
                 "value": analytics.totals.get("appointments", 0),
                 "unit": "count",
             },
             {
                 "id": "retention",
-                "label": "Avg Retention",
+                "label": 'Среднее удержание',
                 "value": analytics.totals.get("avg_retention", 0),
                 "unit": "ratio",
             },
             {
                 "id": "ai_success",
-                "label": "Avg AI Success",
+                "label": 'Средняя успешность ИИ',
                 "value": analytics.totals.get("avg_ai_success_rate", 0),
                 "unit": "ratio",
             },
-            {"id": "policies", "label": "AI Policies", "value": len(policies), "unit": "count"},
+            {"id": "policies", "label": 'Политики ИИ', "value": len(policies), "unit": "count"},
         ]
         return CentralDashboard(
             organization_id=org.id,

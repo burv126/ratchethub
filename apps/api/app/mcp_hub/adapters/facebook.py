@@ -9,7 +9,7 @@ from app.mcp_hub.enums import AuthMethod, IntegrationCategory, IntegrationProvid
 class FacebookAdapter(BaseAdapter):
     provider = IntegrationProvider.FACEBOOK
     display_name = "Facebook"
-    description = "Page messaging and posts for shop marketing."
+    description = 'Сообщения и публикации страницы для маркетинга автосервиса.'
     category = IntegrationCategory.SOCIAL
     auth_method = AuthMethod.OAUTH2
     api_version = "v19.0"
@@ -20,13 +20,13 @@ class FacebookAdapter(BaseAdapter):
     tool_defs = [
         (
             "facebook.create_post",
-            "Publish a page post",
+            'Опубликовать запись на странице',
             {"type": "object", "properties": {"message": {"type": "string"}}, "required": ["message"]},
             ["social", "write"],
         ),
         (
             "facebook.list_messages",
-            "List page inbox messages",
+            'Получить входящие сообщения страницы',
             {"type": "object", "properties": {"limit": {"type": "integer"}}},
             ["social", "read"],
         ),

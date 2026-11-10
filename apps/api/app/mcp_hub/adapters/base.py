@@ -69,7 +69,7 @@ class BaseAdapter:
             if credentials.fields.get("demo", "").lower() in {"1", "true", "yes"}:
                 credentials.fields["demo"] = "true"
             else:
-                raise ValueError(f"Missing credentials: {', '.join(missing)}")
+                raise ValueError(f"Не указаны учётные данные: {', '.join(missing)}")
         credentials.method = self.auth_method
         if not credentials.scopes:
             credentials.scopes = list(self.required_scopes)
@@ -78,7 +78,7 @@ class BaseAdapter:
 
     async def test_connection(self, connection: IntegrationConnection) -> dict[str, Any]:
         if connection.credentials is None:
-            raise ValueError("No credentials configured")
+            raise ValueError('Учётные данные не настроены')
         return {
             "ok": True,
             "provider": self.provider.value,
@@ -94,7 +94,7 @@ class BaseAdapter:
     ) -> dict[str, Any]:
         tool_names = {t[0] for t in self.tool_defs}
         if request.tool and request.tool not in tool_names:
-            raise ValueError(f"Unknown tool '{request.tool}' for {self.provider.value}")
+            raise ValueError(f"Неизвестный инструмент '{request.tool}' для {self.provider.value}")
         return {
             "provider": self.provider.value,
             "tool": request.tool,

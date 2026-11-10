@@ -181,10 +181,10 @@ async def invite_staff(
     if existing is not None:
         membership = await uow.memberships.get(current.shop_id, existing.id)
         if membership is not None:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already a member")
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Уже состоит в команде')
 
     if existing is None and email and await uow.users.get_by_email(email):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Почта уже зарегистрирована')
 
     # Enforce plan seat limit before creating user/membership rows.
     try:
@@ -253,7 +253,7 @@ async def update_member_capabilities(
     memberships = await uow.memberships.list_for_shop(current.shop_id)
     membership = next((m for m in memberships if m.id == membership_id), None)
     if membership is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Сотрудник не найден')
     if normalize_user_role(membership.role) == UserRole.OWNER:
         caps = default_capabilities_for_role(UserRole.OWNER)
     else:
@@ -264,7 +264,7 @@ async def update_member_capabilities(
     await uow.commit()
     user = await uow.users.get_by_id(updated.user_id)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
     return _member_out(updated, user)
 
 
@@ -277,15 +277,15 @@ async def remove_member(
     memberships = await uow.memberships.list_for_shop(current.shop_id)
     membership = next((m for m in memberships if m.id == membership_id), None)
     if membership is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Сотрудник не найден')
     if normalize_user_role(membership.role) == UserRole.OWNER:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot remove the shop owner",
+            detail='Нельзя удалить владельца автосервиса',
         )
     deleted = await uow.memberships.delete(membership.id)
     if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Сотрудник не найден')
     await uow.refresh_tokens.revoke_all_for_user(
         membership.user_id, datetime.now(timezone.utc)
     )
@@ -333,7 +333,7 @@ async def get_shop_settings(
 ) -> ShopSettingsOut:
     shop = await uow.shops.get_by_id(current.shop_id)
     if shop is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shop not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Автосервис не найден')
     return await _shop_settings_out(uow, shop)
 
 
@@ -345,13 +345,13 @@ async def update_shop_settings(
 ) -> ShopSettingsOut:
     shop = await uow.shops.get_by_id(current.shop_id)
     if shop is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shop not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Автосервис не найден')
     if body.name is None and body.timezone is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No changes provided")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Изменения не указаны')
     if body.name is not None:
         shop.name = body.name.strip()
         if len(shop.name) < 2:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Shop name too short")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Название автосервиса слишком короткое')
         # Keep internal slug in sync with display name (hidden from owners).
         from app.application.services import AuthService
 
@@ -361,7 +361,7 @@ async def update_shop_settings(
     if body.timezone is not None:
         shop.timezone = body.timezone.strip()
         if not shop.timezone:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid timezone")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Некорректный часовой пояс')
     updated = await uow.shops.update(shop)
     await uow.commit()
     return await _shop_settings_out(uow, updated)
@@ -376,19 +376,19 @@ async def set_shop_ai_paused(
     """Pause/resume SMS + Voice AI only. Voice Notes and other AI tools stay on."""
     shop = await uow.shops.get_by_id(current.shop_id)
     if shop is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shop not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Автосервис не найден')
     if not body.ai_paused:
         sms_phone, voice_phone = await uow.shops.get_channel_phones(shop.id)
         if not (sms_phone or voice_phone):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="AI phone number not assigned yet.",
+                detail='Номер телефона ИИ пока не назначен.',
             )
         # Resuming AI requires remaining monthly AI call quota.
         if not await QuotaService().ai_usage_available(shop.id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="AI monthly quota exceeded. Upgrade your plan to resume AI.",
+                detail='Месячная квота ИИ исчерпана. Повысьте тариф для продолжения.',
             )
     shop.ai_paused = bool(body.ai_paused)
     updated = await uow.shops.update(shop)
@@ -404,11 +404,11 @@ async def update_my_profile(
 ) -> ProfileOut:
     full_name = body.full_name.strip()
     if not full_name:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Full name is required")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Укажите полное имя')
 
     existing = await uow.users.get_by_id(current.user_id)
     if existing is None or not existing.is_active:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
 
     new_phone = existing.phone
     new_email = existing.email
@@ -438,18 +438,18 @@ async def update_my_profile(
     if not new_phone and not new_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Phone or email is required",
+            detail='Укажите телефон или почту',
         )
     primary = (existing.primary_auth_method or "phone").lower()
     if primary == "phone" and not new_phone:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Phone is required for this account",
+            detail='Для этой учётной записи нужен телефон',
         )
     if primary == "email" and not new_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email is required for this account",
+            detail='Для этой учётной записи нужна почта',
         )
 
     if new_phone and new_phone != existing.phone:
@@ -457,14 +457,14 @@ async def update_my_profile(
         if other is not None and other.id != existing.id:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Phone number already in use",
+                detail='Телефон уже используется',
             )
     if new_email and new_email != (existing.email or None):
         other = await uow.users.get_by_email(new_email)
         if other is not None and other.id != existing.id:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Email already in use",
+                detail='Почта уже используется',
             )
 
     phone_changed = (new_phone or None) != (existing.phone or None)
@@ -477,10 +477,10 @@ async def update_my_profile(
         email=new_email,
     )
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
     shop = await uow.shops.get_by_id(current.shop_id)
     if shop is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Shop not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Автосервис не найден')
     await uow.commit()
 
     if phone_changed or email_changed:
@@ -518,22 +518,22 @@ async def change_my_password(
 ) -> dict:
     user = await uow.users.get_by_id(current.user_id)
     if user is None or not user.is_active:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
     if not verify_password(body.current_password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect",
+            detail='Текущий пароль неверен',
         )
     if body.current_password == body.new_password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="New password must be different from the current password",
+            detail='Новый пароль должен отличаться от текущего',
         )
     updated = await uow.users.update_password(
         current.user_id, password_hash=hash_password(body.new_password)
     )
     if updated is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
     await uow.commit()
     return {"ok": True}
 
@@ -545,7 +545,7 @@ async def get_my_notifications(
 ) -> NotificationPrefsOut:
     prefs = await uow.users.get_notification_prefs(current.user_id)
     if prefs is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
     return _notification_prefs_out(prefs)
 
 
@@ -557,14 +557,14 @@ async def update_my_notifications(
 ) -> NotificationPrefsOut:
     current_prefs = await uow.users.get_notification_prefs(current.user_id)
     if current_prefs is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
     merged = _notification_prefs_out(current_prefs).model_dump()
     patch = body.model_dump(exclude_unset=True)
     if not patch:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No changes provided")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Изменения не указаны')
     merged.update(patch)
     saved = await uow.users.set_notification_prefs(current.user_id, merged)
     if saved is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Пользователь не найден')
     await uow.commit()
     return _notification_prefs_out(saved)

@@ -43,27 +43,27 @@ SUGGESTED_ACTION_DEFS: list[dict[str, Any]] = [
     {
         "id": "declined_estimate",
         "campaign_type": CampaignType.DECLINED_ESTIMATE.value,
-        "title": "Declined estimates",
-        "description": "Customers who turned down a repair estimate — follow up while the need is fresh.",
+        "title": 'Отклонённые сметы',
+        "description": 'Клиенты, отклонившие смету ремонта — свяжитесь с ними, пока потребность актуальна.',
     },
     {
         "id": "open_recommendation",
         "campaign_type": CampaignType.MAINTENANCE_REMINDER.value,
-        "title": "Advisor recommendations",
-        "description": "Open follow-ups from repair notes — real recommendations already on file.",
+        "title": 'Рекомендации консультанта',
+        "description": 'Открытые рекомендации из записей о ремонте.',
         "segment": "open_recommendation",
     },
     {
         "id": "inactive_customer",
         "campaign_type": CampaignType.INACTIVE_CUSTOMER.value,
-        "title": "Inactive customers",
-        "description": "Haven't visited in months. Invite them back with a simple inspection offer.",
+        "title": 'Неактивные клиенты',
+        "description": 'Не посещали несколько месяцев. Пригласите их на простой осмотр.',
     },
     {
         "id": "maintenance_reminder",
         "campaign_type": CampaignType.MAINTENANCE_REMINDER.value,
-        "title": "Maintenance reminders",
-        "description": "Vehicles due for oil, brakes, or other scheduled service.",
+        "title": 'Напоминания об обслуживании',
+        "description": 'Автомобили, которым пора заменить масло, обслужить тормоза или выполнить другие регламентные работы.',
     },
 ]
 

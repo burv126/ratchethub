@@ -79,7 +79,7 @@ async def upload_and_process_voice_note(
         except Exception as exc:  # AI provider failures
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"AI processing failed: {exc}",
+                detail=f'Не удалось обработать данные ИИ: {exc}',
             ) from exc
         return VoiceNoteProcessOut(
             voice_note=VoiceNoteOut.model_validate(result.voice_note),
@@ -131,7 +131,7 @@ async def download_voice_note_audio(
     except NotFoundError as exc:
         raise _http_error(exc) from exc
     except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail="Audio file missing") from exc
+        raise HTTPException(status_code=404, detail='Аудиофайл отсутствует') from exc
 
     media = "audio/webm"
     if note.audio_url.endswith(".wav"):

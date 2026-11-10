@@ -20,8 +20,7 @@ class AdvisorCommunicationService:
             body = recs[0].plain_language or recs[0].description
         elif ctx.inbound_text:
             body = (
-                "Thanks for reaching out. We're reviewing your vehicle details and will "
-                "recommend the safest next step shortly."
+                'Спасибо за обращение. Изучаем данные автомобиля и скоро порекомендуем следующий шаг.'
             )
         else:
             return []
@@ -40,7 +39,7 @@ class AdvisorCommunicationService:
 
     def generate_reply(self, ctx: AdvisorContext, *, body: str | None = None) -> list[Any]:
         text = body or (
-            "Got it — our service advisor team is on it and will keep you updated."
+            'Понятно — команда консультантов уже занимается вопросом и будет держать вас в курсе.'
         )
         return [
             CustomerCommunicationDecision(
@@ -50,7 +49,7 @@ class AdvisorCommunicationService:
                 body=text,
                 intent=ctx.intent,
                 confidence=0.7,
-                rationale="Advisor customer reply plan",
+                rationale='План ответа консультанта клиенту',
             )
         ]
 

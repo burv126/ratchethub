@@ -1,4 +1,6 @@
 "use client";
+import { ruError } from "@/lib/ru-errors";
+
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -22,7 +24,7 @@ export default function VehicleDetailPage() {
     try {
       setDetail(await getVehicleDetail(vehicleId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load vehicle");
+      setError(err instanceof Error ? err.message : "Не удалось загрузить автомобиль");
     } finally {
       setLoading(false);
     }
@@ -39,7 +41,7 @@ export default function VehicleDetailPage() {
     const v = detail.vehicle;
     if (
       !window.confirm(
-        `Delete ${v.year} ${v.make} ${v.model}? Repair history for this vehicle will also be removed.`,
+        `Удалить ${v.year} ${v.make} ${v.model}? История ремонта автомобиля также будет удалена.`,
       )
     ) {
       return;
@@ -52,17 +54,17 @@ export default function VehicleDetailPage() {
         v.customer_id ? `/dashboard/customer/${v.customer_id}` : "/dashboard/customer",
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete vehicle");
+      setError(err instanceof Error ? err.message : "Не удалось удалить автомобиль");
       setDeleting(false);
     }
   }
 
   if (loading) {
-    return <p className="text-sm text-[var(--muted)]">Loading vehicle…</p>;
+    return <p className="text-sm text-[var(--muted)]">Загрузка автомобиля…</p>;
   }
 
   if (!detail) {
-    return <p className="text-sm text-red-700">{error ?? "Vehicle not found"}</p>;
+    return <p className="text-sm text-red-700">{ruError(error ?? "Автомобиль не найден")}</p>;
   }
 
   const v = detail.vehicle;
@@ -75,7 +77,7 @@ export default function VehicleDetailPage() {
             href={`/dashboard/customer/${v.customer_id}`}
             className="text-sm text-[var(--muted)] hover:text-[var(--accent)]"
           >
-            ← Back to customer
+            ← К клиенту
           </Link>
           <h1 className="page-title mt-2">
             {v.year} {v.make} {v.model}
@@ -88,21 +90,21 @@ export default function VehicleDetailPage() {
           disabled={deleting}
           className="rounded-md border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-60"
         >
-          {deleting ? "Deleting…" : "Delete vehicle"}
+          {deleting ? "Удаление…" : "Удалить автомобиль"}
         </button>
       </div>
 
       {error && (
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-          {error}
+          {ruError(error)}
         </p>
       )}
 
       <section className="grid grid-cols-2 gap-4 rounded-xl border border-[var(--line)] bg-[var(--panel)] p-4 lg:grid-cols-4">
-        <Stat label="Plate" value={v.license_plate ?? "—"} />
-        <Stat label="Mileage" value={v.mileage.toLocaleString()} />
-        <Stat label="Year" value={String(v.year)} />
-        <Stat label="Make / Model" value={`${v.make} ${v.model}`} />
+        <Stat label="Госномер" value={v.license_plate ?? "—"} />
+        <Stat label="Пробег" value={v.mileage.toLocaleString("ru-RU")} />
+        <Stat label="Год" value={String(v.year)} />
+        <Stat label="Марка / модель" value={`${v.make} ${v.model}`} />
       </section>
     </div>
   );

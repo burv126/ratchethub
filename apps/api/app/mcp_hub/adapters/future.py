@@ -11,8 +11,8 @@ from app.mcp_hub.models import ConnectionCredentials, IntegrationConnection, Inv
 
 class FutureAdapter(BaseAdapter):
     provider = IntegrationProvider.FUTURE
-    display_name = "Future Integrations"
-    description = "Reserved slot for upcoming MCP connectors — register via hub registry."
+    display_name = 'Будущие интеграции'
+    description = 'Место для будущих коннекторов MCP — регистрация через реестр центра.'
     category = IntegrationCategory.EXTENSIBILITY
     auth_method = AuthMethod.NONE
     api_version = "v0"
@@ -24,7 +24,7 @@ class FutureAdapter(BaseAdapter):
     tool_defs = [
         (
             "future.ping",
-            "Health ping for future connector slots",
+            'Проверка состояния будущих коннекторов',
             {"type": "object", "properties": {"name": {"type": "string"}}},
             ["future"],
         ),
@@ -36,7 +36,7 @@ class FutureAdapter(BaseAdapter):
         return credentials
 
     async def test_connection(self, connection: IntegrationConnection) -> dict[str, Any]:
-        return {"ok": True, "provider": "future", "message": "Slot ready for registration"}
+        return {"ok": True, "provider": "future", "message": 'Готово к регистрации'}
 
     async def invoke(
         self,
@@ -47,6 +47,6 @@ class FutureAdapter(BaseAdapter):
             "provider": "future",
             "tool": request.tool or "future.ping",
             "status": "not_implemented",
-            "message": "Register a concrete adapter to enable this slot",
+            "message": 'Зарегистрируйте адаптер для включения',
             "arguments": request.arguments,
         }
