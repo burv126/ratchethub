@@ -6,23 +6,23 @@ import "./globals.css";
 const display = localFont({
   variable: "--font-display",
   src: [
-    { path: "../../../../node_modules/@fontsource/archivo/files/archivo-latin-500-normal.woff2", weight: "500", style: "normal" },
-    { path: "../../../../node_modules/@fontsource/archivo/files/archivo-latin-600-normal.woff2", weight: "600", style: "normal" },
-    { path: "../../../../node_modules/@fontsource/archivo/files/archivo-latin-700-normal.woff2", weight: "700", style: "normal" },
-    { path: "../../../../node_modules/@fontsource/archivo/files/archivo-latin-800-normal.woff2", weight: "800", style: "normal" },
+    { path: "./fonts/archivo-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/archivo-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/archivo-latin-700-normal.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/archivo-latin-800-normal.woff2", weight: "800", style: "normal" },
   ],
 });
 
 const sans = localFont({
   variable: "--font-sans",
-  src: "../../../../node_modules/@fontsource/outfit/files/outfit-latin-400-normal.woff2",
+  src: "./fonts/outfit-latin-400-normal.woff2",
 });
 
 const mono = localFont({
   variable: "--font-mono",
   src: [
-    { path: "../../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
-    { path: "../../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/ibm-plex-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/ibm-plex-mono-latin-500-normal.woff2", weight: "500", style: "normal" },
   ],
 });
 
